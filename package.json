@@ -1,0 +1,65 @@
+{
+  "name": "swiftly",
+  "version": "2.0.0",
+  "description": "Swiftly Backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run start:prod",
+    "start:dev": "nodemon index.js",
+    "start:prod": "npm install && node index.js",
+    "lint": "eslint src/**/*.js",
+    "lint-fix": "eslint src/**/*.js --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "Hari Gopal Sharma",
+  "license": "ISC",
+  "dependencies": {
+    "@hapi/joi": "^16.1.7",
+    "@hapi/joi-date": "^2.0.1",
+    "@sendgrid/mail": "^6.5.1",
+    "aws-sdk": "^2.576.0",
+    "axios": "^0.19.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "bunyan": "^1.8.12",
+    "cjson": "^0.5.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.5",
+    "ethereumjs-tx": "^2.1.1",
+    "express": "^4.17.1",
+    "express-mongo-sanitize": "^1.3.2",
+    "express-rate-limit": "^5.0.0",
+    "google-auth-library": "^5.5.1",
+    "helmet": "^3.21.2",
+    "js-sha512": "^0.8.0",
+    "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^2.2.0",
+    "lodash": "^4.17.15",
+    "multer": "^1.4.2",
+    "multer-s3": "^2.9.0",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "payumoney_nodejs": "^2.0.4",
+    "stripe": "^7.13.0",
+    "swagger-express-router": "^1.0.0",
+    "swagger-ui-express": "^4.1.6",
+    "uuid": "^3.3.3",
+    "validator": "^12.0.0",
+    "web3": "^1.2.4"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.6.0",
+    "firebase-admin": "^9.4.2",
+    "mongoose": "^5.7.7",
+    "nodemon": "^1.19.4"
+  }
+}

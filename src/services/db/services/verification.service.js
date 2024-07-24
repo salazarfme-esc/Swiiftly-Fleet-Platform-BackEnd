@@ -7,24 +7,30 @@ let instance;
 class Verification {
 	constructor() {
 		//if email instance already exists then return
-		if(instance) {
+		if (instance) {
 			return instance;
 		}
 		this.instance = this;
 		this._verificationController = verificationModel;
 	}
-	createVerification(verificationObj) {
+	create(verificationObj) {
 		let model = new this._verificationController(verificationObj);
 		return model.save(verificationObj);
 	}
-	getVerificationDetailsByQuery(query,projection = {}){
+	getByQuery(query, projection = {}) {
 		return this._verificationController.find(query, projection);
 	}
-	updateVerificationByQuery(query, updatedObj, option) {
+	updateByQuery(query, updatedObj, option) {
 		return this._verificationController.updateMany(query, { $set: updatedObj }, option);
 	}
-	deleteVerificationById(id) {
+	updateById(userId, updatedObj) {
+        return this._verificationController.findByIdAndUpdate(userId, { $set: updatedObj });
+    }
+	deleteById(id) {
 		return this._verificationController.findByIdAndRemove(id);
+	}
+	deleteByQuery(query) {
+		return this._Controller.deleteMany(query);
 	}
 }
 module.exports = new Verification();

@@ -28,16 +28,6 @@ module.exports = {
 			.trim()
 			.allow("")
 			.label("Last Name"),
-		hourly_rate: Joi
-			.string()
-			.trim()
-			.allow("")
-			.label("Hourly Rate"),
-		social_security_number: Joi
-			.string()
-			.trim()
-			.allow("")
-			.label("Social Security Number"),
 		email: Joi
 			.string()
 			.trim()
@@ -65,25 +55,6 @@ module.exports = {
 			.trim()
 			.allow("")
 			.label("Last Name"),
-		hourly_rate: Joi
-			.string()
-			.trim()
-			.allow("")
-			.label("Hourly Rate"),
-		social_security_number: Joi
-			.string()
-			.trim()
-			.allow("")
-			.label("Social Security Number"),
-		email: Joi
-			.string()
-			.trim()
-			.label('Email'),
-		// id: Joi
-		// 	.string()
-		// 	.trim()
-		// 	.required()
-		// 	.label('Id'),
 		oldPassword: Joi
 			.string()
 			.min(8)

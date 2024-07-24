@@ -14,7 +14,7 @@ const adminAuthController = require('./adminController/auth');
 
 module.exports = {
     /**
-     * All Admin Contollers
+     * All Admin Controllers
      */
     adminAuth: adminAuthController,
     /**

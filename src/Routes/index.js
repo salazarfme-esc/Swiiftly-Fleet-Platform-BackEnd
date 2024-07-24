@@ -35,8 +35,8 @@ module.exports = (app) => {
 	/**
 	* Handling Admin and User Routes with the defined path for usage
 	*/
-	app.use('/admin',adminRoutes(app));
-	app.use('/api/v1',userRoutes(app));
+	app.use('/api/admin',adminRoutes(app));
+	app.use('/api/v1/user',userRoutes(app));
 
 	/**
 	 * Handling Static Files

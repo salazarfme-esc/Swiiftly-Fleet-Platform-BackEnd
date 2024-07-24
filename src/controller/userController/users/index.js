@@ -17,7 +17,7 @@ const verificationDbHandler = dbService.Verification;
 let _comparePassword = (reqPassword, userPassword) => {
     return new Promise((resolve, reject) => {
         //compare password with bcrypt method, password and hashed password both are required
-        bcrypt.compare(reqPassword, userPassword, function(err, isMatch) {
+        bcrypt.compare(reqPassword, userPassword, function (err, isMatch) {
             if (err) reject(err);
             resolve(isMatch);
         });
@@ -44,7 +44,7 @@ let _generateVerificationToken = (tokenData, verification_type) => {
 /**
  * Method to update user Email verification Database
  */
-let _handleVerificationDataUpdate = async(id) => {
+let _handleVerificationDataUpdate = async (id) => {
     log.info('Received request for deleting verification token::', id);
     let deletedInfo = await verificationDbHandler.deleteVerificationById(id);
     return deletedInfo;
@@ -54,10 +54,10 @@ let _encryptPassword = (password) => {
     let salt = config.bcrypt.saltValue;
     // generate a salt
     return new Promise((resolve, reject) => {
-        bcrypt.genSalt(salt, function(err, salt) {
+        bcrypt.genSalt(salt, function (err, salt) {
             if (err) reject(err);
             // hash the password with new salt
-            bcrypt.hash(password, salt, function(err, hash) {
+            bcrypt.hash(password, salt, function (err, hash) {
                 if (err) reject(err);
                 // override the plain password with the hashed one
                 resolve(hash);
@@ -72,20 +72,20 @@ module.exports = {
     /**
      * Method to get User Profilr
      */
-    profile: async(req, res) => {
+    profile: async (req, res) => {
         let user = req.user;
         let id = user.sub;
-        log.info('Recieved request for User Profile for User:', user);
+        log.info('Received request for User Profile for User:', user);
         let responseData = {};
         try {
-            let userData = await userDbHandler.getUserDetailsById(id, {user_password: 0});
-            responseData.msg = `Data Fetched Successfully !!!`;
+            let userData = await userDbHandler.getById(id, { user_password: 0 });
+            responseData.msg = `Data Fetched Successfully!`;
             responseData.data = userData;
             return responseHelper.success(res, responseData);
 
         } catch (error) {
             log.error('failed to get user signup with error::', error);
-            responseData.msg = 'failed to get user login';
+            responseData.msg = 'failed to get profile!';
             return responseHelper.error(res, responseData);
         }
     },
@@ -93,84 +93,87 @@ module.exports = {
     /**
      *  Method to update Profile
      */
-     updateProfile: async(req, res) => {
-        let reqObj = req.body; 
-        let user = req.user;
-        let id = user.sub;
-        log.info('Recieved request for User Profile update:', reqObj);
-        let responseData = {};
-        try {
-            let userData = await userDbHandler.getUserDetailsById(id, {user_password: 0});
-            if (!userData) {
-                responseData.msg = 'Invalid user!!!';
-                return responseHelper.error(res, responseData);
-            }
+    // updateProfile: async (req, res) => {
+    //     let reqObj = req.body;
+    //     let user = req.user;
+    //     let id = user.sub;
+    //     log.info('Received request for User Profile update:', reqObj);
+    //     let responseData = {};
+    //     try {
+    //         let userData = await userDbHandler.getById(id, { user_password: 0 });
+    //         if (!userData) {
+    //             responseData.msg = 'Invalid user!!!';
+    //             return responseHelper.error(res, responseData);
+    //         }
 
-            let checkPhoneNumber = await userDbHandler.getUserDetailsByQuery({ phone_number: reqObj.phone_number });
-            let checkUsername = await userDbHandler.getUserDetailsByQuery({ user_name: reqObj.user_name });
-            if (checkPhoneNumber.length && checkPhoneNumber[0]._id != id) {
-                responseData.msg = 'Phone Number Already Exist !!!';
-                return responseHelper.error(res, responseData);
-            }
-            if (checkUsername.length && checkUsername[0]._id != id) {
-                responseData.msg = 'User Name Already Exist !!!';
-                return responseHelper.error(res, responseData);
-            }
+    //         let checkPhoneNumber = await userDbHandler.getUserDetailsByQuery({ phone_number: reqObj.phone_number });
+    //         let checkUsername = await userDbHandler.getUserDetailsByQuery({ user_name: reqObj.user_name });
+    //         if (checkPhoneNumber.length && checkPhoneNumber[0]._id != id) {
+    //             responseData.msg = 'Phone Number Already Exist !!!';
+    //             return responseHelper.error(res, responseData);
+    //         }
+    //         if (checkUsername.length && checkUsername[0]._id != id) {
+    //             responseData.msg = 'User Name Already Exist !!!';
+    //             return responseHelper.error(res, responseData);
+    //         }
 
-            let user_avatar = userData.user_avatar;
-            if (req.file) {
-                user_avatar  = req.file.location;
-            }
-            let updatedObj = {
-                first_name: reqObj.first_name,
-                last_name: reqObj.last_name,
-                user_name: reqObj.user_name,
-                phone_number: reqObj.phone_number,
-                user_avatar: user_avatar,
-                user_bio: reqObj.user_bio,
-            }
-            let updateProfile = await userDbHandler.updateUserDetailsById(id, updatedObj);
-            responseData.msg = `Data updated sucessfully !!!`;
-            return responseHelper.success(res, responseData);
+    //         let user_avatar = userData.user_avatar;
+    //         if (req.file) {
+    //             user_avatar = req.file.location;
+    //         }
+    //         let updatedObj = {
+    //             first_name: reqObj.first_name,
+    //             last_name: reqObj.last_name,
+    //             user_name: reqObj.user_name,
+    //             phone_number: reqObj.phone_number,
+    //             user_avatar: user_avatar,
+    //             user_bio: reqObj.user_bio,
+    //         }
+    //         let updateProfile = await userDbHandler.updateUserDetailsById(id, updatedObj);
+    //         responseData.msg = `Data updated sucessfully !!!`;
+    //         return responseHelper.success(res, responseData);
 
-        } catch (error) {
-            log.error('failed to get user signup with error::', error);
-            responseData.msg = 'failed to get user login';
-            return responseHelper.error(res, responseData);
-        }
-    },
+    //     } catch (error) {
+    //         log.error('failed to get user signup with error::', error);
+    //         responseData.msg = 'failed to get user login';
+    //         return responseHelper.error(res, responseData);
+    //     }
+    // },
 
     /**
      * Method to handle change password
      */
-    changePassword: async(req, res) => {
-        let reqObj = req.body; 
+    changePassword: async (req, res) => {
+        let reqObj = req.body;
         let user = req.user;
         let id = user.sub;
-        log.info('Recieved request for User Profile update:', reqObj);
+        log.info('Received request for User password update:', reqObj);
         let responseData = {};
         try {
-            let userData = await userDbHandler.getUserDetailsById(id);
-            let comparePassword = await _comparePassword(reqObj.old_password, userData.user_password);
+            let userData = await userDbHandler.getById(id);
+
+            let comparePassword = await _comparePassword(reqObj.old_password, userData.password);
+            console.log("🚀 ~ changePassword: ~ comparePassword:", comparePassword)
             if (!comparePassword) {
                 responseData.msg = `Invalid old password !!!`;
                 return responseHelper.error(res, responseData);
             }
-            let compareNewAndOld = await _comparePassword(reqObj.new_password, userData.user_password);
+            let compareNewAndOld = await _comparePassword(reqObj.new_password, userData.password);
+            console.log("🚀 ~ changePassword: ~ compareNewAndOld:", compareNewAndOld)
             if (compareNewAndOld) {
                 responseData.msg = `New password must be different from old password !!!`;
                 return responseHelper.error(res, responseData);
             }
             let updatedObj = {
-                user_password: await _encryptPassword(reqObj.new_password)
+                password: await _encryptPassword(reqObj.new_password)
             }
-            let updateProfile = await userDbHandler.updateUserDetailsById(id, updatedObj);
-            responseData.msg = `Data updated sucessfully !!!`;
+            let updateProfile = await userDbHandler.updateById(id, updatedObj);
+            responseData.msg = `Data updated successfully!`;
             return responseHelper.success(res, responseData);
 
         } catch (error) {
             log.error('failed to update with error::', error);
-            responseData.msg = 'failed to update data';
+            responseData.msg = 'failed to change password!';
             return responseHelper.error(res, responseData);
         }
     }

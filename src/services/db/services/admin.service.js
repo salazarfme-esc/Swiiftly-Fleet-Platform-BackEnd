@@ -13,27 +13,30 @@ class Admin {
 		this.instance = this;
 		this._adminController = adminModel;
 	}
-	createAdmin(adminObj) {
+	create(adminObj) {
 		let model = new this._adminController(adminObj);
 		return model.save(adminObj);
 	}
-	getAdminDetailsById(adminId, projection) {
+	getById(adminId, projection) {
 		if (projection) {
 			return this._adminController.findOne({ _id: adminId }, projection);
 		}
 		return this._adminController.findOne({ _id: adminId });
 	}
-	getAdminDetailsByQuery(query,projection = {}){
+	getByQuery(query,projection = {}){
 		return this._adminController.find(query, projection);
 	}
-	updateAdminDetailsById(adminId, updatedObj) {
+	updateById(adminId, updatedObj) {
 		return this._adminController.findByIdAndUpdate(adminId, { $set : updatedObj });
 	}
-	updateAdminByQuery(query, updatedObj, option) {
+	updateByQuery(query, updatedObj, option) {
 		return this._adminController.updateMany(query, { $set: updatedObj }, option);
 	}
-	deleteAdminById(adminId) {
+	deleteById(adminId) {
 		return this._adminController.findByIdAndRemove(adminId);
 	}
+	deleteByQuery(query) {
+        return this._Controller.deleteMany(query);
+    }
 }
 module.exports = new Admin();

@@ -27,7 +27,7 @@ module.exports = () => {
      * Middlerware for Handling Request Authorization
      */
     Router.use("/", adminAuthenticated);
-    Router.get("/get-all-admin", adminAuthController.getAlladmin);
+    Router.get("/get-all-admin", adminAuthController.getAllAdmin);
     Router.get("/get-admin/:id", adminAuthController.getSingleAdmin);
     Router.put("/update-admin", validationMiddleware(adminValidationSchema.update_admin, "body"), adminAuthController.updateAdmin);
     Router.post("/add-admin", validationMiddleware(adminValidationSchema.add_admin, "body"), adminAuthController.addAdmin);

@@ -5,20 +5,17 @@ const Schema = mongoose.Schema;
  * Creating Verification Schema Model
  */
 const VerificationSchema = new Schema({
-	token: {
-		type: String,
-		required: true,
-		trim: true,
-		unique: true
-	},
 	otp: {
 		type: String,
 		default: ''
 	},
 	user_id: {
 		type: mongoose.Schema.Types.ObjectId,
-		required: true,
 		ref: 'Users'
+	},
+	admin_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Admins'
 	},
 	attempts: {
 		type: Number,
@@ -27,8 +24,13 @@ const VerificationSchema = new Schema({
 	verification_type: {
 		type: String,
 		required: true,
-		enum: ['email','password','mobile']
+		enum: ['email', 'password']
+	},
+	verification_for: {
+		type: String,
+		required: true,
+		enum: ['admin', 'user']
 	}
-},{ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }});
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 module.exports = mongoose.model('Verifications', VerificationSchema);

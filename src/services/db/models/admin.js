@@ -18,22 +18,13 @@ const adminUserSchema = new Schema(
       trim: true,
       default: ''
     },
-    hourly_rate: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    social_security_number: {
-      type: String,
-      default: ""
-    },
     email: {
       type: String,
       required: true,
       trim: true,
     },
     password: {
-      type:String,
+      type: String,
       required: true,
     },
     last_login: {

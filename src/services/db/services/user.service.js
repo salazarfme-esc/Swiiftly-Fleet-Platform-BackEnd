@@ -20,24 +20,27 @@ class User {
     getFeaturedUsers() {
         return this._userController.find({ featured: true }, { password: 0 });
     }
-    getUserDetailsById(userId, projection) {
+    getById(userId, projection) {
         if (projection) {
             return this._userController.findOne({ _id: userId }, projection);
         }
         return this._userController.findOne({ _id: userId });
     }
-    getUserDetailsByQuery(query, projection = {}) {
+    getByQuery(query, projection = {}) {
         return this._userController.find(query, projection);
     }
 
-    updateUserDetailsById(userId, updatedObj) {
+    updateById(userId, updatedObj) {
         return this._userController.findByIdAndUpdate(userId, { $set: updatedObj });
     }
-    updateUserByQuery(query, updatedObj, option) {
+    updateByQuery(query, updatedObj, option) {
         return this._userController.updateMany(query, { $set: updatedObj }, option);
     }
-    deleteUserById(userId) {
+    deleteById(userId) {
         return this._userController.findByIdAndRemove(userId);
+    }
+    deleteByQuery(query) {
+        return this._Controller.deleteMany(query);
     }
 }
 module.exports = new User();

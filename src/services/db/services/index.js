@@ -7,4 +7,7 @@ module.exports = {
 	User: require('./user.service'),
 	Verification: require('./verification.service'),
 	Admin: require('./admin.service'),
+	Flow: require("./flow.service"),
+	FlowQuestion: require("./flowQuestion.service"),
+	FlowCategory: require("./flowCategory.service")
 };

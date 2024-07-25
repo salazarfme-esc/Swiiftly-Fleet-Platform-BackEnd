@@ -4,6 +4,7 @@ const Router = require('express').Router();
  */
 const userAuthController = require('../../controller').userAuth;
 const userInfoController = require('../../controller').userInfo;
+const userVehicleController = require("../../controller").userVehicle;
 /**
  * All Middlewares
  */
@@ -11,6 +12,7 @@ const userAuthenticated = require('../../services/middleware/userAuthenticate');
 const verificationAuthenticated = require('../../services/middleware/verification');
 const userValidationSchema = require('../../validation').authSchema;
 const userInfoValidationSchema = require('../../validation').userInfoSchema;
+const vehicleValidationSchema = require("../../validation").vehicleSchema
 const validationMiddleware = require('../../utils/validationMiddleware');
 const multerService = require('../../services/multer');
 module.exports = () => {
@@ -97,6 +99,15 @@ module.exports = () => {
      * Routes for handle change password
      */
     Router.put('/change-password', validationMiddleware(userInfoValidationSchema.changePassword, 'body'), userInfoController.changePassword);
+
+
+    /**
+     * Routes for handle vehicle
+     */
+    Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
+    Router.get('/vehicle', userVehicleController.GetVehicle);
+    Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
+    Router.delete('/vehicle/:id', userVehicleController.DeleteVehicle);
 
     /**************************
      * END OF AUTHORIZED ROUTES

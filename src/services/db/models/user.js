@@ -69,28 +69,10 @@ const userSchema = new Schema({
         type: String,
         default: ""
     },
-
-    // address: {
-    //     street: { type: String, default: "" },
-    //     landmark: { type: String, default: "" },
-    //     city: { type: String, default: "" },
-    //     district: { type: String, default: "" },
-    //     state: { type: String, default: "" },
-    //     pin: { type: String, default: "" },
-    //     country: { type: String, default: "" },
-    // },
-    // location: {
-    //     type: {
-    //         type: String,
-    //         enum: ['Point'], // 'location.type' must be 'Point'[lng,lat]
-    //         default: 'Point',
-    //     },
-    //     coordinates: { type: [], default: [0.0000, 0.0000] },
-    // },
     user_role: {
         type: String,
         enum: ['fleet', 'vendor'],
-        default: 'patient',
+        default: '',
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 /**

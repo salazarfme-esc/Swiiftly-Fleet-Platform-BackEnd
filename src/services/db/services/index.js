@@ -9,5 +9,6 @@ module.exports = {
 	Admin: require('./admin.service'),
 	Flow: require("./flow.service"),
 	FlowQuestion: require("./flowQuestion.service"),
-	FlowCategory: require("./flowCategory.service")
+	FlowCategory: require("./flowCategory.service"),
+	Vehicle: require("./vehicles.service")
 };

@@ -74,6 +74,10 @@ const userSchema = new Schema({
         enum: ['fleet', 'vendor'],
         default: '',
     },
+    is_delete: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 /**
  * Method to Encrypt User password before Saving to Database

@@ -13,6 +13,7 @@ const userVehicleController = require("./userController/vehicle");
  */
 const adminAuthController = require('./adminController/auth');
 const adminFlowController = require("./adminController/flow");
+const adminUserManagementController = require("./adminController/userManagement");
 
 module.exports = {
     /**
@@ -20,6 +21,7 @@ module.exports = {
      */
     adminAuth: adminAuthController,
     adminFlow: adminFlowController,
+    adminUserManagement: adminUserManagementController,
     /**
      * All User Controllers
      */

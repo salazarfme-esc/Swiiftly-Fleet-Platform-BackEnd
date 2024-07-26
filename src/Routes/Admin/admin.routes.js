@@ -4,6 +4,7 @@ const Router = require("express").Router();
  */
 const adminAuthController = require("../../controller").adminAuth;
 const adminFlowController = require("../../controller").adminFlow;
+const adminUserManagementController = require("../../controller").adminUserManagement;
 
 /**
  * Middlewares
@@ -11,6 +12,7 @@ const adminFlowController = require("../../controller").adminFlow;
 const adminAuthenticated = require("../../services/middleware/adminAuthenticate");
 const adminValidationSchema = require("../../validation").adminSchema;
 const florValidationSchema = require("../../validation").flowSchema;
+const userManagementSchema = require("../../validation").userManagementSchema;
 const validationMiddleware = require("../../utils/validationMiddleware");
 
 module.exports = () => {
@@ -47,6 +49,13 @@ module.exports = () => {
     Router.post("/flow", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.addFlow);
     Router.get("/flow", adminFlowController.getFlow);
     Router.put("/flow/:id", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.updateFlow);
+
+    /**
+   * Middleware for Handling User Management Requests
+   */
+    Router.post("/user", validationMiddleware(userManagementSchema.addUser, "body"), adminUserManagementController.addUser);
+    Router.get("/user", adminUserManagementController.GetUser);
+    Router.delete("/user/:id", adminUserManagementController.DeleteUser);
 
 
 

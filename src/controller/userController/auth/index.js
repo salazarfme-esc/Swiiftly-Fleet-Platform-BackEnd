@@ -94,6 +94,10 @@ module.exports = {
                 responseData.msg = "Incorrect password. Please try again.";
                 return responseHelper.error(res, responseData);
             }
+            if (getUser[0].is_delete) {
+                responseData.msg = "Your account has been deleted. For further queries please contact us!";
+                return responseHelper.error(res, responseData);
+            }
             if (!getUser[0].email_verified) {
 
                 let verification_type = 'email';
@@ -249,7 +253,7 @@ module.exports = {
         try {
             let query = {
                 email: userEmail,
-                login_way: 'local'
+                login_way: 'local',
             };
             let userData = await userDbHandler.getByQuery(query);
             if (!userData.length) {
@@ -257,6 +261,11 @@ module.exports = {
                 responseData.msg = 'This Email ID does not exist. Please try again with different Email ID!';
                 return responseHelper.error(res, responseData);
             }
+            if (userData[0].is_delete) {
+                responseData.msg = "Your account has been deleted. For further queries please contact us!";
+                return responseHelper.error(res, responseData);
+            }
+
             let passwordQuery = {
                 user_id: userData[0]._id,
                 verification_for: "user",
@@ -326,7 +335,7 @@ module.exports = {
         let responseData = {};
         let user_email = reqBody.email.toLowerCase();
         try {
-            let userData = await userDbHandler.getByQuery({ email: user_email });
+            let userData = await userDbHandler.getByQuery({ email: user_email, is_delete: false });
             if (!userData.length) {
                 responseData.msg = "Something went wrong. Please try again later!"
                 responseHelper.error(res, responseData);
@@ -398,6 +407,10 @@ module.exports = {
                 responseData.msg = 'Email is not registered. Please register yourself!';
                 return responseHelper.error(res, responseData);
             }
+            if (userData[0].is_delete) {
+                responseData.msg = "Your account has been deleted. For further queries please contact us!";
+                return responseHelper.error(res, responseData);
+            }
 
 
             let digits = '0123456789';
@@ -455,7 +468,7 @@ module.exports = {
         log.info('Received request for User Reset Password:', reqObj);
         let responseData = {};
         try {
-            let getUser = await userDbHandler.getByQuery({ _id: id }).lean();
+            let getUser = await userDbHandler.getByQuery({ _id: id, is_delete: false }).lean();
             if (!getUser.length) {
                 responseData.msg = 'Something went wrong. Please try again later!';
                 return responseHelper.error(res, responseData);

@@ -5,6 +5,7 @@ const Router = require("express").Router();
 const adminAuthController = require("../../controller").adminAuth;
 const adminFlowController = require("../../controller").adminFlow;
 const adminUserManagementController = require("../../controller").adminUserManagement;
+const adminJobController = require("../../controller").adminJob;
 
 /**
  * Middlewares
@@ -56,6 +57,11 @@ module.exports = () => {
     Router.post("/user", validationMiddleware(userManagementSchema.addUser, "body"), adminUserManagementController.addUser);
     Router.get("/user", adminUserManagementController.GetUser);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
+
+    /**
+   * Middleware for Handling Job Requests
+   */
+    Router.get("/request", adminJobController.getRequests);
 
 
 

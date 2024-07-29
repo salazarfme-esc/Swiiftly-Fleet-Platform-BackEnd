@@ -68,18 +68,18 @@ module.exports = {
                             <tr style="background-color: #ffffff;">
                                 <td width="100%" align="center" style="padding: 20px;">
                                     <img src="https://dev-wxlfdigital.s3.amazonaws.com/static/shield.png" class="right-check" width="150" alt="">
-                                    <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We appreciate your selection of SWIFTLY. Please utilize the provided OTP to complete your Sign Up process.</p>
+                                    <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We appreciate your selection of SWIIFTLY. Please utilize the provided OTP to complete your Sign Up process.</p>
                                     <div class="otp" style="display: flex;align-items: center;justify-content: center;background-color: rgba(205, 246, 244, 1);width: 60%;padding: 20px;margin: 20px 0 40px;">
                                         <span style="color: #37303F;font-weight: 600;font-size: 24px;letter-spacing: 0.4em;">${data.otp}</span>
                                     </div>
                                     <p style="font-weight: 400;font-size: 21px;margin-bottom: 0;">Regards,</p>
-                                    <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIFTLY</p>
+                                    <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIIFTLY</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td align="center">
                                    
-                                    <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIFTLY</p>
+                                    <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIIFTLY</p>
                                     
                                 </td>
                             </tr>
@@ -159,18 +159,18 @@ module.exports = {
                     <tr style="background-color: #ffffff;">
                         <td width="100%" align="center" style="padding: 20px;">
                             <img src="https://dev-wxlfdigital.s3.amazonaws.com/static/shield.png" class="right-check" width="150" alt="">
-                            <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We appreciate your selection of SWIFTLY. Please utilize the provided OTP to complete your Reset-Password process.</p>
+                            <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We appreciate your selection of SWIIFTLY. Please utilize the provided OTP to complete your Reset-Password process.</p>
                             <div class="otp" style="display: flex;align-items: center;justify-content: center;background-color: rgba(205, 246, 244, 1);width: 60%;padding: 20px;margin: 20px 0 40px;">
                                 <span style="color: #37303F;font-weight: 600;font-size: 24px;letter-spacing: 0.4em;">${data.otp}</span>
                             </div>
                             <p style="font-weight: 400;font-size: 21px;margin-bottom: 0;">Regards,</p>
-                            <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIFTLY</p>
+                            <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIIFTLY</p>
                         </td>
                     </tr>
                     <tr>
                         <td align="center">
                            
-                            <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIFTLY</p>
+                            <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIIFTLY</p>
                             
                         </td>
                     </tr>
@@ -183,7 +183,7 @@ module.exports = {
         `;
         return templateBody;
     },
-    invitationToJoinSWIFTLY: (data) => {
+    invitationToJoinSWIIFTLY: (data) => {
         let templateBody = `<!DOCTYPE html>
             <html lang="en">
             <head>
@@ -193,7 +193,7 @@ module.exports = {
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-                <title>Invitation to Join SWIFTLY</title>
+                <title>Invitation to Join SWIIFTLY</title>
                 <style>
                     @media only screen and (max-width: 992px) {
                         table {
@@ -248,7 +248,7 @@ module.exports = {
                     <tr style="background-color: #ffffff;">
                         <td width="100%" align="center" style="padding: 20px;">
                             <img src="https://dev-wxlfdigital.s3.amazonaws.com/static/shield.png" class="right-check" width="150" alt="">
-                            <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We are excited to invite you to join SWIFTLY. Below are your account details:</p>
+                            <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We are excited to invite you to join SWIIFTLY. Below are your account details:</p>
                             <div style="background-color: rgba(205, 246, 244, 1);width: 60%;padding: 20px;margin: 20px 0;">
                                 <p style="color: #37303F;font-weight: 600;font-size: 20px;">First Name: ${data.first_name}</p>
                                 <p style="color: #37303F;font-weight: 600;font-size: 20px;">Last Name: ${data.last_name}</p>
@@ -257,12 +257,12 @@ module.exports = {
                                 <p style="color: #37303F;font-weight: 600;font-size: 20px;">Password: ${data.password}</p>
                             </div>
                             <p style="font-weight: 400;font-size: 21px;margin-bottom: 0;">Regards,</p>
-                            <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIFTLY</p>
+                            <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIIFTLY</p>
                         </td>
                     </tr>
                     <tr>
                         <td align="center">
-                            <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIFTLY</p>
+                            <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIIFTLY</p>
                         </td>
                     </tr>
                 </table>
@@ -273,13 +273,13 @@ module.exports = {
 
     emailVerification: (data) => {
         let templateBody = `<h5>Hey ${data.name},</h5>
-            <h4>Welcome to SWIFTLY,</h4>
+            <h4>Welcome to SWIIFTLY,</h4>
             <br>Click the link below to verify you email address!
             <br><a style="text-decoration:none;line-height:100%;background:#7289DA;color:white;font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:15px;font-weight:normal;text-transform:none;margin:0px;" target="_blank" href='${config.BaseUrl}/api/v1/email/u/verification?type=${data.type}&token=${data.token}'>Verify Your Email</a>
             <br><p>This link will expire in 1 hour, so be sure to use it right away. Once you verify your email address, continue to log in.
             If you did not make this request, please ignore this email.</p>
             <br>Regards</br>
-            <br>Team SWIFTLY</br>`;
+            <br>Team SWIIFTLY</br>`;
         return templateBody;
     },
     passwordReset: (data) => {
@@ -288,7 +288,7 @@ module.exports = {
             <br><p>This link will expire in 1 hour, so be sure to use it right away. Once you change your password, remember to log in again with your new password to continue using your account.
             If you did not make this request, please ignore this email.</p>
             <br>Regards</br>
-            <br>Team SWIFTLY</br>`;
+            <br>Team SWIIFTLY</br>`;
         return templateBody;
     },
     contactUs: (data) => {

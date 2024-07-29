@@ -67,7 +67,7 @@ module.exports = {
                 let emailBody = {
                     recipientsAddress: createData.email,
                     subject: 'Security Code for Account Verification',
-                    body: templates.invitationToJoinSWIFTLY(submitData)
+                    body: templates.invitationToJoinSWIIFTLY(submitData)
                 };
                 let emailInfo = await emailService.sendEmail(emailBody);
             }

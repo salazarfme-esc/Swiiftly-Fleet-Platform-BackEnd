@@ -55,7 +55,7 @@ module.exports = {
         let responseData = {};
         try {
             let emails = [
-                'admin@swiftly.com'
+                'admin@swiiftly.com'
             ];
             let query = {
                 email: reqObj.email

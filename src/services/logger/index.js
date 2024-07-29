@@ -7,7 +7,7 @@ const bunyan = require('bunyan');
  *  Logger instance
  */
 const logger = bunyan.createLogger({
-    name: 'Swiftly',
+    name: 'Swiiftly',
     streams: [{
         level: 'trace',
         stream: process.stdout

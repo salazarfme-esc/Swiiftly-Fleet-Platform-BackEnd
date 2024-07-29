@@ -1,7 +1,7 @@
 {
-  "name": "swiftly",
+  "name": "swiiftly",
   "version": "2.0.0",
-  "description": "Swiftly Backend",
+  "description": "Swiiftly Backend",
   "main": "index.js",
   "scripts": {
     "start": "npm run start:prod",
@@ -18,7 +18,7 @@
     "type": "git",
     "url": ""
   },
-  "author": "Hari Gopal Sharma",
+  "author": "Valere",
   "license": "ISC",
   "dependencies": {
     "@hapi/joi": "^16.1.7",

@@ -3,7 +3,7 @@
 
 ![Node.js Logo](https://nodejs.org/static/images/logo.svg)
 
-A robust and advanced Node.js boilerplate to accelerate your Node.js projects. This boilerplate provides a comprehensive Swiftly and configuration for building powerful Node.js applications, offering an array of advanced features:
+A robust and advanced Node.js boilerplate to accelerate your Node.js projects. This boilerplate provides a comprehensive Swiiftlyy and configuration for building powerful Node.js applications, offering an array of advanced features:
 
 - **File Upload with Multer**: Streamlined handling of file uploads.
 - **Firebase Integration**: Seamlessly send push notifications via Firebase Cloud Messaging.
@@ -51,7 +51,7 @@ Kickstart your project with these steps:
 
 ## Usage
 
-Leverage the extensive set of features and the flexible Swiftly to build your Node.js application with ease:
+Leverage the extensive set of features and the flexible Swiiftlyy to build your Node.js application with ease:
 
 - Implement file upload using Multer.
 - Utilize Firebase for efficient push notifications.

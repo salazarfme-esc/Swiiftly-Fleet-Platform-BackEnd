@@ -66,9 +66,12 @@ const VehicleSchema = new Schema({
         default: [],
     },
     user_id: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Users'
-	},
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Users',
+        required: true
+    },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
+VehicleSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Vehicle', VehicleSchema);

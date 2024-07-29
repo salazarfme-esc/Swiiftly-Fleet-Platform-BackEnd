@@ -141,10 +141,11 @@ module.exports = {
                 flow_category: reqObj.flow_category,  // this should be the ObjectId of the related FlowCategory
                 question: reqObj.question,            // this should be a string
                 question_type: reqObj.question_type,  // this should be 'single_choice' or 'multiple_choice'
-                options: reqObj.options.map(option => ({
+                options: reqObj.options?.map(option => ({
                     option: option.option,            // this should be a string
                     action: option.action             // this should be a boolean
                 })),
+                action: reqObj.action
             };
             let createData = await FlowQuestionDbHandler.create(submitData);
             responseData.msg = "Data added successfully!";

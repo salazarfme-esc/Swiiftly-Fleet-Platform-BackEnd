@@ -17,7 +17,7 @@ const FlowQuestionSchema = new Schema({
     },
     question_type: {
         type: String,
-        enum: ['single_choice', 'multiple_choice'],
+        enum: ['single_choice', 'multiple_choice', 'text'],
         required: true
     },
     options: {
@@ -25,7 +25,6 @@ const FlowQuestionSchema = new Schema({
             {
                 option: {
                     type: String,
-                    required: true
                 },
                 action: {
                     type: Boolean,
@@ -35,6 +34,10 @@ const FlowQuestionSchema = new Schema({
         ],
         default: []
     },
+    action: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 module.exports = mongoose.model('FlowQuestion', FlowQuestionSchema);

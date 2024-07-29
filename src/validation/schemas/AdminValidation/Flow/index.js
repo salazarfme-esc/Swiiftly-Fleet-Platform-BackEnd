@@ -9,13 +9,19 @@ module.exports = {
     flowQuestion: Joi.object().keys({
         flow_category: Joi.string().required().label('Flow Category'),
         question: Joi.string().required().label('Question'),
-        question_type: Joi.string().valid('single_choice', 'multiple_choice').required().label('Question Type'),
-        options: Joi.array().items(
-            Joi.object().keys({
+        question_type: Joi.string().valid('single_choice', 'multiple_choice', 'text').required().label('Question Type'),
+        options: Joi.when('question_type', {
+            is: 'text',
+            then: Joi.array().items(Joi.object().keys({
+                option: Joi.string().label('Option'),
+                action: Joi.boolean().label('Action')
+            })).default([]).label('Options'),
+            otherwise: Joi.array().items(Joi.object().keys({
                 option: Joi.string().required().label('Option'),
                 action: Joi.boolean().required().label('Action')
-            })
-        ).required().label('Options')
+            })).min(1).required().label('Options')
+        }),
+        action: Joi.boolean().label('Action')
     }),
     flow: Joi.object().keys({
         flow_category: Joi.string().required().label('Flow Category'),

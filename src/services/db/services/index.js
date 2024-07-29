@@ -10,5 +10,7 @@ module.exports = {
 	Flow: require("./flow.service"),
 	FlowQuestion: require("./flowQuestion.service"),
 	FlowCategory: require("./flowCategory.service"),
-	Vehicle: require("./vehicles.service")
+	Vehicle: require("./vehicles.service"),
+	MainJob: require("./mainJob.service"),
+	SubJob: require("./subJob.service")
 };

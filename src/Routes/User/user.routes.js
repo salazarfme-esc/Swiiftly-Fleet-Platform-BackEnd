@@ -5,6 +5,7 @@ const Router = require('express').Router();
 const userAuthController = require('../../controller').userAuth;
 const userInfoController = require('../../controller').userInfo;
 const userVehicleController = require("../../controller").userVehicle;
+const userJobController = require("../../controller").userJob;
 /**
  * All Middlewares
  */
@@ -12,7 +13,8 @@ const userAuthenticated = require('../../services/middleware/userAuthenticate');
 const verificationAuthenticated = require('../../services/middleware/verification');
 const userValidationSchema = require('../../validation').authSchema;
 const userInfoValidationSchema = require('../../validation').userInfoSchema;
-const vehicleValidationSchema = require("../../validation").vehicleSchema
+const vehicleValidationSchema = require("../../validation").vehicleSchema;
+const jobValidationSchema = require("../../validation").jobSchema;
 const validationMiddleware = require('../../utils/validationMiddleware');
 const multerService = require('../../services/multer');
 module.exports = () => {
@@ -108,6 +110,18 @@ module.exports = () => {
     Router.get('/vehicle', userVehicleController.GetVehicle);
     Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
     Router.delete('/vehicle/:id', userVehicleController.DeleteVehicle);
+
+    /**
+    * Routes for handle Jobs
+    */
+    Router.get('/service-type', userJobController.getFlow);
+    Router.post('/root-ticket', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.addMainJob, 'body')], userJobController.CreateTicket);
+    Router.post('/child-ticket', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.addSubJob, 'body')], userJobController.CreateSubTicket);
+    Router.post('/request',  validationMiddleware(jobValidationSchema.submitRequest, 'body'), userJobController.SubmitRequest);
+    Router.get('/root-ticket', userJobController.GetRootTicket);
+    Router.get('/child-ticket/:root_ticket_id', userJobController.GetChildTicket)
+
+
 
     /**************************
      * END OF AUTHORIZED ROUTES

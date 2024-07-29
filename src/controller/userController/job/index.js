@@ -1,23 +1,343 @@
-// 'use strict';
-// const logger = require('../../../services/logger');
-// const log = new logger('UserJobController').getChildLogger();
-// const dbService = require('../../../services/db/services');
-// const bcrypt = require('bcryptjs');
-// const config = require('../../../config/environments');
-// const jwtService = require('../../../services/jwt');
-// const responseHelper = require('../../../services/customResponse');
-// const userDbHandler = dbService.User;
-// const VehicleDbHandler = dbService.Vehicle;
-// /*******************
-//  * PRIVATE FUNCTIONS
-//  ********************/
+'use strict';
+const logger = require('../../../services/logger');
+const log = new logger('UserJobController').getChildLogger();
+const dbService = require('../../../services/db/services');
+const bcrypt = require('bcryptjs');
+const config = require('../../../config/environments');
+const jwtService = require('../../../services/jwt');
+const responseHelper = require('../../../services/customResponse');
+const userDbHandler = dbService.User;
+const VehicleDbHandler = dbService.Vehicle;
+const FlowQuestionDbHandler = dbService.FlowQuestion;
+const FlowCategoryDbHandler = dbService.FlowCategory;
+const MainJobDbHandler = dbService.MainJob;
+const SubJobDbHandler = dbService.SubJob;
+const Flow = require("../../../services/db/models/flow");
+const crypto = require('crypto');
+const mainJob = require('../../../services/db/models/mainJob');
 
-// /**************************
-//  * END OF PRIVATE FUNCTIONS
-//  **************************/
-// module.exports = {
-//     /**
-//      *  Method to add Vehicle
-//      */
+/*******************
+ * PRIVATE FUNCTIONS
+ ********************/
 
-// };
+
+// Function to generate a unique ticket IDs
+const generateTicketId = () => {
+    // Generate 3 bytes of random data
+    return crypto.randomBytes(3).toString('hex').slice(0, 6);
+};
+/**************************
+ * END OF PRIVATE FUNCTIONS
+ **************************/
+module.exports = {
+    /**
+    * Method to handle get flow
+    */
+    getFlow: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        log.info("Received request to get the Job Types")
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getData = await Flow.aggregate([
+                {
+                    $lookup: {
+                        from: 'flowcategories', // The collection name for FlowCategory
+                        localField: 'flow_category',
+                        foreignField: '_id',
+                        as: 'flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_category'
+                },
+                {
+                    $lookup: {
+                        from: 'flowquestions', // The collection name for FlowQuestion
+                        localField: 'flow_question',
+                        foreignField: '_id',
+                        as: 'flow_question'
+                    }
+                },
+                {
+                    $unwind: '$flow_question'
+                },
+                {
+                    $lookup: {
+                        from: 'flowcategories', // Lookup for the independent flow_category key in question_details
+                        localField: 'flow_question.flow_category',
+                        foreignField: '_id',
+                        as: 'flow_question.flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_question.flow_category'
+                },
+                {
+                    $group: {
+                        _id: '$flow_category._id',
+                        category: { $first: '$flow_category' },
+                        questions: {
+                            $push: {
+                                sequence: '$sequence',
+                                question_details: '$$ROOT', // Push the entire document
+                                created_at: '$created_at',
+                                updated_at: '$updated_at',
+                                __v: '$__v'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        flow_category: '$category',
+                        questions: {
+                            $sortArray: {
+                                input: '$questions',
+                                sortBy: { sequence: 1 }
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        'flow_category.created_at': -1
+                    }
+                }
+            ]);
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to fetch data with error::', error);
+            responseData.msg = "failed to fetch data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle get flow
+    */
+    CreateTicket: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        const reqObj = req.body;
+        log.info("Received request to create a ticket", reqObj);
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getCategory = await FlowCategoryDbHandler.getById(reqObj.service_category);
+            if (!getCategory) {
+                responseData.msg = "Please select a valid job type!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getVehicle = await VehicleDbHandler.getByQuery({ _id: reqObj.vehicle_id, user_id: user });
+            if (!getVehicle.length) {
+                responseData.msg = "Please select a valid vehicle!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let media = [];
+            if (req.files && req.files.media) {
+                for (let i = 0; i < req.files.media.length; i++) {
+                    media.push(req.files.media[i].location);
+                }
+            }
+
+            let submitData = {
+                service_category: reqObj.service_category,
+                user_id: user,
+                vehicle_id: reqObj.vehicle_id,
+                ticket_id: generateTicketId(),
+                description: reqObj.description,
+                status: 'draft',
+                address: {
+                    street: reqObj.street,
+                    landmark: reqObj.landmark,
+                    city: reqObj.city,
+                    district: reqObj.district,
+                    state: reqObj.state,
+                    pin: reqObj.pin,
+                    country: reqObj.country,
+                },
+                location: {
+                    type: 'Point',
+                    coordinates: reqObj.coordinates,
+                },
+                media: media,
+            };
+            let saveData = await MainJobDbHandler.create(submitData)
+            responseData.msg = "Ticket created successfully!";
+            responseData.data = saveData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to create ticket with error::', error);
+            responseData.msg = "Failed to create ticket";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    /**
+    * Method to handle creation of a sub-ticket
+    */
+    CreateSubTicket: async (req, res) => {
+        let responseData = {};
+        const reqObj = req.body;
+        let user = req.user.sub;
+        log.info("Received request to create a sub-ticket", reqObj);
+
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getCategory = await FlowCategoryDbHandler.getById(reqObj.service_category);
+            if (!getCategory) {
+                responseData.msg = "Please select a valid job type!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getParentTicket = await MainJobDbHandler.getByQuery({ _id: reqObj.root_ticket_id, user_id: user });
+            if (!getParentTicket.length) {
+                responseData.msg = "Please provide a valid parent ticket ID!";
+                return responseHelper.error(res, responseData);
+            }
+            let getQuestion = await FlowQuestionDbHandler.getById(reqObj.question_id);
+            if (!getQuestion) {
+                responseData.msg = "Please provide a valid question ID!";
+                return responseHelper.error(res, responseData);
+            }
+            // Handle media files
+            let media = [];
+            if (req.files && req.files.media) {
+                for (let i = 0; i < req.files.media.length; i++) {
+                    media.push(req.files.media[i].location);
+                }
+            }
+
+            // Prepare sub-ticket data
+            let submitData = {
+                service_category: reqObj.service_category,
+                root_ticket_id: reqObj.root_ticket_id,
+                question_id: reqObj.question_id,
+                answer: reqObj.answer,
+                ticket_id: generateTicketId(), // Generate a unique ticket ID
+                note: reqObj.note,
+                media: media,
+                status: 'draft', // Default status for new sub-tickets
+            };
+
+            // Save sub-ticket to database
+            let saveData = await SubJobDbHandler.create(submitData);
+            responseData.msg = "Sub-ticket created successfully!";
+            responseData.data = saveData;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to create sub-ticket with error::', error);
+            responseData.msg = "Failed to create sub-ticket";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle submit request
+    */
+    SubmitRequest: async (req, res) => {
+        let responseData = {};
+        const reqObj = req.body;
+        let user = req.user.sub;
+        log.info("Received request submit request", reqObj);
+
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getParentTicket = await MainJobDbHandler.getByQuery({ _id: reqObj.root_ticket_id, user_id: user });
+            if (!getParentTicket.length) {
+                responseData.msg = "Please provide a valid parent ticket ID!";
+                return responseHelper.error(res, responseData);
+            }
+            let submitData = {
+                status: 'created'
+            };
+
+            // Save status to database
+            let UpdateDataParentTicket = await MainJobDbHandler.updateById(reqObj.root_ticket_id, submitData);
+            let UpdateDataChildTicket = await SubJobDbHandler.updateByQuery({ root_ticket_id: reqObj.root_ticket_id }, submitData);
+            responseData.msg = "Request submitted successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to submit request with error::', error);
+            responseData.msg = "Failed to submit request";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle get Root Tickets
+    */
+    GetRootTicket: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        log.info("Received request to get Root tickets");
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getData = await MainJobDbHandler.getByQuery({ user_id: user }).populate("service_category").populate("vehicle_id");
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle get Child Tickets
+    */
+    GetChildTicket: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        log.info("Received request to get Child tickets");
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getData = await SubJobDbHandler.getByQuery({ root_ticket_id: req.params.root_ticket_id })
+                .populate("root_ticket_id").populate("service_category").populate("question_id");
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+};

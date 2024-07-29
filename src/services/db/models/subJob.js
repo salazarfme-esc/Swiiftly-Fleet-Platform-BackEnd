@@ -13,7 +13,7 @@ const SubJobSchema = new Schema({
     vendor_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users',
-        required: true
+        default: null
     },
     root_ticket_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,24 +45,21 @@ const SubJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "in-progress", "accepted", "rejected", "completed", "vendor_rejected", "vendor_accepted"],
+        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "vendor_rejected", "vendor_accepted"],
         default: "draft",
         required: true
     },
     time_estimation: {
         type: String,
         default: "",
-        required: true
     },
     cost_estimation: {
         type: String,
         default: "",
-        required: true
     },
     status_reason: {
         type: String,
         default: "",
-        required: true
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

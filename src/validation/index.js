@@ -6,7 +6,8 @@ module.exports = {
 	userInfoSchema: require('./schemas/UserValidation/user'),
 	adminSchema: require('./schemas/AdminValidation/Auth'),
 	flowSchema: require("./schemas/AdminValidation/Flow"),
-	vehicleSchema : require("./schemas/UserValidation/vehicle"),
-	userManagementSchema: require("./schemas/AdminValidation/UserManagement")
+	vehicleSchema: require("./schemas/UserValidation/vehicle"),
+	userManagementSchema: require("./schemas/AdminValidation/UserManagement"),
+	jobSchema: require("./schemas/UserValidation/job"),
 	// driverSchema: require('./schemas/driver')
 };

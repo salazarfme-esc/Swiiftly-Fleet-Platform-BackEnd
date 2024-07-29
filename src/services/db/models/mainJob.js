@@ -57,19 +57,17 @@ const MainJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "in-progress", "accepted", "rejected", "completed"],
+        enum: ["draft", "created", "in-progress", "accepted", "rejected", "completed"],
         default: "draft",
         required: true
     },
     time_estimation: {
         type: String,
         default: "",
-        required: true
     },
     cost_estimation: {
         type: String,
         default: "",
-        required: true
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

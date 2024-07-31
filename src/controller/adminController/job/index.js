@@ -132,7 +132,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let updatedStatus = {
-                status: req.body.status ? 'accepted' : 'rejected'
+                status: req.body.status ? 'accepted' : 'rejected',
+                status_reason: req.body.status_reason
             }
             if (req.body.status) {
                 let UpdateRootStatus = await MainJobDbHandler.updateById(root_ticket_id, updatedStatus);

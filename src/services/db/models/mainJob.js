@@ -69,6 +69,10 @@ const MainJobSchema = new Schema({
         type: String,
         default: "",
     },
+    status_reason: {
+        type: String,
+        default: "",
+    },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 MainJobSchema.index({ location: '2dsphere' });

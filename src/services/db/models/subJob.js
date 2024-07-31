@@ -45,7 +45,7 @@ const SubJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "vendor_rejected", "vendor_accepted"],
+        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "delay", "vendor_rejected", "vendor_accepted"],
         default: "draft",
         required: true
     },

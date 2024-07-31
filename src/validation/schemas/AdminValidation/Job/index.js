@@ -8,6 +8,7 @@ const Joi = JoiBase.extend(JoiDate);
 module.exports = {
     acceptOrRejectRequest: Joi.object().keys({
         status: Joi.boolean().required().label('Status'), // Should be ObjectId as a string
+        status_reason: Joi.string().allow("").label('Status Reason'), // Should be ObjectId as a string
     }),
 
 };

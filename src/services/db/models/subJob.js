@@ -17,7 +17,7 @@ const SubJobSchema = new Schema({
     },
     root_ticket_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubJob',
+        ref: 'MainJob',
         required: true
     },
     question_id: {
@@ -60,6 +60,11 @@ const SubJobSchema = new Schema({
     status_reason: {
         type: String,
         default: "",
+    },
+    sequence: {
+        type: Number,
+        default: 0,
+        required: true
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

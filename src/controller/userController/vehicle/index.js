@@ -54,7 +54,8 @@ module.exports = {
                 model: reqObj.model || '',
                 color: reqObj.color || '',
                 registration_due_date: reqObj.registration_due_date || '',
-                accessibility: reqObj.accessibility || '',
+                last_oil_change: reqObj.last_oil_change || '',
+                license_plate: reqObj.license_plate || '',
                 address: {
                     street: reqObj.street || '',
                     landmark: reqObj.landmark || '',
@@ -145,7 +146,8 @@ module.exports = {
                 model: reqObj.model,
                 color: reqObj.color,
                 registration_due_date: reqObj.registration_due_date,
-                accessibility: reqObj.accessibility,
+                last_oil_change: reqObj.last_oil_change,
+                license_plate: reqObj.license_plate,
                 address: {
                     street: reqObj.street,
                     landmark: reqObj.landmark,

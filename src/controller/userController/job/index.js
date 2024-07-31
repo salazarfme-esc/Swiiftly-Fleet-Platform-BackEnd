@@ -218,6 +218,7 @@ module.exports = {
                 responseData.msg = "Please provide a valid question ID!";
                 return responseHelper.error(res, responseData);
             }
+            let SubJobsSequence = await SubJobDbHandler.getByQuery({ root_ticket_id: reqObj.root_ticket_id });
             // Handle media files
             let media = [];
             if (req.files && req.files.media) {
@@ -236,6 +237,7 @@ module.exports = {
                 note: reqObj.note,
                 media: media,
                 status: 'draft', // Default status for new sub-tickets
+                sequence: SubJobsSequence.length + 1
             };
 
             // Save sub-ticket to database
@@ -328,7 +330,7 @@ module.exports = {
             }
 
             let getData = await SubJobDbHandler.getByQuery({ root_ticket_id: req.params.root_ticket_id })
-                .populate("root_ticket_id").populate("service_category").populate("question_id");
+                .populate("root_ticket_id").populate("service_category").populate("question_id").sort({"sequence": 1});
 
             responseData.msg = "Tickets fetched successfully!";
             responseData.data = getData;

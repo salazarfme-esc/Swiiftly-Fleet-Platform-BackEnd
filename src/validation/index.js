@@ -9,5 +9,6 @@ module.exports = {
 	vehicleSchema: require("./schemas/UserValidation/vehicle"),
 	userManagementSchema: require("./schemas/AdminValidation/UserManagement"),
 	jobSchema: require("./schemas/UserValidation/job"),
+	adminJobSchema: require("./schemas/AdminValidation/Job")
 	// driverSchema: require('./schemas/driver')
 };

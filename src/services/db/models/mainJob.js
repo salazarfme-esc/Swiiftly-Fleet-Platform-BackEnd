@@ -57,7 +57,7 @@ const MainJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "created", "in-progress", "accepted", "rejected", "completed"],
+        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "vendor_rejected", "vendor_accepted"],
         default: "draft",
         required: true
     },

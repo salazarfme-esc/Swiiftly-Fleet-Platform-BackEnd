@@ -10,6 +10,10 @@ const VehicleSchema = new Schema({
         type: String,
         required: true
     },
+    license_plate: {
+        type: String,
+        required: true
+    },
     nickname: {
         type: String,
         required: true
@@ -34,9 +38,8 @@ const VehicleSchema = new Schema({
         type: String,
         required: true
     },
-    accessibility: {
+    last_oil_change: {
         type: String,
-        enum: ["No", "Yes"],
         required: true
     },
     address: {

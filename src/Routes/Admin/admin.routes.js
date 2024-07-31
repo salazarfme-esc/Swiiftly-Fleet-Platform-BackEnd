@@ -14,6 +14,7 @@ const adminAuthenticated = require("../../services/middleware/adminAuthenticate"
 const adminValidationSchema = require("../../validation").adminSchema;
 const florValidationSchema = require("../../validation").flowSchema;
 const userManagementSchema = require("../../validation").userManagementSchema;
+const adminJobValidationSchema = require("../../validation").adminJobSchema;
 const validationMiddleware = require("../../utils/validationMiddleware");
 
 module.exports = () => {
@@ -62,6 +63,9 @@ module.exports = () => {
    * Middleware for Handling Job Requests
    */
     Router.get("/request", adminJobController.getRequests);
+    Router.put("/accept-or-reject/:root_ticket_id",validationMiddleware(adminJobValidationSchema.acceptOrRejectRequest, "body"), adminJobController.AcceptRejectRequest);
+    Router.put("/child-sequence-update/:root_ticket_id", adminJobController.UpdateSubJobSequence);
+    
 
 
 

@@ -8,6 +8,7 @@ const responseHelper = require('../../../services/customResponse');
 const adminDbHandler = dbService.Admin;
 const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
+const VendorDbHandler = dbService.User;
 const MainJobAggregate = require("../../../services/db/models/mainJob")
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
@@ -112,6 +113,130 @@ module.exports = {
     },
 
     /**
+     * Method to handle get Accepted Job Requests
+     */
+    getAcceptedJobs: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        const limit = parseInt(req.query.limit) || 10; // Default limit to 10
+        const skip = parseInt(req.query.skip) || 0; // Default skip to 0
+        log.info("Received request to get the Accepted Job Requests");
+
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            // Use aggregation pipeline for more efficient querying and populating
+            let finalData = await MainJobAggregate.aggregate([
+                { $match: { status: req.query.status } }, // Match the updated job request with status 'created'
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $lookup: {
+                        from: "flowcategories",
+                        localField: "service_category",
+                        foreignField: "_id",
+                        as: "service_category"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "vehicles",
+                        localField: "vehicle_id",
+                        foreignField: "_id",
+                        as: "vehicle_id"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user_id"
+                    }
+                },
+                { $unwind: { path: "$service_category", preserveNullAndEmptyArrays: true } },
+                { $unwind: { path: "$vehicle_id", preserveNullAndEmptyArrays: true } },
+                { $unwind: { path: "$user_id", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "subjobs",
+                        localField: "_id",
+                        foreignField: "root_ticket_id",
+                        as: "child",
+                        pipeline: [
+                            {
+                                $lookup: {
+                                    from: "flowcategories",
+                                    localField: "service_category",
+                                    foreignField: "_id",
+                                    as: "service_category"
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "users",
+                                    localField: "vendor_id",
+                                    foreignField: "_id",
+                                    as: "vendor_id"
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "flowquestions",
+                                    localField: "question_id",
+                                    foreignField: "_id",
+                                    as: "question_id"
+                                }
+                            },
+                            { $unwind: { path: "$service_category", preserveNullAndEmptyArrays: true } },
+                            { $unwind: { path: "$question_id", preserveNullAndEmptyArrays: true } },
+                            {
+                                $addFields: {
+                                    vendor_id: {
+                                        $cond: {
+                                            if: { $eq: ["$vendor_id", []] },
+                                            then: null,
+                                            else: { $arrayElemAt: ["$vendor_id", 0] }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    $addFields: {
+                        child: {
+                            $map: {
+                                input: "$child",
+                                as: "c",
+                                in: {
+                                    $mergeObjects: ["$$c", {
+                                        vendor_id: { $ifNull: ["$$c.vendor_id", null] }
+                                    }]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]).exec();
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = finalData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to fetch data with error::', error);
+            responseData.msg = "Failed to fetch data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+
+
+    /**
      * Method to handle Accept or Reject for the Job Requests
      */
     AcceptRejectRequest: async (req, res) => {
@@ -152,8 +277,8 @@ module.exports = {
         }
     },
     /**
- * Method to handle updating the sequence of sub-jobs
- */
+    * Method to handle updating the sequence of sub-jobs
+    */
     UpdateSubJobSequence: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
@@ -217,5 +342,88 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    /**
+    * Method to assign a vendor to a sub-ticket
+    */
+    AssignVendorToSubTicket: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        const { subTicketId, vendorId, cost_estimation, time_estimation } = req.body;
+        log.info("Received request to assign a vendor to a sub-ticket");
+    
+        try {
+            // Check if admin is valid
+            let adminData = await adminDbHandler.getById(admin);
+            if (!adminData) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Check if the vendor exists in the database
+            let vendorData = await VendorDbHandler.getByQuery({ _id: vendorId, user_role: 'vendor' });
+            if (!vendorData.length) {
+                responseData.msg = "Vendor not found!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Check if the sub-ticket exists in the database
+            let subTicketData = await SubJobDbHandler.getById(subTicketId);
+            if (!subTicketData) {
+                responseData.msg = "Sub-ticket not found!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Fetch the root ticket ID from the sub-ticket data
+            const rootTicketId = subTicketData.root_ticket_id;
+    
+            // Fetch all sub-tasks for the root ticket, sorted by sequence
+            let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId }).sort({ sequence: 1 });
+            if (!subJobs || subJobs.length === 0) {
+                responseData.msg = "No sub-jobs found!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Check if the sub-ticket is the first in the sequence
+            const isFirstJob = subJobs[0]._id.equals(subTicketId);
+    
+            // Update the sub-ticket with the vendor ID, status, and active status if it's the first job
+            let updateData = {
+                vendor_id: vendorId,
+                status: "vendor_assigned",
+                cost_estimation: cost_estimation,
+                time_estimation: time_estimation,
+                ...(isFirstJob && { active: true })
+            };
+            let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+    
+            if (!updateSubTicket) {
+                responseData.msg = "Failed to assign vendor to sub-ticket!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Check if all sub-jobs have statuses from the allowed set
+            const allowedStatuses = ["vendor_assigned", "delay", "vendor_rejected", "vendor_accepted", "completed", "in-progress"];
+            let allStatusesValid = subJobs.every(job => allowedStatuses.includes(job.status));
+    
+            if (allStatusesValid) {
+                // Update the main ticket status to "in-progress"
+                let updateMainTicket = await MainJobDbHandler.updateById(rootTicketId, { status: "in-progress" });
+    
+                if (!updateMainTicket) {
+                    responseData.msg = "Failed to update the main ticket status!";
+                    return responseHelper.error(res, responseData);
+                }
+            }
+    
+            responseData.msg = "Vendor assigned to sub-ticket successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to assign vendor to sub-ticket with error:', error);
+            responseData.msg = "Something went wrong! Please try again later.";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    
+
 
 };

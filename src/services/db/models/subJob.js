@@ -66,8 +66,16 @@ const SubJobSchema = new Schema({
         default: 0,
         required: true
     },
+    active: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
-SubJobSchema.index({ location: '2dsphere' });
-
+// Indexes for optimizing queries
+SubJobSchema.index({ root_ticket_id: 1 });
+SubJobSchema.index({ service_category: 1 });
+SubJobSchema.index({ vendor_id: 1 });
+SubJobSchema.index({ question_id: 1 });
+SubJobSchema.index({ status: 1 });
 module.exports = mongoose.model('SubJob', SubJobSchema);

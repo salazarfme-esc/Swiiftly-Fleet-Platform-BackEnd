@@ -1,6 +1,7 @@
 'use strict';
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+
 /**
  * Creating MainJob Schema Model
  */
@@ -57,7 +58,7 @@ const MainJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "vendor_rejected", "vendor_accepted"],
+        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed"],
         default: "draft",
         required: true
     },
@@ -75,6 +76,11 @@ const MainJobSchema = new Schema({
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
+// Indexes for optimizing queries
+MainJobSchema.index({ status: 1 });
+MainJobSchema.index({ service_category: 1 });
+MainJobSchema.index({ user_id: 1 });
+MainJobSchema.index({ vehicle_id: 1 });
 MainJobSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('MainJob', MainJobSchema);

@@ -330,7 +330,7 @@ module.exports = {
             }
 
             let getData = await SubJobDbHandler.getByQuery({ root_ticket_id: req.params.root_ticket_id })
-                .populate("root_ticket_id").populate("service_category").populate("question_id").sort({"sequence": 1});
+                .populate("root_ticket_id").populate("service_category").populate("question_id").sort({ "sequence": 1 });
 
             responseData.msg = "Tickets fetched successfully!";
             responseData.data = getData;
@@ -341,5 +341,123 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+    * Method to handle get Vendor Child Tickets Requests
+    */
+    GetVendorChildTicketRequest: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        log.info("Received request to get Vendor Child Ticket Requests");
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "vendor" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: "vendor_assigned" }).skip(skip).limit(limit)
+                .populate("root_ticket_id").populate("service_category").populate("question_id");
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle get Vendor Child Tickets
+    */
+    GetVendorChildTicket: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        log.info("Received request to get Vendor Child Ticket");
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
+        // Define allowed statuses
+        const allowedStatuses = ['vendor_accepted', 'completed', 'in-progress'];
+
+        // Check if the provided status is valid
+        if (status && !allowedStatuses.includes(status)) {
+            responseData.msg = "Invalid status parameter!";
+            return responseHelper.error(res, responseData);
+        }
+
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "vendor" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).skip(skip).limit(limit)
+                .populate("root_ticket_id").populate("service_category").populate("question_id");
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method for vendor to accept or reject a job
+    */
+    VendorAcceptOrRejectJob: async (req, res) => {
+        let responseData = {};
+        let vendor = req.user.sub;
+        const { subTicketId, status, status_reason } = req.body;
+        log.info("Received request from vendor to accept or reject a job");
+
+        try {
+            // Check if the vendor exists in the database
+            let vendorData = await userDbHandler.getByQuery({ _id: vendor, user_role: "vendor" });
+            if (!vendorData.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Check if the sub-ticket exists in the database
+            let subTicketData = await SubJobDbHandler.getByQuery({ _id: subTicketId, active: true, status: "vendor_assigned" });
+            if (!subTicketData.length) {
+                responseData.msg = "Sub-ticket not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Update the sub-ticket with the new status and reason if necessary
+            let updateData = {
+                status: status ? "vendor_accepted" : "vendor_rejected",
+                ...(status_reason && { status_reason })
+            };
+            if (!status && !status_reason) {
+                responseData.msg = "Rejection reason is required when rejecting the job!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+
+            if (!updateSubTicket) {
+                responseData.msg = "Failed to update the sub-ticket status!";
+                return responseHelper.error(res, responseData);
+            }
+
+            responseData.msg = `Job has been ${status ? "accepted" : "rejected"} successfully!`;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to update job status with error:', error);
+            responseData.msg = "Something went wrong! Please try again later.";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 };

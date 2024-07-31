@@ -119,7 +119,13 @@ module.exports = () => {
     Router.post('/child-ticket', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.addSubJob, 'body')], userJobController.CreateSubTicket);
     Router.post('/request',  validationMiddleware(jobValidationSchema.submitRequest, 'body'), userJobController.SubmitRequest);
     Router.get('/root-ticket', userJobController.GetRootTicket);
-    Router.get('/child-ticket/:root_ticket_id', userJobController.GetChildTicket)
+    Router.get('/child-ticket/:root_ticket_id', userJobController.GetChildTicket);
+
+    Router.get('/vendor/child-ticket-request', userJobController.GetVendorChildTicketRequest);
+    Router.get('/vendor/child-ticket', userJobController.GetVendorChildTicket);
+    Router.put('/vendor/accept-reject',  validationMiddleware(jobValidationSchema.vendorAcceptOrRejectJob, 'body'), userJobController.VendorAcceptOrRejectJob);
+
+
 
 
 

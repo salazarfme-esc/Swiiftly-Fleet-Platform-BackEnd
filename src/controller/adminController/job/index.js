@@ -29,8 +29,8 @@ module.exports = {
     getRequests: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const limit = parseInt(req.query.limit) || 10; // Default limit to 10
-        const skip = parseInt(req.query.skip) || 0; // Default skip to 0
+        const limit = parseInt(req.query.limit); 
+        const skip = parseInt(req.query.skip);
         log.info("Received request to get the Job Requests");
 
         try {
@@ -118,8 +118,8 @@ module.exports = {
     getAcceptedJobs: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const limit = parseInt(req.query.limit) || 10; // Default limit to 10
-        const skip = parseInt(req.query.skip) || 0; // Default skip to 0
+        const limit = parseInt(req.query.limit)
+        const skip = parseInt(req.query.skip)
         log.info("Received request to get the Accepted Job Requests");
 
         try {

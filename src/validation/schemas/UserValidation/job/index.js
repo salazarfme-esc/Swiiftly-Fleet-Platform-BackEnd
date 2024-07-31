@@ -29,5 +29,10 @@ module.exports = {
     submitRequest: Joi.object().keys({
         root_ticket_id: Joi.string().required().label('Parent Ticket ID'), // Should be ObjectId as a string
     }),
+    vendorAcceptOrRejectJob: Joi.object().keys({
+        subTicketId: Joi.string().required().label('Sub Ticket ID'),
+        status: Joi.boolean().required().label('Status'), // true for accept, false for reject
+        status_reason: Joi.string().allow("").label('Status Reason') // Required if status is false
+    })
 
 };

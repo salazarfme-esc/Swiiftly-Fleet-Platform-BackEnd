@@ -124,6 +124,7 @@ module.exports = () => {
     Router.get('/vendor/child-ticket-request', userJobController.GetVendorChildTicketRequest);
     Router.get('/vendor/child-ticket', userJobController.GetVendorChildTicket);
     Router.put('/vendor/accept-reject',  validationMiddleware(jobValidationSchema.vendorAcceptOrRejectJob, 'body'), userJobController.VendorAcceptOrRejectJob);
+    Router.put('/vendor/status',[multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]),  validationMiddleware(jobValidationSchema.vendorUpdateJobStatusSchema, 'body')], userJobController.VendorUpdateJobStatus);
 
 
 

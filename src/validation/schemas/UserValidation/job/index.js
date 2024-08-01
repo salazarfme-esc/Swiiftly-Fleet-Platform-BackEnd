@@ -33,6 +33,15 @@ module.exports = {
         subTicketId: Joi.string().required().label('Sub Ticket ID'),
         status: Joi.boolean().required().label('Status'), // true for accept, false for reject
         status_reason: Joi.string().allow("").label('Status Reason') // Required if status is false
+    }),
+    vendorUpdateJobStatusSchema : Joi.object({
+        subTicketId: Joi.string().required().label('Sub Ticket ID'), // Must be a valid string and is required
+        status: Joi.string().valid('in-progress', 'delayed', 'completed').required().label('Status'), // Must be one of the allowed statuses
+        time_estimation: Joi.when('status', {
+            is: 'delayed',
+            then: Joi.string().required().label('Time Estimation'), // Required if status is 'delayed'
+            otherwise: Joi.allow("") // Not allowed for other statuses
+        }),
     })
 
 };

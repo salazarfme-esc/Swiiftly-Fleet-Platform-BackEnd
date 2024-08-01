@@ -45,7 +45,7 @@ const SubJobSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "delay", "vendor_rejected", "vendor_accepted"],
+        enum: ["draft", "in-progress", "created", "accepted", "rejected", "completed", "vendor_assigned", "delayed", "vendor_rejected", "vendor_accepted"],
         default: "draft",
         required: true
     },
@@ -69,7 +69,11 @@ const SubJobSchema = new Schema({
     active: {
         type: Boolean,
         default: false
-    }
+    },
+    vendor_media: {
+        type: [String],
+        default: [],
+    },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 // Indexes for optimizing queries

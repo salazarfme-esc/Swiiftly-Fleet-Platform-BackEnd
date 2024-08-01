@@ -381,10 +381,10 @@ module.exports = {
         const limit = parseInt(req.query.limit);
         const skip = parseInt(req.query.skip);
         // Define allowed statuses
-        const allowedStatuses = ['vendor_accepted', 'completed', 'in-progress'];
+        const allowedStatuses = ['vendor_accepted', 'completed', 'in-progress', 'delayed'];
 
         // Check if the provided status is valid
-        if (status && !allowedStatuses.includes(status)) {
+        if (req.query.status && !allowedStatuses.includes(req.query.status)) {
             responseData.msg = "Invalid status parameter!";
             return responseHelper.error(res, responseData);
         }
@@ -458,6 +458,109 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+ * Method for vendor to update the status of a job
+ */
+    VendorUpdateJobStatus: async (req, res) => {
+        let responseData = {};
+        let vendor = req.user.sub;
+        const { subTicketId, status, time_estimation } = req.body;
+        log.info("Received request from vendor to update job status");
+
+        // Define allowed statuses
+        const allowedStatuses = ['in-progress', 'delayed', 'completed'];
+
+        try {
+            // Check if the vendor exists in the database
+            let vendorData = await userDbHandler.getByQuery({ _id: vendor, user_role: "vendor" });
+            if (!vendorData.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Check if the sub-ticket exists in the database
+            let subTicketData = await SubJobDbHandler.getByQuery({ _id: subTicketId, active: true, vendor_id: vendor });
+            if (!subTicketData.length) {
+                responseData.msg = "Sub-ticket not found or you are not authorized to update this ticket!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Validate the status
+            if (!allowedStatuses.includes(status)) {
+                responseData.msg = "Invalid status provided!";
+                return responseHelper.error(res, responseData);
+            }
+            let media = [];
+            if (req.files && req.files.media) {
+                for (let i = 0; i < req.files.media.length; i++) {
+                    media.push(req.files.media[i].location);
+                }
+            }
+
+            // Validate and prepare data based on status
+            let updateData = { status };
+
+
+
+            if (status === 'delayed' && !time_estimation) {
+                responseData.msg = "Time estimation is required when the status is set to delayed!";
+                return responseHelper.error(res, responseData);
+            }
+
+            if (status === 'completed' && !media.length) {
+                responseData.msg = "Vendor media is required when the status is set to completed!";
+                return responseHelper.error(res, responseData);
+            }
+
+            if (status === 'delayed') {
+                updateData.time_estimation = time_estimation;
+            }
+
+            if (status === 'completed') {
+                updateData.vendor_media = media;
+                updateData.active = false;
+            }
+
+            // Update the sub-ticket with the new status and additional data
+            let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+
+            if (!updateSubTicket) {
+                responseData.msg = "Failed to update the sub-ticket status!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // If the status is completed, find the next job and activate it
+            if (status === 'completed') {
+                // Fetch the next job in sequence
+                const rootTicketId = subTicketData[0].root_ticket_id;
+                const currentSequence = subTicketData[0].sequence;
+
+                let nextJob = await SubJobDbHandler.getByQuery({
+                    root_ticket_id: rootTicketId,
+                    sequence: currentSequence + 1
+                });
+
+                // Activate the next job if it exists
+                if (nextJob.length > 0) {
+                    let activateNextJob = await SubJobDbHandler.updateById(nextJob[0]._id, { active: true });
+
+                    if (!activateNextJob) {
+                        responseData.msg = "Failed to activate the next sub-job!";
+                        return responseHelper.error(res, responseData);
+                    }
+                }
+            }
+
+            responseData.msg = `Job status has been updated to ${status} successfully!`;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to update job status with error:', error);
+            responseData.msg = "Something went wrong! Please try again later.";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 
 };

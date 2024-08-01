@@ -491,6 +491,7 @@ module.exports = {
                 responseData.msg = "Invalid status provided!";
                 return responseHelper.error(res, responseData);
             }
+
             let media = [];
             if (req.files && req.files.media) {
                 for (let i = 0; i < req.files.media.length; i++) {
@@ -500,8 +501,6 @@ module.exports = {
 
             // Validate and prepare data based on status
             let updateData = { status };
-
-
 
             if (status === 'delayed' && !time_estimation) {
                 responseData.msg = "Time estimation is required when the status is set to delayed!";
@@ -549,6 +548,20 @@ module.exports = {
                         responseData.msg = "Failed to activate the next sub-job!";
                         return responseHelper.error(res, responseData);
                     }
+                } else {
+                    // Check if all sub-jobs are completed
+                    let allSubJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId });
+                    const allCompleted = allSubJobs.every(job => job.status === 'completed');
+
+                    if (allCompleted) {
+                        // Update the root ticket status to completed
+                        let updateRootTicket = await MainJobDbHandler.updateById(rootTicketId, { status: 'completed' });
+
+                        if (!updateRootTicket) {
+                            responseData.msg = "Failed to update the root ticket status!";
+                            return responseHelper.error(res, responseData);
+                        }
+                    }
                 }
             }
 
@@ -560,6 +573,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
 
 
 

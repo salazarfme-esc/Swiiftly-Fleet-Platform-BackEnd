@@ -86,6 +86,9 @@ module.exports = {
         let user = req.user;
         let id = user.sub;
         log.info('Received request for get vehicle with id:', id);
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
+        const searchValue =  req.body.search;
         let responseData = {};
         try {
             let userData = await userDbHandler.getByQuery({ _id: id, user_role: 'fleet' });
@@ -93,10 +96,32 @@ module.exports = {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-            let vehicleData = await VehicleDbHandler.getByQuery({ user_id: id });
+            // Construct MongoDB query using $or for various fields
+            const queryConditions = [
+                { identification_number: { $regex: searchValue, $options: 'i' } },
+                { nickname: { $regex: searchValue, $options: 'i' } },
+                { year: { $regex: searchValue, $options: 'i' } },
+                { make: { $regex: searchValue, $options: 'i' } },
+                { model: { $regex: searchValue, $options: 'i' } },
+                { color: { $regex: searchValue, $options: 'i' } },
+                { registration_due_date: { $regex: searchValue, $options: 'i' } },
+                { last_oil_change: { $regex: searchValue, $options: 'i' } },
+                { license_plate: { $regex: searchValue, $options: 'i' } },
+                { 'address.street': { $regex: searchValue, $options: 'i' } },
+                { 'address.landmark': { $regex: searchValue, $options: 'i' } },
+                { 'address.city': { $regex: searchValue, $options: 'i' } },
+                { 'address.district': { $regex: searchValue, $options: 'i' } },
+                { 'address.state': { $regex: searchValue, $options: 'i' } },
+                { 'address.pin': { $regex: searchValue, $options: 'i' } },
+                { 'address.country': { $regex: searchValue, $options: 'i' } }
+            ];
 
+            // Search using $or operator across all specified fields
+            const searchResults = await VehicleDbHandler.getByQuery({
+                $or: queryConditions
+            }).skip(skip).limit(limit);
             responseData.msg = "Data fetched!";
-            responseData.data = vehicleData;
+            responseData.data = searchResults;
             return responseHelper.success(res, responseData);
 
         } catch (error) {
@@ -200,6 +225,5 @@ module.exports = {
             responseData.msg = 'failed to delete data!';
             return responseHelper.error(res, responseData);
         }
-    }
-
+    },
 };

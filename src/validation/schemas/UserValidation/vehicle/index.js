@@ -25,5 +25,8 @@ module.exports = {
         country: Joi.string().trim().optional().allow("").label("Country"),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
     }),
+    searchVehicle: Joi.object().keys({
+        search: Joi.string().trim().allow("").label("Search"),
+    }),
 
 };

@@ -107,7 +107,7 @@ module.exports = () => {
      * Routes for handle vehicle
      */
     Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
-    Router.get('/vehicle', userVehicleController.GetVehicle);
+    Router.post('/vehicle/search',validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
     Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
     Router.delete('/vehicle/:id', userVehicleController.DeleteVehicle);
 

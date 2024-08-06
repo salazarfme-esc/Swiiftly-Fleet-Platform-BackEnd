@@ -11,6 +11,8 @@ const connectDatabase = require('./utils/db/connection');
 const log = require('./services/logger').getAppLevelInstance();
 const passportService = require('./services/passport');
 const routeService = require('./Routes');
+const { Crons } = require("./services/Crons")
+
 /********************************
  * LOAD SERVER EXPRESS SERVER
  ********************************/
@@ -33,9 +35,7 @@ class Server {
         this._loadStaticFiles();
     }
     _loadCors() {
-        //setting up the cors policy
-        let corsOption = { origin: '*' };
-        this._app.use(cors(corsOption));
+        Crons();
     }
     _loadBodyParser() {
         //Handling Body Parser for parsing Incoming Data request

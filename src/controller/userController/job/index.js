@@ -164,7 +164,7 @@ module.exports = {
                 status: 'draft',
                 address: {
                     street: reqObj.street,
-                    landmark: reqObj.landmark,
+                    address: reqObj.address,
                     city: reqObj.city,
                     district: reqObj.district,
                     state: reqObj.state,
@@ -175,6 +175,19 @@ module.exports = {
                     type: 'Point',
                     coordinates: reqObj.coordinates,
                 },
+                location_history: [{
+                    type: 'Point',
+                    coordinates: reqObj.coordinates,
+                }],
+                address_history: [{
+                    street: reqObj.street,
+                    address: reqObj.address,
+                    city: reqObj.city,
+                    district: reqObj.district,
+                    state: reqObj.state,
+                    pin: reqObj.pin,
+                    country: reqObj.country,
+                }],
                 media: media,
             };
             let saveData = await MainJobDbHandler.create(submitData)
@@ -562,6 +575,28 @@ module.exports = {
                             return responseHelper.error(res, responseData);
                         }
                     }
+                }
+                // Update main job with drop-off address and location if present
+                if (subTicketData[0].is_dropoff) {
+                    const mainJob = await MainJobDbHandler.getByQuery({ _id: rootTicketId });
+
+                    // Update dropoff location and address
+                    mainJob[0].location = subTicketData[0].dropoff_location;
+                    mainJob[0].address = subTicketData[0].dropoff_address;
+
+                    // Add dropoff location and address to history
+                    mainJob[0].location_history.push({
+                        ...subTicketData[0].dropoff_location,
+                        timestamp: new Date()
+                    });
+
+                    mainJob[0].address_history.push({
+                        ...subTicketData[0].dropoff_address,
+                        timestamp: new Date()
+                    });
+                    // Save changes
+                    await mainJob[0].save();
+
                 }
             }
 

@@ -58,7 +58,7 @@ module.exports = {
                 license_plate: reqObj.license_plate || '',
                 address: {
                     street: reqObj.street || '',
-                    landmark: reqObj.landmark || '',
+                    address: reqObj.address || '',
                     city: reqObj.city || '',
                     district: reqObj.district || '',
                     state: reqObj.state || '',
@@ -108,7 +108,7 @@ module.exports = {
                 { last_oil_change: { $regex: searchValue, $options: 'i' } },
                 { license_plate: { $regex: searchValue, $options: 'i' } },
                 { 'address.street': { $regex: searchValue, $options: 'i' } },
-                { 'address.landmark': { $regex: searchValue, $options: 'i' } },
+                { 'address.address': { $regex: searchValue, $options: 'i' } },
                 { 'address.city': { $regex: searchValue, $options: 'i' } },
                 { 'address.district': { $regex: searchValue, $options: 'i' } },
                 { 'address.state': { $regex: searchValue, $options: 'i' } },
@@ -175,7 +175,7 @@ module.exports = {
                 license_plate: reqObj.license_plate,
                 address: {
                     street: reqObj.street,
-                    landmark: reqObj.landmark,
+                    address: reqObj.address,
                     city: reqObj.city,
                     district: reqObj.district,
                     state: reqObj.state,

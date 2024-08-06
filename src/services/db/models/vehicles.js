@@ -44,7 +44,7 @@ const VehicleSchema = new Schema({
     },
     address: {
         street: { type: String, default: "" },
-        landmark: { type: String, default: "" },
+        address: { type: String, default: "" },
         city: { type: String, default: "" },
         district: { type: String, default: "" },
         state: { type: String, default: "" },

@@ -29,7 +29,7 @@ module.exports = {
     getRequests: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const limit = parseInt(req.query.limit); 
+        const limit = parseInt(req.query.limit);
         const skip = parseInt(req.query.skip);
         log.info("Received request to get the Job Requests");
 
@@ -349,8 +349,9 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         const { subTicketId, vendorId, cost_estimation, time_estimation } = req.body;
+        const reqObj = req.body;
         log.info("Received request to assign a vendor to a sub-ticket");
-    
+
         try {
             // Check if admin is valid
             let adminData = await adminDbHandler.getById(admin);
@@ -358,63 +359,78 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Check if the vendor exists in the database
             let vendorData = await VendorDbHandler.getByQuery({ _id: vendorId, user_role: 'vendor' });
             if (!vendorData.length) {
                 responseData.msg = "Vendor not found!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Check if the sub-ticket exists in the database
             let subTicketData = await SubJobDbHandler.getById(subTicketId);
             if (!subTicketData) {
                 responseData.msg = "Sub-ticket not found!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Fetch the root ticket ID from the sub-ticket data
             const rootTicketId = subTicketData.root_ticket_id;
-    
+
             // Fetch all sub-tasks for the root ticket, sorted by sequence
             let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId }).sort({ sequence: 1 });
             if (!subJobs || subJobs.length === 0) {
                 responseData.msg = "No sub-jobs found!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Check if the sub-ticket is the first in the sequence
             const isFirstJob = subJobs[0]._id.equals(subTicketId);
-    
+
             // Update the sub-ticket with the vendor ID, status, and active status if it's the first job
             let updateData = {
                 vendor_id: vendorId,
                 status: "vendor_assigned",
                 cost_estimation: cost_estimation,
                 time_estimation: time_estimation,
+                is_dropoff: reqObj.is_dropoff,
+                dropoff_address: {
+                    street: reqObj.street,
+                    address: reqObj.address,
+                    city: reqObj.city,
+                    district: reqObj.district,
+                    state: reqObj.state,
+                    pin: reqObj.pin,
+                    country: reqObj.country,
+                },
+                dropoff_location: {
+                    type: 'Point',
+                    coordinates: reqObj.coordinates,
+                },
                 ...(isFirstJob && { active: true })
             };
             let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
-    
+
             if (!updateSubTicket) {
                 responseData.msg = "Failed to assign vendor to sub-ticket!";
                 return responseHelper.error(res, responseData);
             }
-    
+
+            let subJobsNew = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId }).sort({ sequence: 1 });
             // Check if all sub-jobs have statuses from the allowed set
             const allowedStatuses = ["vendor_assigned", "delay", "vendor_rejected", "vendor_accepted", "completed", "in-progress"];
-            let allStatusesValid = subJobs.every(job => allowedStatuses.includes(job.status));
-    
+            let allStatusesValid = subJobsNew.every(job => allowedStatuses.includes(job.status));
+
             if (allStatusesValid) {
                 // Update the main ticket status to "in-progress"
                 let updateMainTicket = await MainJobDbHandler.updateById(rootTicketId, { status: "in-progress" });
-    
+
                 if (!updateMainTicket) {
                     responseData.msg = "Failed to update the main ticket status!";
                     return responseHelper.error(res, responseData);
                 }
             }
-    
+
             responseData.msg = "Vendor assigned to sub-ticket successfully!";
             return responseHelper.success(res, responseData);
         } catch (error) {
@@ -423,7 +439,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    
+
 
 
 };

@@ -13,10 +13,19 @@ module.exports = {
     }),
 
     assignVendorToSubTicket: Joi.object().keys({
-        subTicketId: Joi.string().required().label('Sub-Ticket ID'), // Validates if subTicketId is a string
-        vendorId: Joi.string().required().label('Vendor ID'), // Validates if vendorId is a string
+        subTicketId: Joi.string().required().label('Sub-Ticket ID'),
+        vendorId: Joi.string().required().label('Vendor ID'),
         cost_estimation: Joi.string().required().label('Cost Estimation'),
-        time_estimation: Joi.string().required().label('Time Estimation')
+        time_estimation: Joi.string().required().label('Time Estimation'),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
+        is_dropoff: Joi.boolean().required().label('Is Dropoff'),
+        street: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Street"), otherwise: Joi.string().trim().optional().allow("").label("Street") }),
+        address: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Address"), otherwise: Joi.string().trim().optional().allow("").label("Address") }),
+        city: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("City"), otherwise: Joi.string().trim().optional().allow("").label("City") }),
+        district: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("District"), otherwise: Joi.string().trim().optional().allow("").label("District") }),
+        state: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("State"), otherwise: Joi.string().trim().optional().allow("").label("State") }),
+        pin: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("PIN"), otherwise: Joi.string().trim().optional().allow("").label("PIN") }),
+        country: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Country"), otherwise: Joi.string().trim().optional().allow("").label("Country") }),
     }),
     updateSubJobSequence: Joi.object().keys({
         subJobId: Joi.string().required().label('Sub-Job ID'), // Validates if subJobId is a string

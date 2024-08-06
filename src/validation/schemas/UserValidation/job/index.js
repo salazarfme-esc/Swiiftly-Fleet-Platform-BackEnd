@@ -10,14 +10,14 @@ module.exports = {
         service_category: Joi.string().required().label('Service Category ID'), // Should be ObjectId as a string
         vehicle_id: Joi.string().required().label('Vehicle ID'), // Should be ObjectId as a string
         description: Joi.string().required().label('Description'),
-        coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
-        street: Joi.string().trim().optional().allow("").label("Street"),
-        landmark: Joi.string().trim().optional().allow("").label("Landmark"),
-        city: Joi.string().trim().optional().allow("").label("City"),
+        street: Joi.string().trim().required().label("Street"),
+        address: Joi.string().trim().required().label("address"),
+        city: Joi.string().trim().required().label("City"),
         district: Joi.string().trim().optional().allow("").label("District"),
-        state: Joi.string().trim().optional().allow("").label("State"),
-        pin: Joi.string().trim().optional().allow("").label("PIN"),
+        state: Joi.string().trim().required().label("State"),
+        pin: Joi.string().trim().required().label("PIN"),
         country: Joi.string().trim().optional().allow("").label("Country"),
+        coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
     }),
     addSubJob: Joi.object().keys({
         service_category: Joi.string().required().label('Service Category ID'), // Should be ObjectId as a string

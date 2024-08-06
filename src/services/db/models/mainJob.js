@@ -45,13 +45,35 @@ const MainJobSchema = new Schema({
     },
     address: {
         street: { type: String, default: "" },
-        landmark: { type: String, default: "" },
+        address: { type: String, default: "" },
         city: { type: String, default: "" },
         district: { type: String, default: "" },
         state: { type: String, default: "" },
         pin: { type: String, default: "" },
         country: { type: String, default: "" },
     },
+    location_history: [{
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            default: [0.0000, 0.0000]
+        },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    address_history: [{
+        street: { type: String, default: "" },
+        address: { type: String, default: "" },
+        city: { type: String, default: "" },
+        district: { type: String, default: "" },
+        state: { type: String, default: "" },
+        pin: { type: String, default: "" },
+        country: { type: String, default: "" },
+        timestamp: { type: Date, default: Date.now }
+    }],
     media: {
         type: [String],
         default: [],
@@ -75,6 +97,7 @@ const MainJobSchema = new Schema({
         default: "",
     },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
 
 // Indexes for optimizing queries
 MainJobSchema.index({ status: 1 });

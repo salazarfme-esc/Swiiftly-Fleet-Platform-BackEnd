@@ -12,5 +12,6 @@ module.exports = {
 	FlowCategory: require("./flowCategory.service"),
 	Vehicle: require("./vehicles.service"),
 	MainJob: require("./mainJob.service"),
-	SubJob: require("./subJob.service")
+	SubJob: require("./subJob.service"),
+	vendorInvoice: require("./vendorInvoice.service")
 };

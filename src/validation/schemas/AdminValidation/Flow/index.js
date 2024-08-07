@@ -32,5 +32,14 @@ module.exports = {
     flowCategory: Joi.object().keys({
         name: Joi.string().required().label('Name'),
         description: Joi.string().required().label('Description')
+    }),
+    deleteFlowItem: Joi.object().keys({
+        sequence: Joi.number().required().label('Sequence'),
+        flow_category: Joi.string().required().label('Flow Category')
+    }),
+    updateFlowSequence: Joi.object().keys({
+        flow_id: Joi.string().required().label('Flow ID'),
+        newIndex: Joi.number().required().label('New Index'),
+        flow_category: Joi.string().required().label('Flow Category')
     })
 };

@@ -368,6 +368,7 @@ module.exports = {
             let getData = await FlowDbHandler.getByQuery({
                 flow_category: reqObj.flow_category, sequence: reqObj.sequence
             });
+            console.log("🚀 ~ updateFlow: ~ getData:", getData)
             if (getData.length && getData[0]._id.toString() !== id) {
                 responseData.msg = "Sequence already exist!";
                 return responseHelper.error(res, responseData);
@@ -386,4 +387,109 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    UpdateFlowSequence: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        log.info("Received request to update the sequence of flows", req.body);
+        try {
+            let adminData = await adminDbHandler.getById(admin);
+            if (!adminData) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            const { flow_id, newIndex, flow_category } = req.body;
+
+            // Fetch all flows for the specified category
+            let flows = await FlowDbHandler.getByQuery({ flow_category: flow_category });
+            if (!flows || flows.length === 0) {
+                responseData.msg = "No flows found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Sort flows by their current sequence
+            flows.sort((a, b) => a.sequence - b.sequence);
+
+            // Find the flow that needs to be updated
+            let movedFlow = flows.find(flow => flow._id.toString() === flow_id);
+            if (!movedFlow) {
+                responseData.msg = "Flow not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Remove the flow from its current position
+            flows = flows.filter(flow => flow._id.toString() !== flow_id);
+
+            // Adjust newIndex to 0-based index for array manipulation
+            const adjustedNewIndex = newIndex - 1;
+
+            // Insert the flow into the new position
+            flows.splice(adjustedNewIndex, 0, movedFlow);
+
+            // Update sequence for all flows
+            for (let i = 0; i < flows.length; i++) {
+                let updateSequence = await FlowDbHandler.updateById(flows[i]._id, { sequence: i + 1 });
+                if (!updateSequence) {
+                    responseData.msg = "Failed to update flow sequence!";
+                    return responseHelper.error(res, responseData);
+                }
+            }
+
+            responseData.msg = "Flow sequence updated successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to update flow sequence with error:', error);
+            responseData.msg = "Something went wrong! Please try again later.";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    DeleteFlowBySequence: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        const { flow_category, sequence } = req.body;
+        log.info("Received request to delete a flow item", req.body);
+        
+        try {
+            let adminData = await adminDbHandler.getById(admin);
+            if (!adminData) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Fetch the flow item to be deleted
+            let flowToDelete = await FlowDbHandler.getByQuery({ flow_category: flow_category, sequence: sequence });
+            if (!flowToDelete || flowToDelete.length === 0) {
+                responseData.msg = "Flow item not found!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Delete the flow item
+            let deleteFlow = await FlowDbHandler.deleteById(flowToDelete[0]._id);
+            if (!deleteFlow) {
+                responseData.msg = "Failed to delete flow item!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            // Fetch all flows with a sequence greater than the deleted item
+            let flowsToUpdate = await FlowDbHandler.getByQuery({ flow_category: flow_category, sequence: { $gt: sequence } });
+    
+            // Update the sequence of the remaining flows
+            for (let i = 0; i < flowsToUpdate.length; i++) {
+                let updateSequence = await FlowDbHandler.updateById(flowsToUpdate[i]._id, { sequence: flowsToUpdate[i].sequence - 1 });
+                if (!updateSequence) {
+                    responseData.msg = "Failed to update flow sequences!";
+                    return responseHelper.error(res, responseData);
+                }
+            }
+    
+            responseData.msg = "Flow item deleted and sequences updated successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to delete flow item with error:', error);
+            responseData.msg = "Something went wrong! Please try again later.";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    
+
 };

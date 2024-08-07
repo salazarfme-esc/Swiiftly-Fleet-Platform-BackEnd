@@ -478,7 +478,7 @@ module.exports = {
     VendorUpdateJobStatus: async (req, res) => {
         let responseData = {};
         let vendor = req.user.sub;
-        const { subTicketId, status, time_estimation } = req.body;
+        const { subTicketId, status, time_estimation, cost_estimation } = req.body;
         log.info("Received request from vendor to update job status");
 
         // Define allowed statuses
@@ -493,7 +493,7 @@ module.exports = {
             }
 
             // Check if the sub-ticket exists in the database
-            let subTicketData = await SubJobDbHandler.getByQuery({ _id: subTicketId, active: true, vendor_id: vendor });
+            let subTicketData = await SubJobDbHandler.getByQuery({ _id: subTicketId, vendor_id: vendor });
             if (!subTicketData.length) {
                 responseData.msg = "Sub-ticket not found or you are not authorized to update this ticket!";
                 return responseHelper.error(res, responseData);
@@ -532,6 +532,7 @@ module.exports = {
             if (status === 'completed') {
                 updateData.vendor_media = media;
                 updateData.active = false;
+                updateData.cost_estimation = cost_estimation;
             }
 
             // Update the sub-ticket with the new status and additional data

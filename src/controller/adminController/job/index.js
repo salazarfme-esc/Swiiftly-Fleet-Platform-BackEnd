@@ -348,7 +348,7 @@ module.exports = {
     AssignVendorToSubTicket: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const { subTicketId, vendorId, cost_estimation, time_estimation } = req.body;
+        const { subTicketId, vendorId, time_estimation } = req.body;
         const reqObj = req.body;
         log.info("Received request to assign a vendor to a sub-ticket");
 
@@ -391,7 +391,6 @@ module.exports = {
             let updateData = {
                 vendor_id: vendorId,
                 status: "vendor_assigned",
-                cost_estimation: cost_estimation,
                 time_estimation: time_estimation,
                 is_dropoff: reqObj.is_dropoff,
                 dropoff_address: {

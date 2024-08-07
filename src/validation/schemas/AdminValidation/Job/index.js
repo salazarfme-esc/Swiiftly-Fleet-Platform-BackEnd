@@ -15,7 +15,6 @@ module.exports = {
     assignVendorToSubTicket: Joi.object().keys({
         subTicketId: Joi.string().required().label('Sub-Ticket ID'),
         vendorId: Joi.string().required().label('Vendor ID'),
-        cost_estimation: Joi.string().required().label('Cost Estimation'),
         time_estimation: Joi.string().required().label('Time Estimation'),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
         is_dropoff: Joi.boolean().required().label('Is Dropoff'),

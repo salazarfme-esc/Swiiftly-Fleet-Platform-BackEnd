@@ -33,9 +33,17 @@ class Server {
         this._loadDatabaseConnection();
         this._loadPassPort();
         this._loadStaticFiles();
+        this._loadCron()
     }
     _loadCors() {
+        //setting up the cors policy
+        let corsOption = { origin: '*' };
+        this._app.use(cors(corsOption));
+    }
+    _loadCron() {
+        console.log("instance will run cron job.");
         Crons();
+
     }
     _loadBodyParser() {
         //Handling Body Parser for parsing Incoming Data request
@@ -93,7 +101,7 @@ class Server {
             })
             .then(() => {
                 return new Promise((resolve, reject) => {
-                    this._server.listen(3000, (err) => {
+                    this._server.listen(3001, (err) => {
                         if (err) {
                             reject(err);
                         } else {

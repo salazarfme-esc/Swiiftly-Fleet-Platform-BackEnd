@@ -7,7 +7,10 @@ const jwtService = require('../../../services/jwt');
 const responseHelper = require('../../../services/customResponse');
 const adminDbHandler = dbService.Admin;
 const contactInfoDbHandler = dbService.ContactInfo;
+const verificationDbHandler = dbService.AdminVerification;
 const config = require('../../../config/environments');
+const templates = require('../../../utils/templates/template');
+const emailService = require('../../../services/sendEmail');
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -41,6 +44,21 @@ let _generateAdminToken = (tokenData) => {
     let tokenService = new jwtService();
     let token = tokenService.createJwtAdminAuthenticationToken(tokenData);
     return token;
+};
+let _encryptPassword = (password) => {
+    let salt = config.bcrypt.saltValue;
+    // generate a salt
+    return new Promise((resolve, reject) => {
+        bcrypt.genSalt(salt, function (err, salt) {
+            if (err) reject(err);
+            // hash the password with new salt
+            bcrypt.hash(password, salt, function (err, hash) {
+                if (err) reject(err);
+                // override the plain password with the hashed one
+                resolve(hash);
+            });
+        });
+    });
 };
 /**************************
  * END OF PRIVATE FUNCTIONS
@@ -209,6 +227,188 @@ module.exports = {
         } catch (error) {
             log.error('failed to update data with error::', error);
             responseData.msg = "failed to add data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    forgotPasswordByEmail: async (req, res) => {
+        let reqBody = req.body;
+        log.info('Received request for Admin forgot password:', reqBody);
+        let responseData = {};
+        let isVerificationDataExists = false;
+        try {
+            let query = {
+                email: req.body.email,
+            };
+            let userData = await adminDbHandler.getByQuery({ email: req.body.email });
+            if (!userData.length) {
+                log.error('Admin email does not exist for forget password request');
+                responseData.msg = 'Admin is not registered with us';
+                return responseHelper.error(res, responseData);
+            }
+
+            let verificationType = 'email';
+
+            //check if user already have forgot password request data in verification collection
+            let passwordQuery = {
+                admin_id: userData[0]._id,
+                verification_type: verificationType
+            };
+            let passwordTokenInfo = await verificationDbHandler.getByQuery(passwordQuery);
+            let digits = '0123456789';
+            let OTP = '';
+            for (let i = 0; i < 6; i++) {
+                OTP += digits[Math.floor(Math.random() * 10)];
+            }
+            //let OTP='1234';
+
+            let otpBody = {
+                otp: OTP,
+            };
+
+            //if password verification data found update it with new token, else create new entry
+            if (passwordTokenInfo.length) {
+                isVerificationDataExists = true;
+                let updatePasswordVerificationObj = {
+                    email: userData[0].email,
+                    attempts: passwordTokenInfo[0].attempts + 1,
+                    otp: otpBody.otp
+                };
+
+                let updatedVerificationData = await verificationDbHandler.updateById(passwordTokenInfo[0]._id, updatePasswordVerificationObj);
+                log.info('password verification updated in the db', updatedVerificationData);
+            }
+
+
+            let emailBody = {
+                recipientsAddress: userData[0].email,
+                subject: 'OTP',
+                body: templates.otpVerification(otpBody)
+            };
+
+            let emailInfo = await emailService.sendEmail(emailBody);
+
+
+            //patch email verification templateBody
+            let templateBody = {
+                type: verificationType,
+                email: userData[0].email,
+                otp: otpBody.otp
+
+            };
+            if (!isVerificationDataExists) {
+                // if(emailInfo) {
+                //     log.info('Email verification mail sent successfully',emailInfo);
+                //     responseData.msg = 'OTP have been sent on the registered Email-Id';
+                //     return responseHelper.success(res,responseData);
+                // }
+                // let emailInfo = await emailService.sendEmail(emailBody);
+                // log.info('password reset mail sent successfully', emailInfo);
+                let passwordResetObj = {
+                    admin_id: userData[0]._id,
+                    email: userData[0].email,
+                    verification_type: verificationType,
+                    otp: otpBody.otp
+                };
+                let newPasswordVerification = await verificationDbHandler.create(passwordResetObj);
+                log.info('new forgot password entry created successfully in the database', newPasswordVerification);
+            }
+            responseData.msg = 'Email validated and OTP is sent on your mail';
+            responseData.data = templateBody;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to process forget password request with error::', error);
+            responseData.msg = 'failed to process forget password request';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    verifyOtp: async (req, res) => {
+        // let reQuery = req.query;
+        // let decodedEmailToken = reQuery.token;
+        let reqBody = req.body;
+        log.info('Received request for otp verification ::', reqBody);
+        let responseData = {};
+        try {
+            let verificationInfo = await verificationDbHandler.getByQuery({
+                email: reqBody.email,
+                otp: reqBody.otp
+            });
+            if (!verificationInfo.length) {
+                responseData.msg = 'Otp expired or wrong otp';
+                return responseHelper.error(res, responseData);
+            }
+            //update user email verification status
+            let userId = verificationInfo[0].admin_id;
+            let updateObj = {
+                otp_verified: true
+            };
+            let updatedUser = await adminDbHandler.updateById(userId, updateObj);
+            if (!updatedUser) {
+                log.info('failed to verify otp');
+                responseData.msg = 'failed to verify otp';
+                return responseHelper.error(res, responseData);
+            }
+            log.info('user email verification status updated successfully', updatedUser);
+            verificationInfo[0].otp = "";
+            let updatedVerificationInfo = await verificationInfo[0].save();
+            // let removedTokenInfo = await _handleVerificationDataUpdate(mobileInfo[0]._id);
+            // log.info('mobile verification token has been removed::',removedTokenInfo);
+            responseData.msg = 'Otp verified successfully';
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to process email verification::', error);
+            responseData.msg = 'failed to verify Otp';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    resetPassword: async (req, res) => {
+        // let reQuery = req.query;
+        // let decodedEmailToken = reQuery.token;
+        let reqBody = req.body;
+        log.info('Received request for password reset====>:', reqBody);
+        let newPassword = reqBody.password;
+        let responseData = {};
+        try {
+            let query = {
+                email: reqBody.email,
+            };
+            let passwordTokenInfo = await verificationDbHandler.getByQuery(query);
+            if (!passwordTokenInfo.length) {
+                log.error('Invalid request');
+                responseData.msg = 'Invalid Password reset request';
+                return responseHelper.error(res, responseData);
+            }
+            // log.info("tokenInfo", passwordTokenInfo);
+            let userId = passwordTokenInfo[0].admin_id;
+            let userDetail = await adminDbHandler.getByQuery({ _id: userId });
+            if (userDetail[0].otp_verified) {
+                let encryptedPassword = await _encryptPassword(newPassword);
+                let updateUserQuery = {
+                    password: encryptedPassword
+                };
+                let updatedUser = await adminDbHandler.updateById(userId, updateUserQuery);
+                if (!updatedUser) {
+                    log.error('failed to reset user password. Please try again later', updatedUser);
+                    responseData.msg = 'failed to reset user password. Please try again later';
+                    return responseHelper.error(res, responseData);
+                }
+            }
+            else {
+                log.error('failed to reset user password. Otpnot verified');
+                responseData.msg = 'Please verify otp to reset password !';
+                return responseHelper.error(res, responseData);
+            }
+            let updateObj = {
+                otp_verified: false
+
+            };
+            let updatedUser = await adminDbHandler.updateById(userId, updateObj);
+            responseData.msg = 'Password updated successfully! Please Login to continue';
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to reset password with error::', error);
+            responseData.msg = 'failed to reset password';
             return responseHelper.error(res, responseData);
         }
     },

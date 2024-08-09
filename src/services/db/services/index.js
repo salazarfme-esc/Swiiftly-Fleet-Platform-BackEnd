@@ -13,5 +13,7 @@ module.exports = {
 	Vehicle: require("./vehicles.service"),
 	MainJob: require("./mainJob.service"),
 	SubJob: require("./subJob.service"),
-	vendorInvoice: require("./vendorInvoice.service")
+	vendorInvoice: require("./vendorInvoice.service"),
+	AdminVerification: require("./verificationAdmin.service"),
+
 };

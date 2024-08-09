@@ -12,11 +12,7 @@ const userSchema = new Schema({
         default: '',
         trim: true,
     },
-    first_name: {
-        type: String,
-        trim: true,
-    },
-    last_name: {
+    full_name: {
         type: String,
         trim: true,
     },
@@ -77,6 +73,10 @@ const userSchema = new Schema({
     is_delete: {
         type: Boolean,
         default: false
+    },
+    company_name: {
+        type: String,
+        default: ''
     }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 /**

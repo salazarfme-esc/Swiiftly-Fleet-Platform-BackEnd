@@ -185,6 +185,8 @@ module.exports = {
                 phone_number: reqObj.phone_number,
                 password: reqObj.password,
                 dob: reqObj.dob,
+                company_name: reqObj.company_name,
+                full_name: reqObj.full_name,
                 user_role: "fleet",
                 login_way: "local",
                 device_type: "1",

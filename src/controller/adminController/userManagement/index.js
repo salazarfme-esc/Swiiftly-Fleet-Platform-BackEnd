@@ -52,9 +52,7 @@ module.exports = {
             let password = generateStrongPassword();
 
             let submitData = {
-                first_name: reqObj.first_name,
-                last_name: reqObj.last_name,
-                user_name: reqObj.user_name,
+                full_name: reqObj.full_name,
                 email: reqObj.email,
                 phone_number: reqObj.phone_number,
                 password: password,

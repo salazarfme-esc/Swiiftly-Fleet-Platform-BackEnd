@@ -75,4 +75,22 @@ module.exports = {
 			.allow("")
 			.error(new Error('Confirm password and new password must be same')),
 	}),
+	forgotPassword: Joi.object().keys({
+        email: Joi
+			.string()
+			.required()
+			.label('Email'),
+    }),
+    resetPassword: Joi.object().keys({
+        email: Joi.string().email().required().label('Email'),
+        password: Joi.string().min(6).max(20).required().label('New Password'),
+        confirm_password: Joi.string()
+            .valid(Joi.ref('password'))
+            .required()
+            .error(new Error('Confirm password and password must be same')),
+    }),
+    verifyOtp: Joi.object().keys({
+        email: Joi.string().email().required().label('Email'),
+        otp: Joi.string().min(6).max(6).required().label('Otp'),
+    }),
 };

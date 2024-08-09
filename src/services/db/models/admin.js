@@ -35,7 +35,11 @@ const adminUserSchema = new Schema(
       type: String,
       enum: ["1", "2"],
       default: "2"
-    }
+    },
+    otp_verified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );

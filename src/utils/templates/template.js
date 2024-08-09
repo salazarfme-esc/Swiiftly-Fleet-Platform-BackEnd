@@ -250,9 +250,7 @@ module.exports = {
                             <img src="https://dev-wxlfdigital.s3.amazonaws.com/static/shield.png" class="right-check" width="150" alt="">
                             <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We are excited to invite you to join SWIIFTLY. Below are your account details:</p>
                             <div style="background-color: rgba(205, 246, 244, 1);width: 60%;padding: 20px;margin: 20px 0;">
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">First Name: ${data.first_name}</p>
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Last Name: ${data.last_name}</p>
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Username: ${data.user_name}</p>
+                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Name: ${data.full_name}</p>
                                 <p style="color: #37303F;font-weight: 600;font-size: 20px;">Email: ${data.email}</p>
                                 <p style="color: #37303F;font-weight: 600;font-size: 20px;">Password: ${data.password}</p>
                             </div>

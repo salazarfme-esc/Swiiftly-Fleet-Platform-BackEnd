@@ -47,6 +47,12 @@ module.exports = {
                 'date.format': 'Date Of Birth must be in format (YYYY-MM-DD).',
                 'any.required': 'Date Of Birth is required.'
             }),
+        full_name: Joi.string()
+            .required()
+            .label('Full Name'),
+        company_name: Joi.string()
+            .required()
+            .label('Company Name'),
         password: Joi.string()
             .min(6)
             .required()
@@ -94,13 +100,13 @@ module.exports = {
     }),
     verifyOtp: Joi.object().keys({
         email: Joi.string()
-        .email({ tlds: { allow: false } })
-        .required()
-        .label('Email')
-        .messages({
-            'string.email': 'Please provide a valid email address.',
-            'any.required': 'Email is required.'
-        }),
+            .email({ tlds: { allow: false } })
+            .required()
+            .label('Email')
+            .messages({
+                'string.email': 'Please provide a valid email address.',
+                'any.required': 'Email is required.'
+            }),
         otp: Joi.string().min(6).max(6).required().label('OTP'),
         type: Joi.string().valid("email", "password").required().label('Type'),
 

@@ -26,6 +26,21 @@ module.exports = () => {
         validationMiddleware(adminValidationSchema.login, "body"),
         adminAuthController.login
     );
+    Router.post(
+        "/forgot-password",
+        validationMiddleware(adminValidationSchema.forgotPassword, "body"),
+        adminAuthController.forgotPasswordByEmail
+    );
+    Router.post(
+        "/verify-otp",
+        validationMiddleware(adminValidationSchema.verifyOtp, "body"),
+        adminAuthController.verifyOtp
+    );
+    Router.put(
+        "/reset-password",
+        validationMiddleware(adminValidationSchema.resetPassword, "body"),
+        adminAuthController.resetPassword
+    );
     /**********************
      * AUTHORIZED ROUTES
      **********************/
@@ -51,8 +66,8 @@ module.exports = () => {
     Router.post("/flow", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.addFlow);
     Router.get("/flow", adminFlowController.getFlow);
     Router.put("/flow/:id", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.updateFlow);
-    Router.put("/flow-sequence",validationMiddleware(florValidationSchema.updateFlowSequence, "body"), adminFlowController.UpdateFlowSequence);
-    Router.delete("/flow-sequence",validationMiddleware(florValidationSchema.deleteFlowItem, "body"), adminFlowController.DeleteFlowBySequence);
+    Router.put("/flow-sequence", validationMiddleware(florValidationSchema.updateFlowSequence, "body"), adminFlowController.UpdateFlowSequence);
+    Router.delete("/flow-sequence", validationMiddleware(florValidationSchema.deleteFlowItem, "body"), adminFlowController.DeleteFlowBySequence);
 
     /**
    * Middleware for Handling User Management Requests

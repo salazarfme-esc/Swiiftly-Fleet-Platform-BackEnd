@@ -141,7 +141,8 @@ module.exports = {
                     }
                 }
                 responseData.msg = "Please verify your Email-Id to continue. Check your email inbox for verification code.";
-                return responseHelper.error(res, responseData);
+                responseData.data = { email_verified: getUser[0].email_verified }
+                return responseHelper.success(res, responseData);
             }
             let tokenData = {
                 sub: getUser[0]._id,
@@ -380,7 +381,7 @@ module.exports = {
             //generate jwt token with the token obj
             let jwtToken = _generateUserToken(tokenData);
             updatedUser.token = jwtToken
-            responseData.msg = 'Email ID has been verified';
+            responseData.msg = 'Otp verified successfully';
             if (reqBody.type == "email") {
                 responseData.data = updatedUser;
             }

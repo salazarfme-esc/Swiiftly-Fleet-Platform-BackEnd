@@ -112,7 +112,9 @@ module.exports = {
                 //patch email verification templateBody
                 let templateBody = {
                     otp: OTP,
-                    email: getUser[0].email
+                    email: getUser[0].email,
+                    name: getUser[0].full_name
+
                 };
                 let emailBody = {
                     recipientsAddress: getUser[0].email,
@@ -208,7 +210,8 @@ module.exports = {
             //patch email verification templateBody
             let templateBody = {
                 otp: OTP,
-                email: newUser.email
+                email: newUser.email,
+                name: newUser.full_name
             };
             let emailBody = {
                 recipientsAddress: newUser.email,
@@ -283,7 +286,9 @@ module.exports = {
             //let OTP='1234';
 
             let otpBody = {
-                otp: OTP
+                otp: OTP,
+                name: userData[0].full_name
+
             };
 
             //if password verification data found update it with new token, else create new entry
@@ -422,7 +427,9 @@ module.exports = {
                 OTP += digits[Math.floor(Math.random() * 10)];
             }
             let otpBody = {
-                otp: OTP
+                otp: OTP,
+                name: userData[0].full_name
+
             };
             let emailBody = {
                 recipientsAddress: userData[0].email,

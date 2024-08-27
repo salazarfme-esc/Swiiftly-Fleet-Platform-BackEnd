@@ -161,7 +161,7 @@ module.exports = {
             let compareNewAndOld = await _comparePassword(reqObj.new_password, userData.password);
             console.log("🚀 ~ changePassword: ~ compareNewAndOld:", compareNewAndOld)
             if (compareNewAndOld) {
-                responseData.msg = `New password must be different from old password !!!`;
+                responseData.msg = `New password must be different from old password!`;
                 return responseHelper.error(res, responseData);
             }
             let updatedObj = {

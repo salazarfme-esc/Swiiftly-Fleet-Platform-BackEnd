@@ -263,6 +263,8 @@ module.exports = {
 
             let otpBody = {
                 otp: OTP,
+                name : "Swiiftly-Admin"
+                
             };
 
             //if password verification data found update it with new token, else create new entry

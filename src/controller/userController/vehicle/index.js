@@ -40,10 +40,16 @@ module.exports = {
             }
 
             let media = [];
+            let document = [];
 
             if (req.files && req.files.media) {
                 for (let i = 0; i < req.files.media.length; i++) {
                     media.push(req.files.media[i].location);
+                }
+            }
+            if (req.files && req.files.document) {
+                for (let i = 0; i < req.files.document.length; i++) {
+                    document.push(req.files.document[i].location);
                 }
             }
             let submitData = {
@@ -70,6 +76,7 @@ module.exports = {
                     coordinates: reqObj.coordinates || [0.0000, 0.0000],
                 },
                 media: media || [],
+                document: document || [],
                 user_id: id
             }
             let saveData = await VehicleDbHandler.create(submitData);

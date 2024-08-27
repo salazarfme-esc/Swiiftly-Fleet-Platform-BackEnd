@@ -106,9 +106,9 @@ module.exports = () => {
     /**
      * Routes for handle vehicle
      */
-    Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
-    Router.post('/vehicle/search',validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
-    Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
+    Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
+    Router.post('/vehicle/search', validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
+    Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
     Router.delete('/vehicle/:id', userVehicleController.DeleteVehicle);
 
     /**
@@ -117,14 +117,14 @@ module.exports = () => {
     Router.get('/service-type', userJobController.getFlow);
     Router.post('/root-ticket', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.addMainJob, 'body')], userJobController.CreateTicket);
     Router.post('/child-ticket', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.addSubJob, 'body')], userJobController.CreateSubTicket);
-    Router.post('/request',  validationMiddleware(jobValidationSchema.submitRequest, 'body'), userJobController.SubmitRequest);
+    Router.post('/request', validationMiddleware(jobValidationSchema.submitRequest, 'body'), userJobController.SubmitRequest);
     Router.get('/root-ticket', userJobController.GetRootTicket);
     Router.get('/child-ticket/:root_ticket_id', userJobController.GetChildTicket);
 
     Router.get('/vendor/child-ticket-request', userJobController.GetVendorChildTicketRequest);
     Router.get('/vendor/child-ticket', userJobController.GetVendorChildTicket);
-    Router.put('/vendor/accept-reject',  validationMiddleware(jobValidationSchema.vendorAcceptOrRejectJob, 'body'), userJobController.VendorAcceptOrRejectJob);
-    Router.put('/vendor/status',[multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]),  validationMiddleware(jobValidationSchema.vendorUpdateJobStatusSchema, 'body')], userJobController.VendorUpdateJobStatus);
+    Router.put('/vendor/accept-reject', validationMiddleware(jobValidationSchema.vendorAcceptOrRejectJob, 'body'), userJobController.VendorAcceptOrRejectJob);
+    Router.put('/vendor/status', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.vendorUpdateJobStatusSchema, 'body')], userJobController.VendorUpdateJobStatus);
 
 
 

@@ -68,6 +68,10 @@ const VehicleSchema = new Schema({
         type: [String],
         default: [],
     },
+    document: {
+        type: [String],
+        default: [],
+    },
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users',

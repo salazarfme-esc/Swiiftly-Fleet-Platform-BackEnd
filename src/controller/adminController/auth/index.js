@@ -166,44 +166,31 @@ module.exports = {
     updateAdmin: async (req, res) => {
         let responseData = {};
         let admin = req.admin;
-        //let id = req.params.id;
         let id = admin.sub;
         let reqObj = req.body;
+    
         try {
             let getByQuery = await adminDbHandler.getByQuery({ _id: id });
-            if (getByQuery[0]._id != id) {
-                responseData.msg = "This email is already taken";
+            if (!getByQuery.length) {
+                responseData.msg = "Admin not found!";
                 return responseHelper.error(res, responseData);
             }
+    
             let updatedData = {
-                first_name: reqObj.first_name,
-                last_name: reqObj.last_name,
-            }
-            if (reqObj.oldPassword) {
-                let reqOldPassword = reqObj.oldPassword;
-                let adminPassword = getByQuery[0].password;
-                let isPasswordMatch = await _comparePassword(reqOldPassword, adminPassword);
-                if (!isPasswordMatch) {
-                    responseData.msg = "Old password is not correct!";
-                    return responseHelper.error(res, responseData);
-                }
-                if (reqObj.new_password) {
-                    updatedData.password = await _createHashPassword(reqObj.new_password);
-                }
-
-            }
-
-
+                name: reqObj.name,
+                phone_number: reqObj.phone_number, // Update phone_number as well
+            };
+    
             let updateAdmin = await adminDbHandler.updateById(id, updatedData);
-            responseData.msg = "Data updated successfully!";
-            responseData.data = updateAdmin;
+            responseData.msg = "Data updated!";
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to update data with error::', error);
-            responseData.msg = "failed to update data";
+            responseData.msg = "Failed to update data";
             return responseHelper.error(res, responseData);
         }
     },
+    
 
     addAdmin: async (req, res) => {
         let responseData = {};
@@ -216,8 +203,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let Data = {
-                first_name: reqObj.first_name,
-                last_name: reqObj.last_name,
+                name: reqObj.name,
                 email: reqObj.email,
                 password: reqObj.password,
             }
@@ -414,4 +400,42 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    changeAdminPassword: async (req, res) => {
+        let reqObj = req.body;
+        let admin = req.admin;
+        let id = admin.sub;
+        log.info('Received request for Admin password update:', reqObj);
+        let responseData = {};
+        
+        try {
+            let adminData = await adminDbHandler.getById(id);
+    
+            let comparePassword = await _comparePassword(reqObj.old_password, adminData.password);
+            if (!comparePassword) {
+                responseData.msg = "Invalid old password!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            let compareNewAndOld = await _comparePassword(reqObj.new_password, adminData.password);
+            if (compareNewAndOld) {
+                responseData.msg = "New password must be different from old password!";
+                return responseHelper.error(res, responseData);
+            }
+    
+            let updatedObj = {
+                password: await _createHashPassword(reqObj.new_password)
+            };
+    
+            let updateProfile = await adminDbHandler.updateById(id, updatedObj);
+            responseData.msg = "Password updated successfully!";
+            return responseHelper.success(res, responseData);
+    
+        } catch (error) {
+            log.error('Failed to update password with error:', error);
+            responseData.msg = "Failed to change password!";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    
 };

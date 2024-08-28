@@ -8,12 +8,7 @@ const config = require("../../../config/environments");
  */
 const adminUserSchema = new Schema(
   {
-    first_name: {
-      type: String,
-      trim: true,
-      default: ''
-    },
-    last_name: {
+    name: {
       type: String,
       trim: true,
       default: ''
@@ -31,10 +26,18 @@ const adminUserSchema = new Schema(
       type: String,
       default: "",
     },
+    phone_number: {
+      type: String,
+      trim: true,
+    },
     role: {
       type: String,
-      enum: ["1", "2"],
-      default: "2"
+      default: ""
+    },
+    permission: {
+      type: [String],
+      enum: ["Dashboard", "Store Locate", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback"],
+      default: []
     },
     otp_verified: {
       type: Boolean,

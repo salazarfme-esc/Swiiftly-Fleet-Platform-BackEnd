@@ -93,52 +93,40 @@ module.exports = {
     /**
      *  Method to update Profile
      */
-    // updateProfile: async (req, res) => {
-    //     let reqObj = req.body;
-    //     let user = req.user;
-    //     let id = user.sub;
-    //     log.info('Received request for User Profile update:', reqObj);
-    //     let responseData = {};
-    //     try {
-    //         let userData = await userDbHandler.getById(id, { user_password: 0 });
-    //         if (!userData) {
-    //             responseData.msg = 'Invalid user!!!';
-    //             return responseHelper.error(res, responseData);
-    //         }
+    updateProfile: async (req, res) => {
+        let reqObj = req.body;
+        let user = req.user;
+        let id = user.sub;
+        log.info('Received request for User Profile update:', reqObj);
+        let responseData = {};
+        try {
+            let userData = await userDbHandler.getById(id, { user_password: 0 });
+            if (!userData) {
+                responseData.msg = 'Invalid user or token expired. Please login again to continue!';
+                return responseHelper.error(res, responseData);
+            }
 
-    //         let checkPhoneNumber = await userDbHandler.getUserDetailsByQuery({ phone_number: reqObj.phone_number });
-    //         let checkUsername = await userDbHandler.getUserDetailsByQuery({ user_name: reqObj.user_name });
-    //         if (checkPhoneNumber.length && checkPhoneNumber[0]._id != id) {
-    //             responseData.msg = 'Phone Number Already Exist !!!';
-    //             return responseHelper.error(res, responseData);
-    //         }
-    //         if (checkUsername.length && checkUsername[0]._id != id) {
-    //             responseData.msg = 'User Name Already Exist !!!';
-    //             return responseHelper.error(res, responseData);
-    //         }
+            let avatar = userData.avatar;
+            if (req.file) {
+                avatar = req.file.location;
+            }
+            let updatedObj = {
+                full_name: reqObj.full_name,
+                dob: reqObj.dob,
+                phone_number: reqObj.phone_number,
+                company_name: reqObj.company_name,
+                avatar: avatar
+            }
+            let updateProfile = await userDbHandler.updateById(id, updatedObj);
+            responseData.msg = `Data updated!`;
+            return responseHelper.success(res, responseData);
 
-    //         let user_avatar = userData.user_avatar;
-    //         if (req.file) {
-    //             user_avatar = req.file.location;
-    //         }
-    //         let updatedObj = {
-    //             first_name: reqObj.first_name,
-    //             last_name: reqObj.last_name,
-    //             user_name: reqObj.user_name,
-    //             phone_number: reqObj.phone_number,
-    //             user_avatar: user_avatar,
-    //             user_bio: reqObj.user_bio,
-    //         }
-    //         let updateProfile = await userDbHandler.updateUserDetailsById(id, updatedObj);
-    //         responseData.msg = `Data updated sucessfully !!!`;
-    //         return responseHelper.success(res, responseData);
-
-    //     } catch (error) {
-    //         log.error('failed to get user signup with error::', error);
-    //         responseData.msg = 'failed to get user login';
-    //         return responseHelper.error(res, responseData);
-    //     }
-    // },
+        } catch (error) {
+            log.error('failed to update user profile with error::', error);
+            responseData.msg = 'failed to update data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
 
     /**
      * Method to handle change password
@@ -155,7 +143,7 @@ module.exports = {
             let comparePassword = await _comparePassword(reqObj.old_password, userData.password);
             console.log("🚀 ~ changePassword: ~ comparePassword:", comparePassword)
             if (!comparePassword) {
-                responseData.msg = `Invalid old password !!!`;
+                responseData.msg = `Invalid old password!`;
                 return responseHelper.error(res, responseData);
             }
             let compareNewAndOld = await _comparePassword(reqObj.new_password, userData.password);

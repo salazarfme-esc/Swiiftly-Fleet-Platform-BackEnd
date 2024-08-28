@@ -95,7 +95,7 @@ module.exports = () => {
         userAuthController.ResetPassword
     );
     Router.get('/profile', userInfoController.profile);
-    // Router.put('update_profile', [multerService.uploadFile('file').single('user_avatar'), validationMiddleware(userInfoValidationSchema.updateProfile, 'body')], userInfoController.updateProfile);
+    Router.put('/update-profile', [multerService.uploadFile('file').single('avatar'), validationMiddleware(userInfoValidationSchema.updateProfile, 'body')], userInfoController.updateProfile);
 
     /**
      * Routes for handle change password

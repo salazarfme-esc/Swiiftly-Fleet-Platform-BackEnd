@@ -15,5 +15,7 @@ module.exports = {
 	SubJob: require("./subJob.service"),
 	vendorInvoice: require("./vendorInvoice.service"),
 	AdminVerification: require("./verificationAdmin.service"),
+	Make: require("./make.service"),
+	Model: require("./model.service"),
 
 };

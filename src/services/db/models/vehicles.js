@@ -23,11 +23,13 @@ const VehicleSchema = new Schema({
         required: true
     },
     make: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Make', // Reference to the Make model
         required: true
     },
     model: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Model', // Reference to the Model model
         required: true
     },
     color: {

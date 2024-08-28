@@ -8,7 +8,7 @@ class SubJob {
     constructor() {
         //if SubJob instance already exists then return
         if (instance) {
-            return instance;w
+            return instance;
         }
         this.instance = this;
         this._SubJobController = SubJobModel;

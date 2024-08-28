@@ -8,7 +8,7 @@ class VendorInvoice {
     constructor() {
         //if VendorInvoice instance already exists then return
         if (instance) {
-            return instance;w
+            return instance;
         }
         this.instance = this;
         this._VendorInvoiceController = VendorInvoiceModel;

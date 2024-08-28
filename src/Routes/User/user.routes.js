@@ -74,6 +74,13 @@ module.exports = () => {
         userAuthController.forgotPassword
     );
 
+
+    /**
+        * Make And Model Route
+     */
+    Router.get("/get-models", userVehicleController.getModels);
+    Router.get("/get-makes", userVehicleController.getMakes);
+
     /****************************
      * END OF UNAUTHORIZED ROUTES
      ****************************/
@@ -110,6 +117,9 @@ module.exports = () => {
     Router.post('/vehicle/search', validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
     Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
     Router.delete('/vehicle/:id', userVehicleController.DeleteVehicle);
+
+
+
 
     /**
     * Routes for handle Jobs

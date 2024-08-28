@@ -117,12 +117,12 @@ module.exports = {
     <ul style="padding: 0;margin: 0;">
         <li style="list-style: none;display: inline-block;">
             <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;margin-right: 10px;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png" alt="instagram"/>
+                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png"  width="15" alt="instagram"/>
             </a>
         </li>
         <li style="list-style: none;display: inline-block;">
             <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" alt="facebook" />
+                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" width="8" alt="facebook" />
             </a>
         </li>
     </ul>
@@ -272,12 +272,12 @@ module.exports = {
     <ul style="padding: 0;margin: 0;">
         <li style="list-style: none;display: inline-block;">
             <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;margin-right: 10px;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png" alt="instagram"/>
+                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png"  width="15" alt="instagram"/>
             </a>
         </li>
         <li style="list-style: none;display: inline-block;">
             <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" alt="facebook" />
+                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" width="8" alt="facebook" />
             </a>
         </li>
     </ul>

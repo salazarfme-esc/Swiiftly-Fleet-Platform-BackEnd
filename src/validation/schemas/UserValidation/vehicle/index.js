@@ -28,5 +28,13 @@ module.exports = {
     searchVehicle: Joi.object().keys({
         search: Joi.string().trim().allow("").label("Search"),
     }),
+    getCarsByBrandStatusValidation: Joi.object({
+        brand: Joi.string().allow('').label('Brand'), // Optional brand name
+        model: Joi.string().optional().allow('').label('Model')  // Optional model name
+    }),
+    getBrandStatisticsValidation : Joi.object({
+        brand: Joi.string().allow('').label('Brand') // Optional brand name
+    })
+
 
 };

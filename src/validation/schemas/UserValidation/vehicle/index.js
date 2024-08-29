@@ -19,21 +19,21 @@ module.exports = {
         street: Joi.string().trim().required().label("Street"),
         address: Joi.string().trim().required().label("address"),
         city: Joi.string().trim().required().label("City"),
-        district: Joi.string().trim().optional().allow("").label("District"),
+        district: Joi.string().trim().required().allow("").label("District"),
         state: Joi.string().trim().required().label("State"),
         pin: Joi.string().trim().required().label("PIN"),
-        country: Joi.string().trim().optional().allow("").label("Country"),
+        country: Joi.string().trim().required().allow("").label("Country"),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
     }),
     searchVehicle: Joi.object().keys({
-        search: Joi.string().trim().allow("").label("Search"),
+        search: Joi.string().trim().required().allow("").label("Search"),
     }),
     getCarsByBrandStatusValidation: Joi.object({
-        brand: Joi.string().allow('').label('Brand'), // Optional brand name
-        model: Joi.string().optional().allow('').label('Model')  // Optional model name
+        brand: Joi.string().allow('').label('Brand'), // required brand name
+        model: Joi.string().required().allow('').label('Model')  // required model name
     }),
     getBrandStatisticsValidation : Joi.object({
-        brand: Joi.string().allow('').label('Brand') // Optional brand name
+        brand: Joi.string().allow('').label('Brand') // required brand name
     })
 
 

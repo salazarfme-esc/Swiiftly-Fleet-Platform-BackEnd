@@ -78,7 +78,7 @@ module.exports = () => {
     /**
         * Make And Model Route
      */
-    Router.get("/get-models", userVehicleController.getModels);
+    Router.get("/get-models/:id", userVehicleController.getModels);
     Router.get("/get-makes", userVehicleController.getMakes);
 
     /****************************

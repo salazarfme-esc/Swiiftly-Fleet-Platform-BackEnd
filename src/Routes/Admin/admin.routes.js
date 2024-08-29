@@ -53,7 +53,7 @@ module.exports = () => {
     Router.use("/", adminAuthenticated);
     Router.get("/get-all-admin", adminAuthController.getAllAdmin);
     Router.get("/get-admin/:id", adminAuthController.getSingleAdmin);
-    Router.put("/update-admin", validationMiddleware(adminValidationSchema.update_admin, "body"), adminAuthController.updateAdmin);
+    Router.put("/update-admin",[multerService.uploadFile('file').single('avatar'), validationMiddleware(adminValidationSchema.update_admin, "body")], adminAuthController.updateAdmin);
     Router.post("/add-admin", validationMiddleware(adminValidationSchema.add_admin, "body"), adminAuthController.addAdmin);
     Router.put("/change-password", validationMiddleware(adminValidationSchema.changePassword, "body"), adminAuthController.changeAdminPassword);
 

@@ -44,6 +44,7 @@ module.exports = {
 		name: Joi
 			.string()
 			.trim()
+			.required()
 			.allow("")
 			.label("Name"),
 		phone_number: Joi.string()

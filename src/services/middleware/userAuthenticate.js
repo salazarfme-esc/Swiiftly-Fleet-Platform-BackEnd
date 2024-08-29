@@ -29,7 +29,7 @@ module.exports = (req, res, next) => {
 		let user_id = user.sub;
 		let userData = await userDbHandler.getById(user_id);
 		console.log("🚀 ~ userData:", userData)
-		if (userData.is_deleted) {
+		if (userData?.is_deleted) {
 			log.error('failed to extract jwt token info with error::', error);
 			responseData.msg = 'unAuthorized request';
 			return responseHelper.unAuthorize(res, responseData);

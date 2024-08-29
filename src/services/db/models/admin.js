@@ -43,6 +43,10 @@ const adminUserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    avatar: {
+      type: String,
+      default: '',
+  },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );

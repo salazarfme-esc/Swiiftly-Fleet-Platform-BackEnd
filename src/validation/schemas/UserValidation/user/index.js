@@ -9,11 +9,11 @@ const number_validation = /^[0-9]*$/;
 const float_number_validation = /^[0-9.]*$/;
 module.exports = {
   updateProfile: Joi.object().keys({
-    full_name: Joi.string().trim().allow("").label("Full Name"),
+    full_name: Joi.string().trim().required().allow("").label("Full Name"),
     company_name: Joi.string()
       .required()
       .label('Company Name'),
-    dob: Joi.string().trim().allow("").label("DOB"),
+    dob: Joi.string().trim().required().allow("").label("DOB"),
     phone_number: Joi.string()
       .pattern(/^[0-9]{6,16}$/)
       .required()

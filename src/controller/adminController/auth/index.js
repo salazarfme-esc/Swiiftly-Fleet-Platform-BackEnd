@@ -175,10 +175,15 @@ module.exports = {
                 responseData.msg = "Admin not found!";
                 return responseHelper.error(res, responseData);
             }
+            let image = "";
+            if (req.file) {
+                image = req.file.location;
+            }
     
             let updatedData = {
                 name: reqObj.name,
                 phone_number: reqObj.phone_number, // Update phone_number as well
+                avatar: image
             };
     
             let updateAdmin = await adminDbHandler.updateById(id, updatedData);

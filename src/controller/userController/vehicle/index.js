@@ -134,8 +134,8 @@ module.exports = {
                 { identification_number: { $regex: searchValue, $options: 'i' } },
                 { nickname: { $regex: searchValue, $options: 'i' } },
                 { year: { $regex: searchValue, $options: 'i' } },
-                { make: { $regex: searchValue, $options: 'i' } },
-                { model: { $regex: searchValue, $options: 'i' } },
+                // { make: { $regex: searchValue, $options: 'i' } },
+                // { model: { $regex: searchValue, $options: 'i' } },
                 { color: { $regex: searchValue, $options: 'i' } },
                 { registration_due_date: { $regex: searchValue, $options: 'i' } },
                 { last_oil_change: { $regex: searchValue, $options: 'i' } },
@@ -525,8 +525,9 @@ module.exports = {
     */
     getModels: async (req, res) => {
         let responseData = {};
+        let id = req.params.id;
         try {
-            let models = await modelDbHandler.getByQuery({}).populate('make_id', 'title');
+            let models = await modelDbHandler.getByQuery({ make_id: id }).populate('make_id', 'title');
             responseData.msg = "Models fetched successfully!";
             responseData.data = models;
             return responseHelper.success(res, responseData);

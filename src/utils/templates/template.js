@@ -2,6 +2,162 @@
 const config = require('../../config/environments');
 module.exports = {
     otpVerification: (data) => {
+        let templateBody = `
+                <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <title>Swiiftly - OTP</title>
+    
+        <style>
+            body {
+                font-family: "Poppins", sans-serif;
+            }
+
+            @media screen and (max-width: 767px) {
+                table {
+                    width: 100%;
+                }
+                .logo {
+                    width: 90%;
+                }
+                .policy {
+                    display: inline-block !important;
+                    text-align: center;
+                }
+                .policy li {
+                    list-style: none;
+                }
+                    .gs li {
+                margin-left: 0 !important;
+                }
+                input {
+                    width: 100% !important;
+                }
+                .logo {
+                    width: 100%;
+                }
+                ul.policy li {
+                    display: block !important;
+                    width: 100% !important;
+                    margin-bottom: 10px !important;
+                }
+                h1 {
+                    font-size: 20px;
+                }
+            }
+        </style>
+      </head>
+      <body>
+    
+        <table border="0" cellpadding="0" cellspacing="0" style="max-width: 800px; width: 100%; margin: 0 auto;">
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="padding: 10px 0; width: 100%;">
+                        <tr>
+                            <td>
+                                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td>
+                               <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/otpBanner.png" width="100%" alt="">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td>
+                                <h1>Hi ${data.name},</h1>
+                                <p style="margin: 0;">Here is your One Time Password (OTP).</p>
+                                <p style="margin: 0;">Please enter this code to verify your email address for <strong>Swiiftly</strong></p>
+    
+                                <form action="" style="margin: 30px 0;">
+                                    <div class="mb-3">
+                                      <input type="text" style="width: 250px;height: 50px;margin-right: 10px;border-radius: 6px;border: none;background-color: rgba(253, 183, 2, 0.2);text-align: center;font-size: 20px;font-weight: bold;letter-spacing: 20px;box-sizing: border-box;" value=${data.otp}>
+                                      
+                                    </div>
+                                </form>
+                                <p style="margin: 0 0 30px;">OTP will expire in <strong>10 minutes.</strong></p>
+                                <p style="margin: 0;">Best Regards,</p>
+                                <p style="margin: 0;"><strong>Swiiftly team.</strong></p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+             <tr>
+            <td>
+                <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;border-top: 1px solid rgba(217, 217, 217, 1);border-bottom: 1px solid rgba(217, 217, 217, 1);margin: 50px 0;">
+                    <tr>
+                        <td width="50%">
+                            <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
+                        </td>
+                       <td width="50%" align="right">
+                        <ul style="padding: 0;margin: 0;">
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
+                                </a>
+                            </li>
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
+                                </a>
+                            </li>
+                        </ul>
+</td>
+
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td align="center">
+                                <p>© 2024 SWIIFTLY. All rights reserved.</p>
+                                <p>You are receiving this mail because you registered to join the SWIIFTLY platform as a user or a creator. This also shows that you agree to our Terms of use and Privacy Policies. If you no longer want to receive mails from use.</p>
+                                <ul class="policy" style="padding: 0;margin: 0 auto; width: 100%;text-align: center;">
+                                    <li style="list-style: none;display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;list-style: none;color: #000000;border-bottom: 1px solid #333333;">Privacy policy</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Terms of service</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Help center</a></li>
+                                </ul>
+                             </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+           
+        </table>
+      </body>
+    </html>
+        `;
+        return templateBody;
+    },
+
+    ResetOtpVerification: (data) => {
         let templateBody = `<!doctype html>
     <html lang="en">
       <head>
@@ -18,21 +174,7 @@ module.exports = {
             body {
                 font-family: "Poppins", sans-serif;
             }
-            input {
-                width: 50px;
-                height: 50px;
-                margin-right: 10px;
-                border-radius: 6px;
-                border: none;
-                background-color: rgba(253, 183, 2, 0.2);
-                text-align: center;
-                font-size: 20px;
-                font-weight: bold;
-                box-sizing: border-box;
-            }
-            input:focus {
-                outline: none;
-            }
+
             @media screen and (max-width: 767px) {
                 table {
                     width: 100%;
@@ -49,6 +191,20 @@ module.exports = {
                 }
                     .gs li {
                 margin-left: 0 !important;
+                }
+                input {
+                    width: 100% !important;
+                }
+                .logo {
+                    width: 100%;
+                }
+                ul.policy li {
+                    display: block !important;
+                    width: 100% !important;
+                    margin-bottom: 10px !important;
+                }
+                h1 {
+                    font-size: 20px;
                 }
             }
         </style>
@@ -87,14 +243,12 @@ module.exports = {
                             <td>
                                 <h1>Hi ${data.name},</h1>
                                 <p style="margin: 0;">Here is your One Time Password (OTP).</p>
-                                <p style="margin: 0;">Please enter this code to verify your email address for <strong>SWIIFTLY</strong></p>
+                                <p style="margin: 0;">Please enter this code to verify your email address for reset password request</p>
     
                                 <form action="" style="margin: 30px 0;">
                                     <div class="mb-3">
-                                       ${data.otp.split("").map((item) => {
-            return `<input type="text" value="${item}" readonly>`
-
-        }).join("")}
+                                      <input type="text" style="width: 250px;height: 50px;margin-right: 10px;border-radius: 6px;border: none;background-color: rgba(253, 183, 2, 0.2);text-align: center;font-size: 20px;font-weight: bold;letter-spacing: 20px;box-sizing: border-box;" value=${data.otp}>
+                                      
                                     </div>
                                 </form>
                                 <p style="margin: 0 0 30px;">OTP will expire in <strong>10 minutes.</strong></p>
@@ -110,22 +264,22 @@ module.exports = {
             <td>
                 <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;border-top: 1px solid rgba(217, 217, 217, 1);border-bottom: 1px solid rgba(217, 217, 217, 1);margin: 50px 0;">
                     <tr>
-                        <td>
-                            <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" width="50%" alt="">
+                        <td width="50%">
+                            <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
                         </td>
-                       <td>
-    <ul style="padding: 0;margin: 0;">
-        <li style="list-style: none;display: inline-block;">
-            <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;margin-right: 10px;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png"  width="15" alt="instagram"/>
-            </a>
-        </li>
-        <li style="list-style: none;display: inline-block;">
-            <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" width="8" alt="facebook" />
-            </a>
-        </li>
-    </ul>
+                       <td width="50%" align="right">
+                        <ul style="padding: 0;margin: 0;">
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
+                                </a>
+                            </li>
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
+                                </a>
+                            </li>
+                        </ul>
 </td>
 
                     </tr>
@@ -139,166 +293,11 @@ module.exports = {
                         <tr>
                             <td align="center">
                                 <p>© 2024 SWIIFTLY. All rights reserved.</p>
-                                <p>You are receiving this mail because you registered to join the SWIIFTLY platform as a user or a creator. This also shows that you agree to our Terms of use and Privacy Policies.</p>
+                                <p>You are receiving this mail because you registered to join the SWIIFTLY platform as a user or a creator. This also shows that you agree to our Terms of use and Privacy Policies. If you no longer want to receive mails from use.</p>
                                 <ul class="policy" style="padding: 0;margin: 0 auto; width: 100%;text-align: center;">
-                                    <li style="list-style: none;display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;list-style: none;color: #000000;">Privacy policy</a></li>
-                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;">Terms of service</a></li>
-                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;">Help center</a></li>
-                                </ul>
-                             </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-           
-        </table>
-      </body>
-    </html>`;
-        return templateBody;
-    },
-
-    ResetOtpVerification: (data) => {
-        let templateBody = `<html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-        <title>Swiiftly - OTP</title>
-    
-        <style>
-            body {
-                font-family: "Poppins", sans-serif;
-            }
-            input {
-                width: 50px;
-                height: 50px;
-                margin-right: 10px;
-                border-radius: 6px;
-                border: none;
-                background-color: rgba(253, 183, 2, 0.2);
-                text-align: center;
-                font-size: 20px;
-                font-weight: bold;
-                box-sizing: border-box;
-            }
-            input:focus {
-                outline: none;
-            }
-            @media screen and (max-width: 767px) {
-                table {
-                    width: 100%;
-                }
-                .logo {
-                    width: 90%;
-                }
-                .policy {
-                    display: inline-block !important;
-                    text-align: center;
-                }
-                .policy li {
-                    list-style: none;
-                }
-                    .gs li {
-                margin-left: 0 !important;
-                }
-            }
-        </style>
-      </head>
-      <body>
-    
-        <table border="0" cellpadding="0" cellspacing="0" style="max-width: 800px; width: 100%; margin: 0 auto;">
-            <tr>
-                <td>
-                    <table border="0" cellpadding="0" cellspacing="0" style="padding: 10px 0; width: 100%;">
-                        <tr>
-                            <td>
-                                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-    
-            <tr>
-                <td>
-                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
-                        <tr>
-                            <td>
-                               <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/otpBanner.png" width="100%" alt="">
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-    
-            <tr>
-                <td>
-                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
-                        <tr>
-                            <td>
-                                <h1>Hi ${data.name},</h1>
-                                <p style="margin: 0;">Here is your One Time Password (OTP).</p>
-                                <p style="margin: 0;">Please enter this code to verify reset password request for <strong>SWIIFTLY</strong></p>
-    
-                                <form action="" style="margin: 30px 0;">
-                                    <div class="mb-3">
-                                       ${data.otp.split("").map((item) => {
-            return `<input type="text" value="${item}" readonly>`
-
-        }).join("")}
-                                    </div>
-                                </form>
-                                <p style="margin: 0 0 30px;">OTP will expire in <strong>10 minutes.</strong></p>
-                                <p style="margin: 0;">Best Regards,</p>
-                                <p style="margin: 0;"><strong>Swiiftly team.</strong></p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-    
-             <tr>
-            <td>
-                <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;border-top: 1px solid rgba(217, 217, 217, 1);border-bottom: 1px solid rgba(217, 217, 217, 1);margin: 50px 0;">
-                    <tr>
-                        <td>
-                            <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" width="50%" alt="">
-                        </td>
-                       <td>
-    <ul style="padding: 0;margin: 0;">
-        <li style="list-style: none;display: inline-block;">
-            <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;margin-right: 10px;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Group+15.png"  width="15" alt="instagram"/>
-            </a>
-        </li>
-        <li style="list-style: none;display: inline-block;">
-            <a href="#" style="background-color: rgba(253, 183, 2, 1);display: inline-flex;width: 40px;height: 40px;border-radius: 100%;align-items: center;justify-content: center;font-size: 20px;color: #000000;text-decoration: none;">
-                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/Icon.png" width="8" alt="facebook" />
-            </a>
-        </li>
-    </ul>
-</td>
-
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    
-            <tr>
-                <td>
-                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
-                        <tr>
-                            <td align="center">
-                                <p>© 2024 SWIIFTLY. All rights reserved.</p>
-                                <p>You are receiving this mail because you registered to join the SWIIFTLY platform as a user or a creator. This also shows that you agree to our Terms of use and Privacy Policies.</p>
-                                <ul class="policy" style="padding: 0;margin: 0 auto; width: 100%;text-align: center;">
-                                    <li style="list-style: none;display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;list-style: none;color: #000000;">Privacy policy</a></li>
-                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;">Terms of service</a></li>
-                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;">Help center</a></li>
+                                    <li style="list-style: none;display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;list-style: none;color: #000000;border-bottom: 1px solid #333333;">Privacy policy</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Terms of service</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Help center</a></li>
                                 </ul>
                              </td>
                         </tr>

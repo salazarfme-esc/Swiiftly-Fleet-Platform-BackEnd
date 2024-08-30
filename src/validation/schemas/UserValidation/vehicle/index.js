@@ -27,6 +27,9 @@ module.exports = {
     }),
     searchVehicle: Joi.object().keys({
         search: Joi.string().trim().required().allow("").label("Search"),
+        make: Joi.string().trim().required().allow("").label("Make"),
+        model: Joi.string().trim().required().allow("").label("Model"),
+        status: Joi.string().required().allow("").label("Status"),
     }),
     getCarsByBrandStatusValidation: Joi.object({
         brand: Joi.string().allow('').label('Brand'), // required brand name

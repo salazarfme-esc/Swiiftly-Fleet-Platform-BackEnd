@@ -34,11 +34,18 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: reqObj.identification_number });
+            let checkVehicle = await VehicleDbHandler.getByQuery({
+                $or: [
+                    { identification_number: reqObj.identification_number },
+                    { license_plate: reqObj.license_plate }
+                ]
+            });
+
             if (checkVehicle.length) {
-                responseData.msg = 'Vehicle with this identification number already exists!';
+                responseData.msg = 'Vehicle with this identification number or license plate already exists!';
                 return responseHelper.error(res, responseData);
             }
+
 
             // Check if the make exists, if not create it
             let make = await makeDbHandler.getByQuery({ title: reqObj.make });
@@ -119,42 +126,98 @@ module.exports = {
         let user = req.user;
         let id = user.sub;
         log.info('Received request for get vehicle with id:', id);
-        const limit = parseInt(req.query.limit);
-        const skip = parseInt(req.query.skip);
-        const searchValue = req.body.search;
+        const limit = parseInt(req.query.limit) || 10; // Default limit
+        const skip = parseInt(req.query.skip) || 0; // Default skip
+        const searchValue = req.body.search || '';
+        const { make, model, status } = req.body; // Extract make, model, and status from request body
         let responseData = {};
+
         try {
             let userData = await userDbHandler.getByQuery({ _id: id, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-            // Construct MongoDB query using $or for various fields
-            const queryConditions = [
-                { identification_number: { $regex: searchValue, $options: 'i' } },
-                { nickname: { $regex: searchValue, $options: 'i' } },
-                { year: { $regex: searchValue, $options: 'i' } },
-                // { make: { $regex: searchValue, $options: 'i' } },
-                // { model: { $regex: searchValue, $options: 'i' } },
-                { color: { $regex: searchValue, $options: 'i' } },
-                { registration_due_date: { $regex: searchValue, $options: 'i' } },
-                { last_oil_change: { $regex: searchValue, $options: 'i' } },
-                { license_plate: { $regex: searchValue, $options: 'i' } },
-                { 'address.street': { $regex: searchValue, $options: 'i' } },
-                { 'address.address': { $regex: searchValue, $options: 'i' } },
-                { 'address.city': { $regex: searchValue, $options: 'i' } },
-                { 'address.district': { $regex: searchValue, $options: 'i' } },
-                { 'address.state': { $regex: searchValue, $options: 'i' } },
-                { 'address.pin': { $regex: searchValue, $options: 'i' } },
-                { 'address.country': { $regex: searchValue, $options: 'i' } }
-            ];
 
-            // Search using $or operator across all specified fields
-            const searchResults = await VehicleDbHandler.getByQuery({
-                $or: queryConditions
-            }).skip(skip).limit(limit);
+            // Step 1: Construct MongoDB query for vehicle search
+            let query = { user_id: mongoose.Types.ObjectId(id) };
+
+            if (make) {
+                const makeMatches = await makeDbHandler.getByQuery({
+                    title: { $regex: make, $options: 'i' }
+                }).lean();
+                const makeIds = makeMatches.map(make => make._id);
+                if (makeIds.length) {
+                    query.make = { $in: makeIds };
+                }
+            }
+
+            if (model) {
+                const modelMatches = await modelDbHandler.getByQuery({
+                    title: { $regex: model, $options: 'i' }
+                }).lean();
+                const modelIds = modelMatches.map(model => model._id);
+                if (modelIds.length) {
+                    query.model = { $in: modelIds };
+                }
+            }
+
+            if (searchValue) {
+                query.$or = [
+                    { identification_number: { $regex: searchValue, $options: 'i' } },
+                    { nickname: { $regex: searchValue, $options: 'i' } },
+                    { year: { $regex: searchValue, $options: 'i' } },
+                    { color: { $regex: searchValue, $options: 'i' } },
+                    { registration_due_date: { $regex: searchValue, $options: 'i' } },
+                    { last_oil_change: { $regex: searchValue, $options: 'i' } },
+                    { license_plate: { $regex: searchValue, $options: 'i' } },
+                    { 'address.street': { $regex: searchValue, $options: 'i' } },
+                    { 'address.address': { $regex: searchValue, $options: 'i' } },
+                    { 'address.city': { $regex: searchValue, $options: 'i' } },
+                    { 'address.district': { $regex: searchValue, $options: 'i' } },
+                    { 'address.state': { $regex: searchValue, $options: 'i' } },
+                    { 'address.pin': { $regex: searchValue, $options: 'i' } },
+                    { 'address.country': { $regex: searchValue, $options: 'i' } }
+                ];
+            }
+
+            // Step 2: Fetch vehicles based on the constructed query without pagination
+            let vehicles = await VehicleDbHandler.getByQuery(query)
+                .populate('make')
+                .populate('model')
+                .lean();
+
+            // Step 3: Determine "in service" status for each vehicle
+            const vehicleIds = vehicles.map(vehicle => vehicle._id);
+            const inServiceJobs = await MainJobDbHandler.getByQuery({
+                vehicle_id: { $in: vehicleIds },
+                status: { $ne: 'completed' }
+            }).lean();
+
+            const inServiceVehicleIds = new Set(inServiceJobs.map(job => job.vehicle_id.toString()));
+
+            vehicles = vehicles.map(vehicle => ({
+                ...vehicle,
+                inService: inServiceVehicleIds.has(vehicle._id.toString())
+            }));
+
+            // Step 4: Filter based on inService status if provided
+            if (status === "inService") {
+                vehicles = vehicles.filter(vehicle => vehicle.inService === true);
+            } else if (status === "available") {
+                vehicles = vehicles.filter(vehicle => vehicle.inService === false);
+            }
+
+            // Step 5: Apply pagination after filtering
+            const totalRecords = vehicles.length; // Total records after filtering
+            vehicles = vehicles.slice(skip, skip + limit);
+
+            // Step 6: Return paginated results with total count
             responseData.msg = "Data fetched!";
-            responseData.data = searchResults;
+            responseData.data = {
+                vehicles,
+                totalRecords
+            };
             return responseHelper.success(res, responseData);
 
         } catch (error) {
@@ -163,6 +226,12 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+
+
+
+
+
     GetBrandStatistics: async (req, res) => {
         let user = req.user;
         let userId = user.sub;
@@ -392,14 +461,15 @@ module.exports = {
             }
 
             let checkVehicle = await VehicleDbHandler.getByQuery({
-                identification_number: reqObj.identification_number,
-                _id: { $ne: id }
+                $or: [
+                    { identification_number: reqObj.identification_number },
+                    { license_plate: reqObj.license_plate }
+                ], _id: { $ne: id }
             });
             if (checkVehicle.length) {
-                responseData.msg = 'Vehicle with this identification number already exists!';
+                responseData.msg = 'Vehicle with this identification number or license plate already exists!';
                 return responseHelper.error(res, responseData);
             }
-
             // Check if the make exists, if not create it
             let make = await makeDbHandler.getByQuery({ title: reqObj.make });
             let makeId;

@@ -166,18 +166,18 @@ module.exports = {
                 query.$or = [
                     { identification_number: { $regex: searchValue, $options: 'i' } },
                     { nickname: { $regex: searchValue, $options: 'i' } },
-                    { year: { $regex: searchValue, $options: 'i' } },
-                    { color: { $regex: searchValue, $options: 'i' } },
-                    { registration_due_date: { $regex: searchValue, $options: 'i' } },
-                    { last_oil_change: { $regex: searchValue, $options: 'i' } },
+                    // { year: { $regex: searchValue, $options: 'i' } },
+                    // { color: { $regex: searchValue, $options: 'i' } },
+                    // { registration_due_date: { $regex: searchValue, $options: 'i' } },
+                    // { last_oil_change: { $regex: searchValue, $options: 'i' } },
                     { license_plate: { $regex: searchValue, $options: 'i' } },
-                    { 'address.street': { $regex: searchValue, $options: 'i' } },
-                    { 'address.address': { $regex: searchValue, $options: 'i' } },
-                    { 'address.city': { $regex: searchValue, $options: 'i' } },
-                    { 'address.district': { $regex: searchValue, $options: 'i' } },
-                    { 'address.state': { $regex: searchValue, $options: 'i' } },
-                    { 'address.pin': { $regex: searchValue, $options: 'i' } },
-                    { 'address.country': { $regex: searchValue, $options: 'i' } }
+                    // { 'address.street': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.address': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.city': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.district': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.state': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.pin': { $regex: searchValue, $options: 'i' } },
+                    // { 'address.country': { $regex: searchValue, $options: 'i' } }
                 ];
             }
 

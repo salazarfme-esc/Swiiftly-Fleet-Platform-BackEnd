@@ -32,6 +32,7 @@
     "bunyan": "^1.8.12",
     "cjson": "^0.5.0",
     "compression": "^1.7.4",
+    "convert-excel-to-json": "^1.7.0",
     "cors": "^2.8.5",
     "ejs": "^3.1.5",
     "ethereumjs-tx": "^2.1.1",

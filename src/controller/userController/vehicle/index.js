@@ -10,9 +10,49 @@ const VehicleAggregate = require("../../../services/db/models/vehicles");
 const makeDbHandler = dbService.Make;
 const modelDbHandler = dbService.Model;
 const MainJobDbHandler = dbService.MainJob;
+const excelToJson = require('convert-excel-to-json');
+const fs = require('fs');
+const path = require('path');
+const config = require('../../../config/environments');
+const AWS = require('aws-sdk');
+
+
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
+
+
+AWS.config.update({
+    accessKeyId: config.aws.accessKeyId,
+    secretAccessKey: config.aws.secretAccessKey,
+    region: config.aws.region // Optional: Specify your AWS region if different from default
+});
+const s3 = new AWS.S3();
+
+
+const downloadFile = async (bucketName, filePath) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const params = { Bucket: bucketName, Key: filePath };
+
+            const downloadStream = s3.getObject(params).createReadStream();
+            const writeStream = fs.createWriteStream(`./excel/${filePath}`);
+
+            downloadStream.pipe(writeStream)
+                .on('error', (err) => {
+                    console.error('Error downloading file:', err);
+                    reject(err); // Reject the promise if there's an error
+                })
+                .on('finish', () => {
+                    console.log('File downloaded successfully!');
+                    resolve(); // Resolve the promise when download is finished
+                });
+        } catch (err) {
+            console.error('Error:', err);
+            reject(err); // Reject the promise if there's an error
+        }
+    });
+};
 
 /**************************
  * END OF PRIVATE FUNCTIONS
@@ -118,6 +158,155 @@ module.exports = {
         } catch (error) {
             log.error('Failed to save data with error::', error);
             responseData.msg = 'Failed to save data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
+    BulkUploadVehicles: async (req, res) => {
+        let responseData = {};
+        let response = {
+            successCount: 0,
+            failureCount: 0,
+            failedRecords: []
+        };
+        let user = req.user;
+        let id = user.sub;
+        log.info('Received bulk upload request.');
+
+        try {
+            let userData = await userDbHandler.getByQuery({ _id: id, user_role: 'fleet' });
+            if (!userData.length) {
+                responseData.msg = 'Invalid login or token expired!';
+                return responseHelper.error(res, responseData);
+            }
+            if (!req.file) {
+                responseData.msg = 'Please upload a file!';
+                return responseHelper.error(res, responseData);
+            }
+            const filePath = req.file.key; // S3 key of the uploaded file
+            const bucketName = config.aws.s3Bucket;
+            const fileExtension = path.extname(filePath).toLowerCase();
+
+            // Download the file from S3
+            const fileData = await downloadFile(bucketName, filePath);
+
+            // Convert Excel to JSON
+            const excelData = excelToJson({
+                sourceFile: `./excel/${filePath}`, // Corrected path variable
+                header: {
+                    rows: 1
+                },
+                columnToKey: {
+                    A: 'identification_number',
+                    B: 'nickname',
+                    C: 'year',
+                    D: 'make',
+                    E: 'model',
+                    F: 'color',
+                    G: 'registration_due_date',
+                    H: 'last_oil_change',
+                    I: 'license_plate',
+                    J: 'street',
+                    K: 'address',
+                    L: 'city',
+                    M: 'district',
+                    N: 'state',
+                    O: 'pin',
+                    P: 'country',
+                    Q: 'coordinates',
+                    R: 'media',
+                    S: 'document'
+                }
+            });
+
+            for (let record of excelData.Sheet1) { // Assuming the sheet name is 'Sheet1'
+                try {
+                    // Validate uniqueness of VIN and License Plate
+                    let checkVehicle = await VehicleDbHandler.getByQuery({
+                        $or: [
+                            { identification_number: record.identification_number },
+                            { license_plate: record.license_plate }
+                        ]
+                    });
+
+                    if (checkVehicle.length) {
+                        response.failureCount++;
+                        response.failedRecords.push({
+                            record,
+                            reason: 'Vehicle with this identification number or license plate already exists!'
+                        });
+                        continue;
+                    }
+
+                    // Check or Create Make and Model
+                    let make = await makeDbHandler.getByQuery({ title: record.make });
+                    let makeId;
+
+                    if (make.length) {
+                        makeId = make[0]._id;
+                    } else {
+                        let newMake = await makeDbHandler.create({ title: record.make });
+                        makeId = newMake._id;
+                    }
+
+                    let model = await modelDbHandler.getByQuery({ title: record.model, make_id: makeId });
+                    let modelId;
+
+                    if (model.length) {
+                        modelId = model[0]._id;
+                    } else {
+                        let newModel = await modelDbHandler.create({ title: record.model, make_id: makeId });
+                        modelId = newModel._id;
+                    }
+
+                    let media = record.media ? record.media.split(',') : [];
+                    let document = record.document ? record.document.split(',') : [];
+
+                    let submitData = {
+                        identification_number: record.identification_number || '',
+                        nickname: record.nickname || '',
+                        year: record.year || '',
+                        make: makeId,
+                        model: modelId,
+                        color: record.color || '',
+                        registration_due_date: record.registration_due_date || '',
+                        last_oil_change: record.last_oil_change || '',
+                        license_plate: record.license_plate || '',
+                        address: {
+                            street: record.street || '',
+                            address: record.address || '',
+                            city: record.city || '',
+                            district: record.district || '',
+                            state: record.state || '',
+                            pin: record.pin || '',
+                            country: record.country || '',
+                        },
+                        location: {
+                            type: 'Point',
+                            coordinates: record.coordinates ? record.coordinates.split(',').map(Number) : [0.0000, 0.0000],
+                        },
+                        media: media,
+                        document: document,
+                        user_id: id
+                    };
+
+                    await VehicleDbHandler.create(submitData);
+                    response.successCount++;
+                } catch (error) {
+                    log.error('Failed to save record:', record, 'Error:', error);
+                    response.failureCount++;
+                    response.failedRecords.push({
+                        record,
+                        reason: 'Failed to save record due to an error.'
+                    });
+                }
+            }
+            fs.unlinkSync(`./excel/${filePath}`); // Corrected unlinking
+            responseData.msg = 'Bulk upload completed!';
+            responseData.data = response;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to process bulk upload:', error);
+            responseData.msg = 'Failed to process bulk upload!';
             return responseHelper.error(res, responseData);
         }
     },

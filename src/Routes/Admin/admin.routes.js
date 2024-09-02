@@ -90,6 +90,7 @@ module.exports = () => {
    */
     Router.post("/user", validationMiddleware(userManagementSchema.addUser, "body"), adminUserManagementController.addUser);
     Router.get("/user", adminUserManagementController.GetUser);
+    Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
 
     /**

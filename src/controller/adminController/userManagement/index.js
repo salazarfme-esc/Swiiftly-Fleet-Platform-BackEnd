@@ -1,6 +1,7 @@
 'use strict';
 const logger = require('../../../services/logger');
 const log = new logger('AdminUserManagementController').getChildLogger();
+const mongoose = require('mongoose');
 const dbService = require('../../../services/db/services');
 const bcrypt = require('bcryptjs');
 const jwtService = require('../../../services/jwt');
@@ -11,6 +12,8 @@ const adminDbHandler = dbService.Admin;
 const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
 const VehicleDbHandler = dbService.Vehicle;
+const VehicleAggregate = require("../../../services/db/models/vehicles");
+const MainJobAggregate = require("../../../services/db/models/mainJob")
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
 const { response } = require('express');
@@ -124,6 +127,214 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    GetUserVehiclesData: async (req, res) => {
+        let userId = req.params.userId; // Assuming the user ID is passed as a path parameter
+        let admin = req.admin.sub;
+        log.info('Received request for vehicles data with user id:', userId);
+        let responseData = {};
+
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            // Verify user existence
+            let userData = await UserDbHandler.getByQuery({ _id: userId });
+            if (!userData.length) {
+                responseData.msg = 'Fleet Manager not found!';
+                return responseHelper.error(res, responseData);
+            }
+            // Aggregate data for vehicles related to the user
+            let vehicleData = await VehicleAggregate.aggregate([
+                {
+                    $match: {
+                        user_id: mongoose.Types.ObjectId(userId),
+                        // is_deleted: false // Exclude deleted vehicles
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            brand: "$make",
+                            model: "$model"
+                        },
+                        totalCars: { $sum: 1 }
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id.brand",
+                        totalCars: { $sum: "$totalCars" },
+                        models: {
+                            $push: {
+                                modelId: "$_id.model",
+                                count: "$totalCars"
+                            }
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'makes', // The collection name for brands/makes
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'brand'
+                    }
+                },
+                {
+                    $unwind: "$brand"
+                },
+                {
+                    $lookup: {
+                        from: 'models', // The collection name for models
+                        localField: "models.modelId",
+                        foreignField: "_id",
+                        as: "modelDetails"
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        brand: 1, // Include the full brand object
+                        totalCars: 1,
+                        totalModels: { $size: "$modelDetails" },
+                        models: {
+                            $map: {
+                                input: "$modelDetails",
+                                as: "modelDetail",
+                                in: {
+                                    model: "$$modelDetail",
+                                    count: {
+                                        $reduce: {
+                                            input: "$models",
+                                            initialValue: 0,
+                                            in: {
+                                                $cond: [
+                                                    { $eq: ["$$this.modelId", "$$modelDetail._id"] },
+                                                    { $add: ["$$value", "$$this.count"] },
+                                                    "$$value"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            // Use aggregation pipeline for more efficient querying and populating
+            let jobData = await MainJobAggregate.aggregate([
+                {
+                    $match: {
+                        status: req.query.status,
+                        user_id: mongoose.Types.ObjectId(userId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "flowcategories",
+                        localField: "service_category",
+                        foreignField: "_id",
+                        as: "service_category"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "vehicles",
+                        localField: "vehicle_id",
+                        foreignField: "_id",
+                        as: "vehicle_id"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user_id"
+                    }
+                },
+                { $unwind: { path: "$service_category", preserveNullAndEmptyArrays: true } },
+                { $unwind: { path: "$vehicle_id", preserveNullAndEmptyArrays: true } },
+                { $unwind: { path: "$user_id", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "subjobs",
+                        localField: "_id",
+                        foreignField: "root_ticket_id",
+                        as: "child",
+                        pipeline: [
+                            {
+                                $lookup: {
+                                    from: "flowcategories",
+                                    localField: "service_category",
+                                    foreignField: "_id",
+                                    as: "service_category"
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "users",
+                                    localField: "vendor_id",
+                                    foreignField: "_id",
+                                    as: "vendor_id"
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: "flowquestions",
+                                    localField: "question_id",
+                                    foreignField: "_id",
+                                    as: "question_id"
+                                }
+                            },
+                            { $unwind: { path: "$service_category", preserveNullAndEmptyArrays: true } },
+                            { $unwind: { path: "$question_id", preserveNullAndEmptyArrays: true } },
+                            {
+                                $addFields: {
+                                    vendor_id: {
+                                        $cond: {
+                                            if: { $eq: ["$vendor_id", []] },
+                                            then: null,
+                                            else: { $arrayElemAt: ["$vendor_id", 0] }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    $addFields: {
+                        child: {
+                            $map: {
+                                input: "$child",
+                                as: "c",
+                                in: {
+                                    $mergeObjects: ["$$c", {
+                                        vendor_id: { $ifNull: ["$$c.vendor_id", null] }
+                                    }]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            responseData.msg = "Vehicle data fetched successfully!";
+            responseData.data = { totalVehicles: await VehicleDbHandler.getByQuery({ user_id: userId }).countDocuments(), vehicleData, jobData };
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to fetch vehicle data with error::', error);
+            responseData.msg = 'Failed to fetch vehicle data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 
 

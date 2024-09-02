@@ -36,7 +36,10 @@ module.exports = {
         model: Joi.string().required().allow('').label('Model')  // required model name
     }),
     getBrandStatisticsValidation : Joi.object({
-        brand: Joi.string().allow('').label('Brand') // required brand name
+        year: Joi.string().required().label('Year'), // required brand name
+    }),
+    deleteVehicles : Joi.object({
+        vehicleIds: Joi.string().required().trim().label("Vehicle ID's") // required brand name
     })
 
 

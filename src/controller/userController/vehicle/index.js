@@ -329,7 +329,7 @@ module.exports = {
             }
 
             // Step 1: Construct MongoDB query for vehicle search
-            let query = { user_id: mongoose.Types.ObjectId(id) };
+            let query = { user_id: mongoose.Types.ObjectId(id), is_delete: false };
 
             if (make) {
                 const makeMatches = await makeDbHandler.getByQuery({
@@ -424,81 +424,96 @@ module.exports = {
     GetBrandStatistics: async (req, res) => {
         let user = req.user;
         let userId = user.sub;
-        let brandName = req.body.brand || ''; // Get the brand name from the request body
-        log.info('Received request for brand statistics with user id:', userId, 'and brand:', brandName);
+        let year = req.body.year; // Get the year from the request body as a string
+        log.info('Received request for brand statistics with user id:', userId, 'and year:', year);
         let responseData = {};
+    
         try {
             let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-
+    
             // Aggregate data by brand (make)
-            let matchStage = { user_id: mongoose.Types.ObjectId(userId) };
-
-            if (brandName) {
-                // Get the make ID if brandName is provided
-                let makes = await makeDbHandler.getByQuery({
-                    title: { $regex: brandName, $options: 'i' } // Case-insensitive substring search
-                });
-                if (!makes.length) {
-                    responseData.msg = 'Brand not found!';
-                    responseData.data = [];
-                    return responseHelper.success(res, responseData);
-                }
-                let makeIds = makes.map(make => make._id);
-                matchStage['make'] = { $in: makeIds };
-            }
-
+            let matchStage = {
+                user_id: mongoose.Types.ObjectId(userId),
+                is_deleted: false // Exclude deleted vehicles
+            };
+    
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
                     $match: matchStage
                 },
                 {
                     $group: {
-                        _id: "$make",
-                        carCount: { $sum: 1 }
+                        _id: {
+                            make: "$make",
+                            model: "$model"
+                        },
+                        totalCars: { $sum: 1 },
+                        carsInYear: { $sum: { $cond: [{ $eq: ["$year", year] }, 1, 0] } }
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$_id.make",
+                        totalCars: { $sum: "$totalCars" },
+                        carsInYear: { $sum: "$carsInYear" },
+                        models: {
+                            $push: {
+                                model: "$_id.model",
+                                count: "$totalCars"
+                            }
+                        }
                     }
                 },
                 {
                     $lookup: {
-                        from: 'makes', // The collection name for makes
+                        from: 'makes', // The collection name for brands/makes
                         localField: '_id',
                         foreignField: '_id',
-                        as: 'make'
+                        as: 'brand'
                     }
                 },
                 {
-                    $unwind: "$make"
+                    $unwind: "$brand"
                 },
                 {
                     $lookup: {
-                        from: 'mainjobs', // The collection name for MainJob
-                        let: { make_id: "$_id" },
-                        pipeline: [
-                            {
-                                $match: {
-                                    $expr: {
-                                        $and: [
-                                            { $eq: ["$vehicle_id", "$$make_id"] },
-                                            { $ne: ["$status", "completed"] }
-                                        ]
-                                    }
-                                }
-                            }
-                        ],
-                        as: 'inService'
+                        from: 'models', // The collection name for models
+                        localField: "models.model",
+                        foreignField: "_id",
+                        as: "modelDetails"
                     }
                 },
                 {
                     $addFields: {
-                        inServiceCount: { $size: "$inService" },
-                        inServicePercentage: {
+                        yearPercentage: {
                             $cond: {
-                                if: { $eq: ["$carCount", 0] },
+                                if: { $eq: ["$totalCars", 0] },
                                 then: 0,
-                                else: { $multiply: [{ $divide: ["$inServiceCount", "$carCount"] }, 100] }
+                                else: { $multiply: [{ $divide: ["$carsInYear", "$totalCars"] }, 100] }
+                            }
+                        },
+                        models: {
+                            $map: {
+                                input: "$modelDetails",
+                                as: "modelDetail",
+                                in: {
+                                    model: {
+                                        _id: "$$modelDetail._id",
+                                        title: "$$modelDetail.title"
+                                    },
+                                    count: {
+                                        $let: {
+                                            vars: {
+                                                idx: { $indexOfArray: ["$models.model", "$$modelDetail._id"] }
+                                            },
+                                            in: { $arrayElemAt: ["$models.count", "$$idx"] }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -506,25 +521,31 @@ module.exports = {
                 {
                     $project: {
                         _id: 0,
-                        brand: "$make.title",
-                        carCount: 1,
-                        inServicePercentage: {
-                            $ifNull: ["$inServicePercentage", 0] // Ensure the percentage is never null
-                        }
+                        brand: 1, // Include the full brand object
+                        totalCars: 1,
+                        carsInYear: 1,
+                        yearPercentage: 1,
+                        models: 1
                     }
                 }
             ]);
-
+    
             responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;
             return responseHelper.success(res, responseData);
-
+    
         } catch (error) {
             log.error('Failed to get brand statistics with error::', error);
             responseData.msg = 'Failed to get brand statistics!';
             return responseHelper.error(res, responseData);
         }
     },
+    
+    
+
+
+
+
 
     GetCarsByBrandStatus: async (req, res) => {
         let user = req.user;
@@ -734,30 +755,64 @@ module.exports = {
         }
     },
 
-    DeleteVehicle: async (req, res) => {
-        let id = req.params.id;
-        let user_id = req.user.sub;
-        log.info('Received request for delete vehicle with id:', id);
+    BulkDeleteVehicles: async (req, res) => {
         let responseData = {};
+        let response = {
+            deletedCount: 0,
+            skippedCount: 0,
+            skippedVehicles: []
+        };
+        let user = req.user;
+        let userId = user.sub;
+        log.info('Received bulk delete request.');
+
         try {
-            let userData = await userDbHandler.getByQuery({ _id: user_id, user_role: 'fleet' });
+            let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-            let vehicleData = await VehicleDbHandler.getByQuery({ _id: id, user_id: user_id });
-            if (!vehicleData) {
-                responseData.msg = 'Vehicle not found!';
-                return responseHelper.error(res, responseData);
+
+            // Get vehicle IDs from the request and split into an array
+            let vehicleIds = req.body.vehicleIds.split(',');
+
+            for (let vehicleId of vehicleIds) {
+                try {
+                    // Check if the vehicle belongs to the user
+                    let vehicle = await VehicleDbHandler.getByQuery({ _id: vehicleId, user_id: userId });
+
+                    if (!vehicle.length) {
+                        response.skippedCount++;
+                        response.skippedVehicles.push({ vehicleId, reason: 'Vehicle does not belong to the user.' });
+                        continue;
+                    }
+
+                    // Check if the vehicle has any services in progress
+                    let inProgressService = await MainJobDbHandler.getByQuery({ vehicle_id: vehicleId, status: 'in-progress' });
+
+                    if (inProgressService.length) {
+                        response.skippedCount++;
+                        response.skippedVehicles.push({ vehicleId, reason: 'Service in progress.' });
+                        continue;
+                    }
+
+                    // Soft delete the vehicle by setting is_deleted to true
+                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { is_deleted: true });
+
+                    response.deletedCount++;
+                } catch (error) {
+                    log.error('Failed to delete vehicle:', vehicleId, 'Error:', error);
+                    response.skippedCount++;
+                    response.skippedVehicles.push({ vehicleId, reason: 'Failed due to error.' });
+                }
             }
 
-            await VehicleDbHandler.deleteById(id);
-            responseData.msg = `Data deleted!`;
+            responseData.msg = 'Bulk delete completed!';
+            responseData.data = response;
             return responseHelper.success(res, responseData);
-
         } catch (error) {
-            log.error('failed to delete data with error::', error);
-            responseData.msg = 'failed to delete data!';
+            log.error('Failed to process bulk delete:', error);
+            responseData.msg = 'Failed to process bulk delete!';
             return responseHelper.error(res, responseData);
         }
     },

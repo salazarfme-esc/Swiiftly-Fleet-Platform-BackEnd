@@ -456,23 +456,23 @@ module.exports = {
     GetBrandStatistics: async (req, res) => {
         let user = req.user;
         let userId = user.sub;
-        let year = req.body.year; // Get the year from the request body as a string
-        log.info('Received request for brand statistics with user id:', userId, 'and year:', year);
+        let yearFilters = req.body.yearFilters || []; // An array of objects with { brand: <brand_id>, year: <year> }
+        log.info('Received request for brand statistics with user id:', userId, 'and year filters:', yearFilters);
         let responseData = {};
-
+    
         try {
             let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-
+    
             // Aggregate data by brand (make)
             let matchStage = {
                 user_id: mongoose.Types.ObjectId(userId),
                 is_deleted: false // Exclude deleted vehicles
             };
-
+    
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
                     $match: matchStage
@@ -484,18 +484,23 @@ module.exports = {
                             model: "$model"
                         },
                         totalCars: { $sum: 1 },
-                        carsInYear: { $sum: { $cond: [{ $eq: ["$year", year] }, 1, 0] } }
+                        carsByYear: {
+                            $push: {
+                                year: "$year",
+                                count: 1
+                            }
+                        }
                     }
                 },
                 {
                     $group: {
                         _id: "$_id.make",
                         totalCars: { $sum: "$totalCars" },
-                        carsInYear: { $sum: "$carsInYear" },
                         models: {
                             $push: {
                                 model: "$_id.model",
-                                count: "$totalCars"
+                                count: "$totalCars",
+                                carsByYear: "$carsByYear"
                             }
                         }
                     }
@@ -521,13 +526,6 @@ module.exports = {
                 },
                 {
                     $addFields: {
-                        yearPercentage: {
-                            $cond: {
-                                if: { $eq: ["$totalCars", 0] },
-                                then: 0,
-                                else: { $multiply: [{ $divide: ["$carsInYear", "$totalCars"] }, 100] }
-                            }
-                        },
                         models: {
                             $map: {
                                 input: "$modelDetails",
@@ -544,8 +542,43 @@ module.exports = {
                                             },
                                             in: { $arrayElemAt: ["$models.count", "$$idx"] }
                                         }
+                                    },
+                                    carsByYear: {
+                                        $let: {
+                                            vars: {
+                                                idx: { $indexOfArray: ["$models.model", "$$modelDetail._id"] }
+                                            },
+                                            in: { $arrayElemAt: ["$models.carsByYear", "$$idx"] }
+                                        }
                                     }
                                 }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        yearCarsSum: {
+                            $sum: {
+                                $reduce: {
+                                    input: "$models.carsByYear",
+                                    initialValue: [],
+                                    in: { $concatArrays: ["$$value", "$$this"] }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        yearCarsSum: {
+                            $sum: "$yearCarsSum.count"
+                        },
+                        yearPercentage: {
+                            $cond: {
+                                if: { $eq: ["$totalCars", 0] },
+                                then: 0,
+                                else: { $multiply: [{ $divide: ["$yearCarsSum", "$totalCars"] }, 100] }
                             }
                         }
                     }
@@ -555,23 +588,43 @@ module.exports = {
                         _id: 0,
                         brand: 1, // Include the full brand object
                         totalCars: 1,
-                        carsInYear: 1,
-                        yearPercentage: 1,
-                        models: 1
+                        models: 1,
+                        yearCarsSum: 1,
+                        yearPercentage: 1
                     }
                 }
             ]);
-
+    
+            // Apply year filtering based on user input without changing the response structure
+            if (yearFilters.length > 0) {
+                brandStatistics = brandStatistics.map(brand => {
+                    let yearFilter = yearFilters.find(filter => filter.brand.toString() === brand.brand._id.toString());
+                    if (yearFilter) {
+                        brand.models = brand.models.map(model => {
+                            model.carsByYear = model.carsByYear.filter(car => car.year === yearFilter.year);
+                            model.count = model.carsByYear.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
+                            return model;
+                        }).filter(model => model.count > 0); // Only keep models with cars in the specified year
+    
+                        brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
+                        brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
+                    }
+                    return brand;
+                });
+            }
+    
             responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;
             return responseHelper.success(res, responseData);
-
+    
         } catch (error) {
             log.error('Failed to get brand statistics with error::', error);
             responseData.msg = 'Failed to get brand statistics!';
             return responseHelper.error(res, responseData);
         }
     },
+    
+
 
 
 

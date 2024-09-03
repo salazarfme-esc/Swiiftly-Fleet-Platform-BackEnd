@@ -35,10 +35,15 @@ module.exports = {
         brand: Joi.string().allow('').label('Brand'), // required brand name
         model: Joi.string().required().allow('').label('Model')  // required model name
     }),
-    getBrandStatisticsValidation : Joi.object({
-        year: Joi.string().required().label('Year'), // required brand name
-    }),
-    deleteVehicles : Joi.object({
+    getBrandStatisticsValidation: Joi.object({
+        yearFilters: Joi.array().items(
+            Joi.object({
+                brand: Joi.string().required().label('Brand ID'), // Brand ID is required
+                year: Joi.string().required().label('Year') // Year is required
+            })
+        ).optional().label('Year Filters')
+    }), // The yearFilters array is optional    }),
+    deleteVehicles: Joi.object({
         vehicleIds: Joi.string().required().trim().label("Vehicle ID's") // required brand name
     })
 

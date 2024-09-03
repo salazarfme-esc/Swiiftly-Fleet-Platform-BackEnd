@@ -459,20 +459,20 @@ module.exports = {
         let yearFilters = req.body.yearFilters || []; // An array of objects with { brand: <brand_id>, year: <year> }
         log.info('Received request for brand statistics with user id:', userId, 'and year filters:', yearFilters);
         let responseData = {};
-    
+
         try {
             let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Aggregate data by brand (make)
             let matchStage = {
                 user_id: mongoose.Types.ObjectId(userId),
                 is_deleted: false // Exclude deleted vehicles
             };
-    
+
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
                     $match: matchStage
@@ -594,9 +594,32 @@ module.exports = {
                     }
                 }
             ]);
-    
-            // Apply year filtering based on user input without changing the response structure
-            if (yearFilters.length > 0) {
+
+            // Apply year and brand filtering separately based on conditions
+
+            // If yearFilters is not provided, use the current year for filtering
+            if (yearFilters.length === 0) {
+                const currentYear = new Date().getFullYear();
+                brandStatistics = brandStatistics.map(brand => {
+                    brand.models = brand.models.map(model => {
+                        // Filter by current year, if no cars for the current year, set count to 0
+                        let filteredCars = model.carsByYear.filter(car => car.year === currentYear);
+                        if (filteredCars.length === 0) {
+                            model.count = 0;
+                            model.carsByYear = [];
+                        } else {
+                            model.count = filteredCars.reduce((acc, car) => acc + car.count, 0);
+                        }
+                        return model;
+                    });
+
+                    brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
+                    brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
+                    return brand;
+                });
+            }
+            // If yearFilters is provided, apply both brand and year filters
+            else {
                 brandStatistics = brandStatistics.map(brand => {
                     let yearFilter = yearFilters.find(filter => filter.brand.toString() === brand.brand._id.toString());
                     if (yearFilter) {
@@ -605,25 +628,28 @@ module.exports = {
                             model.count = model.carsByYear.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
                             return model;
                         }).filter(model => model.count > 0); // Only keep models with cars in the specified year
-    
+
                         brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
                         brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
+                    } else {
+                        brand.yearCarsSum = 0; // If no matching brand, set the sum to 0
                     }
                     return brand;
-                });
+                }).filter(brand => brand.yearCarsSum > 0); // Only keep brands with cars in the specified year
             }
-    
+
             responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;
             return responseHelper.success(res, responseData);
-    
+
         } catch (error) {
             log.error('Failed to get brand statistics with error::', error);
             responseData.msg = 'Failed to get brand statistics!';
             return responseHelper.error(res, responseData);
         }
     },
-    
+
+
 
 
 

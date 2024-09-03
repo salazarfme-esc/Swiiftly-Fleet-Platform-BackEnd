@@ -119,7 +119,7 @@ module.exports = {
             }));
 
             responseData.msg = "Data fetched successfully!";
-            responseData.data = usersWithDetails;
+            responseData.data = { count: await UserDbHandler.getByQuery({ user_role: reqObj.user_role, is_delete: false }).countDocuments(), data: usersWithDetails };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch data with error::', error);

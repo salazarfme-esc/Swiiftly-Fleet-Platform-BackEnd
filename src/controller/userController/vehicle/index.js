@@ -329,7 +329,7 @@ module.exports = {
             }
 
             // Step 1: Construct MongoDB query for vehicle search
-            let query = { user_id: mongoose.Types.ObjectId(id), is_delete: false };
+            let query = { user_id: mongoose.Types.ObjectId(id), is_deleted: false };
 
             if (make) {
                 const makeMatches = await makeDbHandler.getByQuery({
@@ -416,6 +416,38 @@ module.exports = {
         }
     },
 
+    GetVehicleDetail: async (req, res) => {
+        let user = req.user;
+        let id = user.sub;
+        let vehicleId = req.params.vehicleId;
+        log.info('Received request for get vehicle with id:', id);
+        let responseData = {};
+
+        try {
+            let userData = await userDbHandler.getByQuery({ _id: id, user_role: 'fleet' });
+            if (!userData.length) {
+                responseData.msg = 'Invalid login or token expired!';
+                return responseHelper.error(res, responseData);
+            }
+
+
+            let VehicleData = await VehicleDbHandler.getById(vehicleId);
+            if (!VehicleData) {
+                responseData.msg = 'Vehicle not found!';
+                return responseHelper.error(res, responseData);
+            }
+
+            responseData.msg = 'Data fetched!';
+            responseData.data = VehicleData;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('failed to get data with error::', error);
+            responseData.msg = 'failed to get data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 
 
@@ -427,20 +459,20 @@ module.exports = {
         let year = req.body.year; // Get the year from the request body as a string
         log.info('Received request for brand statistics with user id:', userId, 'and year:', year);
         let responseData = {};
-    
+
         try {
             let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Aggregate data by brand (make)
             let matchStage = {
                 user_id: mongoose.Types.ObjectId(userId),
                 is_deleted: false // Exclude deleted vehicles
             };
-    
+
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
                     $match: matchStage
@@ -529,19 +561,19 @@ module.exports = {
                     }
                 }
             ]);
-    
+
             responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;
             return responseHelper.success(res, responseData);
-    
+
         } catch (error) {
             log.error('Failed to get brand statistics with error::', error);
             responseData.msg = 'Failed to get brand statistics!';
             return responseHelper.error(res, responseData);
         }
     },
-    
-    
+
+
 
 
 

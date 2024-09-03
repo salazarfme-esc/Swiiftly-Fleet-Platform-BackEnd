@@ -120,6 +120,7 @@ module.exports = () => {
     Router.post('/delete-vehicle',validationMiddleware(vehicleValidationSchema.deleteVehicles, 'body'), userVehicleController.BulkDeleteVehicles);
     Router.post('/brand-vehicle',validationMiddleware(vehicleValidationSchema.getBrandStatisticsValidation, 'body'), userVehicleController.GetBrandStatistics);
     Router.post('/brand-vehicle-list',validationMiddleware(vehicleValidationSchema.getCarsByBrandStatusValidation, 'body'), userVehicleController.GetCarsByBrandStatus);
+    Router.get('/get-vehicle/:vehicleId', userVehicleController.GetVehicleDetail);
 
 
 

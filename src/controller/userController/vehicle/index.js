@@ -431,7 +431,8 @@ module.exports = {
             }
 
 
-            let VehicleData = await VehicleDbHandler.getById(vehicleId);
+            let VehicleData = await VehicleDbHandler.getById(vehicleId).populate('make')
+                .populate('model');
             if (!VehicleData) {
                 responseData.msg = 'Vehicle not found!';
                 return responseHelper.error(res, responseData);

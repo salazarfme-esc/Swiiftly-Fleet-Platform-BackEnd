@@ -646,8 +646,8 @@ module.exports = {
             
                 // If no matching brand was found, return the brand with models having count 0 and carsByYear as []
                 if (brandStatistics.length === 0) {
-                    let filteredBrand = await Brand.findById(yearFilters[0].brand); // Fetch the brand details from the database
-                    let models = await Model.find({ make: filteredBrand._id }); // Fetch all models for the brand
+                    let filteredBrand = await makeDbHandler.getById(yearFilters[0].brand); // Fetch the brand details from the database
+                    let models = await modelDbHandler.getByQuery({ make: filteredBrand._id }); // Fetch all models for the brand
                     brandStatistics = [{
                         brand: filteredBrand,
                         totalCars: 0,

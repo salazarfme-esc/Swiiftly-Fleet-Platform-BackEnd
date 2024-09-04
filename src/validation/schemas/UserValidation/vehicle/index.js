@@ -44,8 +44,14 @@ module.exports = {
         ).optional().label('Year Filters')
     }), // The yearFilters array is optional    }),
     deleteVehicles: Joi.object({
-        vehicleIds: Joi.string().required().trim().label("Vehicle ID's") // required brand name
-    })
+        vehicleIds: Joi.string().required().trim().label("Vehicle ID's")
+    }),
+    deleteVehiclesMedias: Joi.object({
+        media: Joi.string().required().allow("").trim().label("Media"),
+        documents: Joi.string().required().allow("").trim().label("Documents"),
+        vehicleId: Joi.string().required().trim().label("Vehicle ID's")
+
+    }),
 
 
 };

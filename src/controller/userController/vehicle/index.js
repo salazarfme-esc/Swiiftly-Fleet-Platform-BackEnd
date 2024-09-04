@@ -963,4 +963,51 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    DeleteVehicleMedia: async (req, res) => {
+        let { vehicleId, media, documents } = req.body; // Expecting vehicleId, mediaImages (comma-separated), and documents (comma-separated)
+        let user = req.user;
+        let userId = user.sub;
+        let responseData = {};
+
+        try {
+            // Validate user
+            let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
+            if (!userData.length) {
+                responseData.msg = 'Invalid login or token expired!';
+                return responseHelper.error(res, responseData);
+            }
+
+            // Validate vehicle
+            let vehicle = await VehicleDbHandler.getById(vehicleId);
+            if (!vehicle) {
+                responseData.msg = 'Vehicle not found!';
+                return responseHelper.error(res, responseData);
+            }
+
+            // Convert comma-separated strings to arrays
+            let mediaToDelete = media ? media.split(',').map(item => item.trim()) : [];
+            let documentsToDelete = documents ? documents.split(',').map(item => item.trim()) : [];
+
+            // Delete images from media
+            if (mediaToDelete.length > 0) {
+                vehicle.media = vehicle.media.filter(image => !mediaToDelete.includes(image));
+            }
+
+            // Delete images from documents
+            if (documentsToDelete.length > 0) {
+                vehicle.document = vehicle.document.filter(doc => !documentsToDelete.includes(doc));
+            }
+
+            // Save updated vehicle data
+            await VehicleDbHandler.updateById(vehicleId, { media: vehicle.media, document: vehicle.document });
+            responseData.msg = 'Media deleted successfully!';
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to delete images/documents with error::', error);
+            responseData.msg = 'Failed to delete media!';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 };

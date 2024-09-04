@@ -814,8 +814,25 @@ module.exports = {
                 modelId = newModel._id; // Use the newly created model ID
             }
 
+
+
             let media = vehicleData[0].media || [];
             let document = vehicleData[0].document || [];
+
+
+            // Convert comma-separated strings to arrays
+            let mediaToDelete = reqObj.delete_media ? reqObj.delete_media.split(',').map(item => item.trim()) : [];
+            let documentsToDelete = reqObj.delete_documents ? reqObj.delete_documents.split(',').map(item => item.trim()) : [];
+
+            // Delete images from media
+            if (mediaToDelete.length > 0) {
+                media = media.filter(image => !mediaToDelete.includes(image));
+            }
+
+            // Delete images from documents
+            if (documentsToDelete.length > 0) {
+                document = document.filter(doc => !documentsToDelete.includes(doc));
+            }
 
             if (req.files && req.files.media) {
                 for (let i = 0; i < req.files.media.length; i++) {

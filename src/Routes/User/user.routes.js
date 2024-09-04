@@ -116,7 +116,7 @@ module.exports = () => {
     Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
     Router.post('/bulk-vehicle', multerService.uploadFile('file').single('vehicle'), userVehicleController.BulkUploadVehicles);
     Router.post('/vehicle/search', validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
-    Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.UpdateVehicle);
+    Router.put('/vehicle/:id', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.updateVehicle, 'body')], userVehicleController.UpdateVehicle);
     Router.post('/delete-vehicle', validationMiddleware(vehicleValidationSchema.deleteVehicles, 'body'), userVehicleController.BulkDeleteVehicles);
     Router.post('/brand-vehicle', validationMiddleware(vehicleValidationSchema.getBrandStatisticsValidation, 'body'), userVehicleController.GetBrandStatistics);
     Router.post('/brand-vehicle-list', validationMiddleware(vehicleValidationSchema.getCarsByBrandStatusValidation, 'body'), userVehicleController.GetCarsByBrandStatus);

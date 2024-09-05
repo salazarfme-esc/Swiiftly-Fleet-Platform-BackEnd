@@ -468,11 +468,21 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
+
             // Aggregate data by brand (make)
             let matchStage = {
                 user_id: mongoose.Types.ObjectId(userId),
                 is_deleted: false // Exclude deleted vehicles
             };
+            if (req.body.make) {
+                const makeMatches = await makeDbHandler.getByQuery({
+                    title: { $regex: req.body.make, $options: 'i' }
+                }).lean();
+                const makeIds = makeMatches.map(make => make._id);
+                if (makeIds.length) {
+                    matchStage.make = { $in: makeIds };
+                }
+            }
 
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
@@ -634,16 +644,16 @@ module.exports = {
                             }
                             return model;
                         });
-            
+
                         // Calculate the yearCarsSum and yearPercentage for the brand
                         brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
                         brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
-            
+
                         return true; // Keep this brand in the output
                     }
                     return false; // Exclude this brand if it doesn't match the year filter
                 });
-            
+
                 // If no matching brand was found, return the brand with models having count 0 and carsByYear as []
                 if (brandStatistics.length === 0) {
                     let filteredBrand = await makeDbHandler.getById(yearFilters[0].brand); // Fetch the brand details from the database
@@ -661,8 +671,8 @@ module.exports = {
                     }];
                 }
             }
-            
-            
+
+
 
             responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;

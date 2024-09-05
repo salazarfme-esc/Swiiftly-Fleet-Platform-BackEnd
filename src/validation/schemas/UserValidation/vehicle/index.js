@@ -62,7 +62,9 @@ module.exports = {
                 brand: Joi.string().required().label('Brand ID'), // Brand ID is required
                 year: Joi.string().required().label('Year') // Year is required
             })
-        ).optional().label('Year Filters')
+        ).optional().label('Year Filters'),
+        make: Joi.string().trim().required().allow("").label("Make"),
+
     }), // The yearFilters array is optional    }),
     deleteVehicles: Joi.object({
         vehicleIds: Joi.string().required().trim().label("Vehicle ID's")

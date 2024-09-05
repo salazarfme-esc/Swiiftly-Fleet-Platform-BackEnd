@@ -60,7 +60,7 @@ module.exports = {
         yearFilters: Joi.array().items(
             Joi.object({
                 brand: Joi.string().required().label('Brand ID'), // Brand ID is required
-                year: Joi.string().required().label('Year') // Year is required
+                year: Joi.string().required().allow("").label('Year') // Year is required
             })
         ).optional().label('Year Filters'),
         make: Joi.string().trim().required().allow("").label("Make"),

@@ -610,7 +610,7 @@ module.exports = {
 
             // If yearFilters is not provided, use the current year for filtering
             if (yearFilters.length === 0) {
-                const currentYear = new Date().getFullYear();
+                const currentYear = new Date().getFullYear().toString();
                 brandStatistics = brandStatistics.map(brand => {
                     brand.models = brand.models.map(model => {
                         // Filter by current year, if no cars for the current year, set count to 0
@@ -621,6 +621,7 @@ module.exports = {
                         } else {
                             model.count = filteredCars.reduce((acc, car) => acc + car.count, 0);
                         }
+                        model.carsByYear = model.carsByYear.filter(car => car.year === currentYear);
                         return model;
                     });
 
@@ -634,16 +635,26 @@ module.exports = {
                 brandStatistics = brandStatistics.filter(brand => {
                     let yearFilter = yearFilters.find(filter => filter.brand.toString() === brand.brand._id.toString());
                     if (yearFilter) {
-                        brand.models = brand.models.map(model => {
-                            let filteredCars = model.carsByYear.filter(car => car.year === yearFilter.year);
-                            if (filteredCars.length === 0) {
-                                model.count = 0;
-                                model.carsByYear = []; // No matching cars for the specified year
-                            } else {
-                                model.count = filteredCars.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
-                            }
-                            return model;
-                        });
+                        // If year is not provided in the filter, return all cars for that brand
+                        if (!yearFilter.year) {
+                            brand.models = brand.models.map(model => {
+                                // Sum up all cars regardless of the year
+                                model.count = model.carsByYear.reduce((acc, car) => acc + car.count, 0);
+                                return model;
+                            });
+                        } else {
+                            brand.models = brand.models.map(model => {
+                                let filteredCars = model.carsByYear.filter(car => car.year === yearFilter.year);
+                                if (filteredCars.length === 0) {
+                                    model.count = 0;
+                                    model.carsByYear = []; // No matching cars for the specified year
+                                } else {
+                                    model.count = filteredCars.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
+                                }
+                                model.carsByYear =model.carsByYear.filter(car => car.year === yearFilter.year)
+                                return model;
+                            });
+                        }
 
                         // Calculate the yearCarsSum and yearPercentage for the brand
                         brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
@@ -671,6 +682,7 @@ module.exports = {
                     }];
                 }
             }
+
 
 
 

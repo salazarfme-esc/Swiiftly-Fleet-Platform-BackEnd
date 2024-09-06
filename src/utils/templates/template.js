@@ -312,88 +312,158 @@ module.exports = {
         return templateBody;
     },
     invitationToJoinSWIIFTLY: (data) => {
-        let templateBody = `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width,initial-scale=1">
-                <meta name="x-apple-disable-message-reformatting">
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-                <title>Invitation to Join SWIIFTLY</title>
-                <style>
-                    @media only screen and (max-width: 992px) {
-                        table {
-                            padding: 20px;
-                            max-width: 768px !important;
-                            width: 768px !important;
-                        }
-                        .logo {
-                            width: 200px !important;
-                        }
-                    }
-                    @media only screen and (max-width: 768px) {
-                        table {
-                            padding: 20px;
-                            max-width: 100% !important;
-                            width: 100% !important;
-                        }
-                    }
-                    @media only screen and (max-width: 767px) {
-                        img {
-                            width: 150px;
-                        }
-                        p {
-                            font-size: 18px;
-                            width: 100% !important;
-                        }
-                        ul {
-                            margin-top: 25px !important;
-                        }
-                        ul li a img {
-                            width: 40px;
-                            height: 40px;
-                        }
-                        .otp {
-                            margin: 25px 0 !important;
-                            width: 85% !important;
-                        }
-                        ul li {
-                            margin: 0 5px !important;
-                        }
-                        .right-check {
-                            width: 100px !important;
-                        }
-                        .logo {
-                            margin-bottom: 10px !important;
-                        }
-                    }
-                </style>
-            </head>
-            <body style="margin:0; padding:0; font-family: 'Montserrat', sans-serif;font-weight: 400;font-size: 16px;background-color: #F2F2F2;">
-                <table width="1000" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;max-width: 800px;padding: 20px;">
-                    <tr style="background-color: #ffffff;">
-                        <td width="100%" align="center" style="padding: 20px;">
-                            <img src="https://dev-wxlfdigital.s3.amazonaws.com/static/shield.png" class="right-check" width="150" alt="">
-                            <p style="width: 75%;margin: 0 auto;font-size: 18px;line-height: 30px;">We are excited to invite you to join SWIIFTLY. Below are your account details:</p>
-                            <div style="background-color: rgba(205, 246, 244, 1);width: 60%;padding: 20px;margin: 20px 0;">
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Name: ${data.full_name}</p>
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Email: ${data.email}</p>
-                                <p style="color: #37303F;font-weight: 600;font-size: 20px;">Password: ${data.password}</p>
-                            </div>
-                            <p style="font-weight: 400;font-size: 21px;margin-bottom: 0;">Regards,</p>
-                            <p style="font-weight: 600;font-size: 21px;margin-top: 10px">Team SWIIFTLY</p>
-                        </td>
-                    </tr>
+        let templateBody = `<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <title>Swiiftly</title>
+    
+        <style>
+            body {
+                font-family: "Poppins", sans-serif;
+            }
+
+            @media screen and (max-width: 767px) {
+                table {
+                    width: 100%;
+                }
+                .logo {
+                    width: 90%;
+                }
+                .policy {
+                    display: inline-block !important;
+                    text-align: center;
+                }
+                .policy li {
+                    list-style: none;
+                }
+                    .gs li {
+                margin-left: 0 !important;
+                }
+                input {
+                    width: 100% !important;
+                }
+                .logo {
+                    width: 100%;
+                }
+                ul.policy li {
+                    display: block !important;
+                    width: 100% !important;
+                    margin-bottom: 10px !important;
+                }
+                h1 {
+                    font-size: 20px;
+                }
+                
+            }
+        </style>
+      </head>
+      <body>
+    
+        <table border="0" cellpadding="0" cellspacing="0" style="max-width: 800px; width: 100%; margin: 0 auto;">
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="padding: 10px 0; width: 100%;">
+                        <tr>
+                            <td>
+                                <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td>
+                               <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/otpBanner.png" width="100%" alt="">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td>
+                                <h1>Invited to Swiiftly</h1>
+                                <p style="margin: 0;">Hello,</p>
+                                <p style="margin: 0;"><strong>${data.full_name}</strong> you have been invited to Swiiftly by your <strong>Swiiftly Admin</strong></p>
+                                <p style="margin: 0;">Please use the below account details to onboard and access the vendor dashboard.</p>
+    
+                                <div style="margin: 30px 0;">
+                                    <p style="margin: 0;">Registered Email: <strong>${data.email}</strong></p>
+                                    <p style="margin: 0;">One Time Password: <strong>${data.password}</strong></p>
+                                </div>
+                                <p style="margin: 0 0 30px;">
+                                    <button class="default-btn" style="border: 0; width: 155px; height: 48px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 88.57px; background-color: #FDB702; color:#000;">Continue</button>
+                                </p>
+                                <p style="margin: 0;">Best Regards,</p>
+                                <p style="margin: 0;"><strong>Swiiftly team.</strong></p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+    
+             <tr>
+            <td>
+                <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;border-top: 1px solid rgba(217, 217, 217, 1);border-bottom: 1px solid rgba(217, 217, 217, 1);margin: 50px 0;">
                     <tr>
-                        <td align="center">
-                            <p style="font-weight: 400;font-size: 21px;">Copyright © 2024 | SWIIFTLY</p>
+                        <td width="50%">
+                            <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/swiiftlyLogo.png" class="logo" width="50%" alt="">
                         </td>
+                       <td width="50%" align="right">
+                        <ul style="padding: 0;margin: 0;">
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
+                                </a>
+                            </li>
+                            <li style="list-style: none;display: inline-block;">
+                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                    <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
+                                </a>
+                            </li>
+                        </ul>
+</td>
+
                     </tr>
                 </table>
-            </body>
-            </html>`;
+            </td>
+        </tr>
+    
+            <tr>
+                <td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
+                        <tr>
+                            <td align="center">
+                                <p>© 2024 SWIIFTLY. All rights reserved.</p>
+                                <p>You are receiving this mail because you registered to join the SWIIFTLY platform as a user or a creator. This also shows that you agree to our Terms of use and Privacy Policies. If you no longer want to receive mails from use.</p>
+                                <ul class="policy" style="padding: 0;margin: 0 auto; width: 100%;text-align: center;">
+                                    <li style="list-style: none;display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;list-style: none;color: #000000;border-bottom: 1px solid #333333;">Privacy policy</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Terms of service</a></li>
+                                    <li style="display: inline-block;width: 20%;text-align: center;"><a href="#" style="text-decoration: none;color: #000000;border-bottom: 1px solid #333333;">Help center</a></li>
+                                </ul>
+                             </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+           
+        </table>
+      </body>
+    </html>`;
         return templateBody;
     },
 

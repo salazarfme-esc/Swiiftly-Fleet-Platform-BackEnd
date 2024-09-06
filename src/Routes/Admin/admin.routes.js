@@ -92,6 +92,7 @@ module.exports = () => {
     Router.get("/user", adminUserManagementController.GetUser);
     Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
+    Router.get("/user-detail/:userId", adminUserManagementController.GetUserDetail);
 
     /**
    * Middleware for Handling Job Requests

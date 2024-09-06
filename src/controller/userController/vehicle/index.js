@@ -74,15 +74,15 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let checkVehicle = await VehicleDbHandler.getByQuery({
-                $or: [
-                    { identification_number: reqObj.identification_number },
-                    { license_plate: reqObj.license_plate }
-                ]
-            });
+            let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: reqObj.identification_number });
+            let checkVehicle1 = await VehicleDbHandler.getByQuery({ license_plate: reqObj.license_plate });
 
             if (checkVehicle.length) {
-                responseData.msg = 'Vehicle with this identification number or license plate already exists!';
+                responseData.msg = 'Vehicle with this identification number already exists!';
+                return responseHelper.error(res, responseData);
+            }
+            if (checkVehicle1.length) {
+                responseData.msg = 'Vehicle with this license plate already exists!';
                 return responseHelper.error(res, responseData);
             }
 
@@ -221,18 +221,22 @@ module.exports = {
             for (let record of excelData.Sheet1) { // Assuming the sheet name is 'Sheet1'
                 try {
                     // Validate uniqueness of VIN and License Plate
-                    let checkVehicle = await VehicleDbHandler.getByQuery({
-                        $or: [
-                            { identification_number: record.identification_number },
-                            { license_plate: record.license_plate }
-                        ]
-                    });
+                    let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: reqObj.identification_number });
+                    let checkVehicle1 = await VehicleDbHandler.getByQuery({ license_plate: reqObj.license_plate });
 
                     if (checkVehicle.length) {
                         response.failureCount++;
                         response.failedRecords.push({
                             record,
-                            reason: 'Vehicle with this identification number or license plate already exists!'
+                            reason: 'Vehicle with this identification number already exists!'
+                        });
+                        continue;
+                    }
+                    if (checkVehicle1.length) {
+                        response.failureCount++;
+                        response.failedRecords.push({
+                            record,
+                            reason: 'Vehicle with this license plate already exists!'
                         });
                         continue;
                     }
@@ -479,10 +483,9 @@ module.exports = {
                     title: { $regex: req.body.make, $options: 'i' }
                 }).lean();
                 const makeIds = makeMatches.map(make => make._id);
-                if (makeIds.length) {
-                    matchStage.make = { $in: makeIds };
-                }
+                matchStage.make = { $in: makeIds };
             }
+
 
             let brandStatistics = await VehicleAggregate.aggregate([
                 {
@@ -651,7 +654,7 @@ module.exports = {
                                 } else {
                                     model.count = filteredCars.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
                                 }
-                                model.carsByYear =model.carsByYear.filter(car => car.year === yearFilter.year)
+                                model.carsByYear = model.carsByYear.filter(car => car.year === yearFilter.year)
                                 return model;
                             });
                         }
@@ -983,7 +986,7 @@ module.exports = {
                 }
             }
 
-            responseData.msg = 'Bulk delete completed!';
+            responseData.msg = vehicleIds.length > 1 ? 'Bulk delete completed!' : 'Vehicle deleted!';
             responseData.data = response;
             return responseHelper.success(res, responseData);
         } catch (error) {

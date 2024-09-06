@@ -127,6 +127,37 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    GetUserDetail: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let reqObj = req.query;
+        let userId = req.params.userId
+        console.log("🚀 ~ GetUserDetail: ~ userId:", userId)
+        log.info("Received request for getting the vendor or fleet manager.", reqObj);
+
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let users = await UserDbHandler.getByQuery({_id: userId}).lean();
+
+            let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: users[0]._id }).countDocuments();
+            let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: users[0]._id, status: 'in-progress' }).countDocuments();
+            users[0].totalVehicles = totalVehicles
+            users[0].inProgressJobs = inProgressJobs
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = users[0];
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch data with error::', error);
+            responseData.msg = "Failed to fetch data";
+            return responseHelper.error(res, responseData);
+        }
+    },
     GetUserVehiclesData: async (req, res) => {
         let userId = req.params.userId; // Assuming the user ID is passed as a path parameter
         let admin = req.admin.sub;

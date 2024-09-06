@@ -188,6 +188,7 @@ module.exports = {
     
             let updateAdmin = await adminDbHandler.updateById(id, updatedData);
             responseData.msg = "Data updated!";
+            responseData.data = await adminDbHandler.getById(id);
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to update data with error::', error);

@@ -119,6 +119,7 @@ module.exports = {
             }
             let updateProfile = await userDbHandler.updateById(id, updatedObj);
             responseData.msg = `Data updated!`;
+            responseData.data = await userDbHandler.getById(id);
             return responseHelper.success(res, responseData);
 
         } catch (error) {

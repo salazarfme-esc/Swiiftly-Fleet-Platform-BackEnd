@@ -53,7 +53,7 @@ module.exports = () => {
     Router.use("/", adminAuthenticated);
     Router.get("/get-all-admin", adminAuthController.getAllAdmin);
     Router.get("/get-admin/:id", adminAuthController.getSingleAdmin);
-    Router.put("/update-admin",[multerService.uploadFile('file').single('avatar'), validationMiddleware(adminValidationSchema.update_admin, "body")], adminAuthController.updateAdmin);
+    Router.put("/update-admin", [multerService.uploadFile('file').single('avatar'), validationMiddleware(adminValidationSchema.update_admin, "body")], adminAuthController.updateAdmin);
     Router.post("/add-admin", validationMiddleware(adminValidationSchema.add_admin, "body"), adminAuthController.addAdmin);
     Router.put("/change-password", validationMiddleware(adminValidationSchema.changePassword, "body"), adminAuthController.changeAdminPassword);
 
@@ -61,13 +61,13 @@ module.exports = () => {
     // Routes for Make
     Router.post("/add-make", [multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateMake, "body")], adminMakeAndModel.addMake);
     Router.get("/get-all-makes", adminMakeAndModel.getMakes);
-    Router.put("/update-make/:id",[multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateMake, "body")], adminMakeAndModel.updateMake);
+    Router.put("/update-make/:id", [multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateMake, "body")], adminMakeAndModel.updateMake);
     Router.delete("/delete-make/:id", adminMakeAndModel.deleteMake);
 
     // Routes for Model
-    Router.post("/add-model",[multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateModel, "body")], adminMakeAndModel.addModel);
+    Router.post("/add-model", [multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateModel, "body")], adminMakeAndModel.addModel);
     Router.get("/get-all-models", adminMakeAndModel.getModels);
-    Router.put("/update-model/:id",[multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateModel, "body")], adminMakeAndModel.updateModel);
+    Router.put("/update-model/:id", [multerService.uploadFile('file').single('image'), validationMiddleware(adminMakeAndModelValidationSchema.addOrUpdateModel, "body")], adminMakeAndModel.updateModel);
     Router.delete("/delete-model/:id", adminMakeAndModel.deleteModel);
 
     /**
@@ -88,7 +88,7 @@ module.exports = () => {
     /**
    * Middleware for Handling User Management Requests
    */
-    Router.post("/user", validationMiddleware(userManagementSchema.addUser, "body"), adminUserManagementController.addUser);
+    Router.post("/user",[ multerService.uploadFile('file').single('w9_document'), validationMiddleware(userManagementSchema.addUser, "body")], adminUserManagementController.addUser);
     Router.get("/user", adminUserManagementController.GetUser);
     Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);

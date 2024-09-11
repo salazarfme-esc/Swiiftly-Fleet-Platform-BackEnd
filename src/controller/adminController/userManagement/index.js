@@ -56,6 +56,11 @@ module.exports = {
             }
             let password = generateStrongPassword();
 
+            let w9_document = "";
+
+            if (req.file) {
+                w9_document = req.file.location;
+            }
             let submitData = {
                 full_name: reqObj.full_name,
                 email: reqObj.email,
@@ -64,7 +69,16 @@ module.exports = {
                 email_verified: true,
                 login_way: "local",
                 user_role: reqObj.user_role,
-                company_name: reqObj.company_name
+                company_name: reqObj.company_name,
+                temporary_password: true,
+                w9: reqObj.w9,
+                w9_document: w9_document,
+                net: reqObj.net,
+                service_type: reqObj.service_type.split(","),
+                owner_name: reqObj.owner_name
+            }
+            if (w9_document || reqObj.w9) {
+                submitData.w9_verified = true
             }
             let createData = await UserDbHandler.createUser(submitData);
             if (createData) {
@@ -102,7 +116,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let users = await UserDbHandler.getByQuery({ user_role: reqObj.user_role, is_delete: false })
+            let users = await UserDbHandler.getByQuery({ user_role: reqObj.user_role, is_delete: false }).populate("service_type")
                 .skip(skip)
                 .limit(limit)
                 .sort({ "created_at": -1 });
@@ -142,7 +156,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let users = await UserDbHandler.getByQuery({_id: userId}).lean();
+            let users = await UserDbHandler.getByQuery({ _id: userId }).populate("service_type").lean();
 
             let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: users[0]._id }).countDocuments();
             let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: users[0]._id, status: 'in-progress' }).countDocuments();

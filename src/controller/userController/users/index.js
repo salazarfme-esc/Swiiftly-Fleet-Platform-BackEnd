@@ -154,7 +154,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let updatedObj = {
-                password: await _encryptPassword(reqObj.new_password)
+                password: await _encryptPassword(reqObj.new_password),
+                temporary_password: false
             }
             let updateProfile = await userDbHandler.updateById(id, updatedObj);
             responseData.msg = `Data updated successfully!`;

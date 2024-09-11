@@ -399,7 +399,7 @@ module.exports = {
                                 <h1>Invited to Swiiftly</h1>
                                 <p style="margin: 0;">Hello,</p>
                                 <p style="margin: 0;"><strong>${data.full_name}</strong> you have been invited to Swiiftly by your <strong>Swiiftly Admin</strong></p>
-                                <p style="margin: 0;">Please use the below account details to onboard and access the vendor dashboard.</p>
+                                <p style="margin: 0;">Please use the below account details to onboard and access the ${data.user_role === "vendor" ? "vendor" : "fleet"} dashboard.</p>
     
                                 <div style="margin: 30px 0;">
                                     <p style="margin: 0;">Registered Email: <strong>${data.email}</strong></p>

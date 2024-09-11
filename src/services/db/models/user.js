@@ -77,7 +77,36 @@ const userSchema = new Schema({
     company_name: {
         type: String,
         default: ''
-    }
+    },
+    owner_name: {
+        type: String,
+        default: ''
+    },
+    temporary_password: {
+        type: Boolean,
+        default: false
+    },
+    w9: {
+        type: String,
+        default: '',
+    },
+    w9_document: {
+        type: String,
+        default: '',
+    },
+    net: {
+        type: String,
+        enum: ['30', '15'],
+        default: '',
+    },
+    service_type: {
+        type: [mongoose.Schema.Types.ObjectId],
+        default: [],
+    },
+    w9_verified: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 /**
  * Method to Encrypt User password before Saving to Database

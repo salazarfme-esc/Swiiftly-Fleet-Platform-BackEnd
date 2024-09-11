@@ -15,6 +15,26 @@ module.exports = {
             is: 'fleet',
             then: Joi.string().required().label('Company Name'),
             otherwise: Joi.string().required().allow('').label('Company Name')
-        })
+        }),
+        w9: Joi.string().when('user_role', {
+            is: 'vendor',
+            then: Joi.string().required().label('W9'),
+            otherwise: Joi.string().required().allow('').label('W9')
+        }),
+        net: Joi.string().valid('30', '15').when('user_role', {
+            is: 'vendor',
+            then: Joi.string().required().label('Net'),
+            otherwise: Joi.string().required().allow('').label('Net')
+        }),
+        service_type: Joi.string().when('user_role', {
+            is: 'vendor',
+            then: Joi.string().required().label('Service Type'),
+            otherwise: Joi.string().required().allow('').label('Service Type')
+        }),
+        owner_name: Joi.string().when('user_role', {
+            is: 'vendor',
+            then: Joi.string().required().label('Owner Name'),
+            otherwise: Joi.string().required().allow('').label('Owner Name')
+        }),
     })
 };

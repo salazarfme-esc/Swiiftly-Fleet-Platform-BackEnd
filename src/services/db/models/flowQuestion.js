@@ -17,7 +17,7 @@ const FlowQuestionSchema = new Schema({
     },
     question_type: {
         type: String,
-        enum: ['single_choice', 'multiple_choice', 'text'],
+        enum: ['single_choice', 'multiple_choice', 'text', 'location'],
         required: true
     },
     options: {

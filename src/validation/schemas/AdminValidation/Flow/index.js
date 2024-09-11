@@ -9,7 +9,7 @@ module.exports = {
     flowQuestion: Joi.object().keys({
         flow_category: Joi.string().required().label('Flow Category'),
         question: Joi.string().required().label('Question'),
-        question_type: Joi.string().valid('single_choice', 'multiple_choice', 'text').required().label('Question Type'),
+        question_type: Joi.string().valid('single_choice', 'multiple_choice', 'text', 'location').required().label('Question Type'),
         options: Joi.when('question_type', {
             is: 'text',
             then: Joi.array().items(Joi.object().keys({

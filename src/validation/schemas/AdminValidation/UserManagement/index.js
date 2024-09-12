@@ -18,7 +18,7 @@ module.exports = {
         }),
         w9: Joi.string().when('user_role', {
             is: 'vendor',
-            then: Joi.string().required().label('W9'),
+            then: Joi.string().required().allow('').label('W9'),
             otherwise: Joi.string().required().allow('').label('W9')
         }),
         net: Joi.string().valid('30', '15').when('user_role', {

@@ -11,7 +11,7 @@ module.exports = {
         question: Joi.string().required().label('Question'),
         question_type: Joi.string().valid('single_choice', 'multiple_choice', 'text', 'location').required().label('Question Type'),
         options: Joi.when('question_type', {
-            is: 'text',
+            is: Joi.string().valid('text', 'location'),
             then: Joi.array().items(Joi.object().keys({
                 option: Joi.string().label('Option'),
                 action: Joi.boolean().label('Action')

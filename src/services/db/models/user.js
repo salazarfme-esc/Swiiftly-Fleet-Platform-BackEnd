@@ -101,6 +101,7 @@ const userSchema = new Schema({
     },
     service_type: {
         type: [mongoose.Schema.Types.ObjectId],
+		ref: 'FlowCategory',
         default: [],
     },
     w9_verified: {

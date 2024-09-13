@@ -163,15 +163,17 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.body;
+        const limit = parseInt(req.query.limit); // Ensure limit is a number
+        const skip = parseInt(req.query.skip); // Ensure skip is a number
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description");
+            let getData = await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description").skip(skip).limit(limit);
             responseData.msg = "Data fetched successfully!";
-            responseData.data = getData;
+            responseData.data = { count: await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description").countDocuments(),  data: getData};
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -448,31 +450,31 @@ module.exports = {
         let admin = req.admin.sub;
         const { flow_category, sequence } = req.body;
         log.info("Received request to delete a flow item", req.body);
-        
+
         try {
             let adminData = await adminDbHandler.getById(admin);
             if (!adminData) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Fetch the flow item to be deleted
             let flowToDelete = await FlowDbHandler.getByQuery({ flow_category: flow_category, sequence: sequence });
             if (!flowToDelete || flowToDelete.length === 0) {
                 responseData.msg = "Flow item not found!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Delete the flow item
             let deleteFlow = await FlowDbHandler.deleteById(flowToDelete[0]._id);
             if (!deleteFlow) {
                 responseData.msg = "Failed to delete flow item!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Fetch all flows with a sequence greater than the deleted item
             let flowsToUpdate = await FlowDbHandler.getByQuery({ flow_category: flow_category, sequence: { $gt: sequence } });
-    
+
             // Update the sequence of the remaining flows
             for (let i = 0; i < flowsToUpdate.length; i++) {
                 let updateSequence = await FlowDbHandler.updateById(flowsToUpdate[i]._id, { sequence: flowsToUpdate[i].sequence - 1 });
@@ -481,7 +483,7 @@ module.exports = {
                     return responseHelper.error(res, responseData);
                 }
             }
-    
+
             responseData.msg = "Flow item deleted and sequences updated successfully!";
             return responseHelper.success(res, responseData);
         } catch (error) {
@@ -490,6 +492,6 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    
+
 
 };

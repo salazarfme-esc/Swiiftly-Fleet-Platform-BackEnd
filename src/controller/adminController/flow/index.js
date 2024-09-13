@@ -10,6 +10,8 @@ const contactInfoDbHandler = dbService.ContactInfo;
 const FlowCategoryDbHandler = dbService.FlowCategory;
 const FlowQuestionDbHandler = dbService.FlowQuestion;
 const FlowDbHandler = dbService.Flow;
+const MainJobDbHandler = dbService.MainJob;
+const SubJobDbHandler = dbService.SubJob;
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
 const { response } = require('express');
@@ -173,7 +175,7 @@ module.exports = {
             }
             let getData = await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description").skip(skip).limit(limit);
             responseData.msg = "Data fetched successfully!";
-            responseData.data = { count: await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description").countDocuments(),  data: getData};
+            responseData.data = { count: await FlowQuestionDbHandler.getByQuery({}).populate("flow_category", "name description").countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -248,6 +250,7 @@ module.exports = {
                 flow_category: reqObj.flow_category,
                 flow_question: reqObj.flow_question,
                 sequence: reqObj.sequence,
+                status: 'draft' // default to draft status
             };
             let createData = await FlowDbHandler.create(submitData);
             responseData.msg = "Data added successfully!";
@@ -304,6 +307,11 @@ module.exports = {
                 },
                 {
                     $unwind: '$flow_question.flow_category'
+                },
+                {
+                    $addFields: {
+                        "flow_category.status": "$status"
+                    }
                 },
                 {
                     $group: {
@@ -386,6 +394,40 @@ module.exports = {
         } catch (error) {
             log.error('failed to update data with error::', error);
             responseData.msg = "failed to update data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    publishFLow: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let reqObj = req.body;
+        let id = req.params.id;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getByQueryFlow = await FlowDbHandler.getByQuery({ flow_category: id });
+            if (!getByQueryFlow.length) {
+                responseData.msg = "Data does not exist!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let mainJobs = await MainJobDbHandler.getByQuery({ service_category: id });
+            let subJob = await SubJobDbHandler.getByQuery({ service_category: id });
+
+            if (reqObj.status == "draft" && (mainJobs.length || subJob.length)) {
+                responseData.msg = "Cannot draft published flow with existing jobs!";
+                return responseHelper.error(res, responseData);
+            }
+            let updateData = await FlowDbHandler.updateByQuery({ flow_category: id }, { status: reqObj.status });
+            responseData.msg = "Status updated successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to update status with error::', error);
+            responseData.msg = "failed to update status";
             return responseHelper.error(res, responseData);
         }
     },

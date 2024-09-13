@@ -20,6 +20,12 @@ const FlowSchema = new Schema({
         default: 0,
         required: true
     },
+    status: {
+        type: String,
+        enum: ['draft', 'published'],
+        default: 'draft',
+        required: true
+    }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 module.exports = mongoose.model('Flow', FlowSchema);

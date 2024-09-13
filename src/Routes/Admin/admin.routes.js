@@ -82,6 +82,8 @@ module.exports = () => {
     Router.post("/flow", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.addFlow);
     Router.get("/flow", adminFlowController.getFlow);
     Router.put("/flow/:id", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.updateFlow);
+    Router.put("/update-status-flow/:id", validationMiddleware(florValidationSchema.flowPublish, "body"), adminFlowController.publishFLow);
+
     Router.put("/flow-sequence", validationMiddleware(florValidationSchema.updateFlowSequence, "body"), adminFlowController.UpdateFlowSequence);
     Router.delete("/flow-sequence", validationMiddleware(florValidationSchema.deleteFlowItem, "body"), adminFlowController.DeleteFlowBySequence);
 

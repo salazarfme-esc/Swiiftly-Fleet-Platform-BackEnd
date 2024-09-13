@@ -28,6 +28,10 @@ module.exports = {
         flow_question: Joi.string().required().label('Flow Question'),
         sequence: Joi.number().required().label('Sequence')
     }),
+    flowPublish: Joi.object().keys({
+        
+        status: Joi.number().required().valid('draft', 'published').label('Status')
+    }),
 
     flowCategory: Joi.object().keys({
         name: Joi.string().required().label('Name'),

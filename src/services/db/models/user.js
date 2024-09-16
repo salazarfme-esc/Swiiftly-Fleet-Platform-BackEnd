@@ -96,7 +96,7 @@ const userSchema = new Schema({
     },
     net: {
         type: String,
-        enum: ['30', '15'],
+        enum: ['30', '15', ''],
         default: '',
     },
     service_type: {

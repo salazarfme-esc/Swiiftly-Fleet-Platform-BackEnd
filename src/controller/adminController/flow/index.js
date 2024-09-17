@@ -62,23 +62,35 @@ module.exports = {
     getFlowCategory: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        let reqObj = req.body;
+        let reqObj = req.query;
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await FlowCategoryDbHandler.getByQuery({});
+
+            // Get all categories
+            let allCategories = await FlowCategoryDbHandler.getByQuery({});
+
+            // Get all flow questions to check if flows exist for categories
+            let allFlows = await FlowQuestionDbHandler.getByQuery({});
+
+            // Filter out categories that already have an associated flow
+            let filteredCategories = allCategories.filter(category =>
+                !allFlows.some(flow => flow.flow_category.toString() === category._id.toString())
+            );
+
             responseData.msg = "Data fetched successfully!";
-            responseData.data = getData;
+            responseData.data = reqObj.isFlow === "true" ? filteredCategories : allCategories;
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
-            responseData.msg = "failed to fetch data";
+            responseData.msg = "Failed to fetch data";
             return responseHelper.error(res, responseData);
         }
     },
+
     /**
      * Method to handle update flow category
      */
@@ -241,7 +253,7 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await FlowDbHandler.getByQuery({ sequence: reqObj.sequence, flow_category: reqObj.flow_category });
+            let getData = await FlowDbHandler.getByQuery({ sequence: reqObj.sequence, flow_category: reqObj.flow_category, flow_question: reqObj.flow_question });
             if (getData.length) {
                 responseData.msg = "Sequence already exist!";
                 return responseHelper.error(res, responseData);
@@ -455,14 +467,14 @@ module.exports = {
             flows.sort((a, b) => a.sequence - b.sequence);
 
             // Find the flow that needs to be updated
-            let movedFlow = flows.find(flow => flow._id.toString() === flow_id);
+            let movedFlow = flows.find(flow => flow.flow_question.toString() === flow_id);
             if (!movedFlow) {
                 responseData.msg = "Flow not found!";
                 return responseHelper.error(res, responseData);
             }
 
             // Remove the flow from its current position
-            flows = flows.filter(flow => flow._id.toString() !== flow_id);
+            flows = flows.filter(flow => flow.flow_question.toString() !== flow_id);
 
             // Adjust newIndex to 0-based index for array manipulation
             const adjustedNewIndex = newIndex - 1;

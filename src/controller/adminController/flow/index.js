@@ -69,20 +69,27 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-
+    
             // Get all categories
             let allCategories = await FlowCategoryDbHandler.getByQuery({});
-
-            // Get all flow questions to check if flows exist for categories
-            let allFlows = await FlowQuestionDbHandler.getByQuery({});
-
-            // Filter out categories that already have an associated flow
-            let filteredCategories = allCategories.filter(category =>
-                !allFlows.some(flow => flow.flow_category.toString() === category._id.toString())
-            );
-
-            responseData.msg = "Data fetched successfully!";
-            responseData.data = reqObj.isFlow === "true" ? filteredCategories : allCategories;
+    
+            // Only filter categories if isFlow is true
+            if (reqObj.isFlow === "true") {
+                // Get all flow questions to check if flows exist for categories
+                let allFlows = await FlowDbHandler.getByQuery({});
+    
+                // Filter out categories that already have an associated flow
+                let filteredCategories = allCategories.filter(category =>
+                    !allFlows.some(flow => flow.flow_category.toString() === category._id.toString())
+                );
+    
+                responseData.msg = "Data fetched successfully!";
+                responseData.data = filteredCategories;
+            } else {
+                responseData.msg = "Data fetched successfully!";
+                responseData.data = allCategories;
+            }
+    
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -90,6 +97,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    
 
     /**
      * Method to handle update flow category

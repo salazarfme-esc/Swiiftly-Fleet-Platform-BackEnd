@@ -15,6 +15,7 @@ const SubJobDbHandler = dbService.SubJob;
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
 const { response } = require('express');
+const mongoose = require("mongoose");
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -69,27 +70,27 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Get all categories
             let allCategories = await FlowCategoryDbHandler.getByQuery({});
-    
+
             // Only filter categories if isFlow is true
             if (reqObj.isFlow === "true") {
                 // Get all flow questions to check if flows exist for categories
                 let allFlows = await FlowDbHandler.getByQuery({});
-    
+
                 // Filter out categories that already have an associated flow
                 let filteredCategories = allCategories.filter(category =>
                     !allFlows.some(flow => flow.flow_category.toString() === category._id.toString())
                 );
-    
+
                 responseData.msg = "Data fetched successfully!";
                 responseData.data = filteredCategories;
             } else {
                 responseData.msg = "Data fetched successfully!";
                 responseData.data = allCategories;
             }
-    
+
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -97,7 +98,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    
+
 
     /**
      * Method to handle update flow category
@@ -373,6 +374,112 @@ module.exports = {
         } catch (error) {
             log.error('failed to fetch data with error::', error);
             responseData.msg = "failed to fetch data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+    * Method to handle get flow by category ID
+    */
+    getFlowByCategoryId: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let categoryId = req.params.categoryId; // Get the category ID from the request parameters
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Query to get flow data for the specific category ID
+            let getData = await Flow.aggregate([
+                {
+                    $match: { 'flow_category': mongoose.Types.ObjectId(categoryId) } // Match by the category ID
+                },
+                {
+                    $lookup: {
+                        from: 'flowcategories', // The collection name for FlowCategory
+                        localField: 'flow_category',
+                        foreignField: '_id',
+                        as: 'flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_category'
+                },
+                {
+                    $lookup: {
+                        from: 'flowquestions', // The collection name for FlowQuestion
+                        localField: 'flow_question',
+                        foreignField: '_id',
+                        as: 'flow_question'
+                    }
+                },
+                {
+                    $unwind: '$flow_question'
+                },
+                {
+                    $lookup: {
+                        from: 'flowcategories', // Lookup for the independent flow_category key in question_details
+                        localField: 'flow_question.flow_category',
+                        foreignField: '_id',
+                        as: 'flow_question.flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_question.flow_category'
+                },
+                {
+                    $addFields: {
+                        "flow_category.status": "$status"
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$flow_category._id',
+                        category: { $first: '$flow_category' },
+                        questions: {
+                            $push: {
+                                sequence: '$sequence',
+                                question_details: '$$ROOT', // Push the entire document
+                                created_at: '$created_at',
+                                updated_at: '$updated_at',
+                                __v: '$__v'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        flow_category: '$category',
+                        questions: {
+                            $sortArray: {
+                                input: '$questions',
+                                sortBy: { sequence: 1 }
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        'flow_category.created_at': -1
+                    }
+                }
+            ]);
+
+            if (getData.length === 0) {
+                responseData.msg = "No data found for the given category ID!";
+                return responseHelper.success(res, responseData);
+            }
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = getData[0]; // Return the specific category's flow data
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to fetch data with error::', error);
+            responseData.msg = "Failed to fetch data";
             return responseHelper.error(res, responseData);
         }
     },

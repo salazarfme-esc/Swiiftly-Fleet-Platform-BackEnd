@@ -82,6 +82,7 @@ module.exports = () => {
     Router.post("/flow", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.addFlow);
     Router.get("/flow", adminFlowController.getFlow);
     Router.put("/flow/:id", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.updateFlow);
+    Router.get("/flow-detail/:categoryId", adminFlowController.getFlowByCategoryId);
     Router.put("/update-status-flow/:id", validationMiddleware(florValidationSchema.flowPublish, "body"), adminFlowController.publishFLow);
 
     Router.put("/flow-sequence", validationMiddleware(florValidationSchema.updateFlowSequence, "body"), adminFlowController.UpdateFlowSequence);
@@ -90,7 +91,7 @@ module.exports = () => {
     /**
    * Middleware for Handling User Management Requests
    */
-    Router.post("/user",[ multerService.uploadFile('file').single('w9_document'), validationMiddleware(userManagementSchema.addUser, "body")], adminUserManagementController.addUser);
+    Router.post("/user", [multerService.uploadFile('file').single('w9_document'), validationMiddleware(userManagementSchema.addUser, "body")], adminUserManagementController.addUser);
     Router.get("/user", adminUserManagementController.GetUser);
     Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);

@@ -128,6 +128,89 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    updateVendorProfile: async (req, res) => {
+        let reqObj = req.body;
+        let user = req.user;
+        let id = user.sub;
+        log.info('Received request for User Profile update:', reqObj);
+        let responseData = {};
+
+        try {
+            // Fetch user data by ID
+            let userData = await userDbHandler.getById(id, { user_password: 0 });
+            if (!userData) {
+                responseData.msg = 'Invalid user or token expired. Please login again to continue!';
+                return responseHelper.error(res, responseData);
+            }
+
+            let avatar = userData.avatar;
+            let w9_document = userData.w9_document;
+            if (req.files && req.files.avatar) {
+                avatar = req.files.avatar[0].location;
+            }
+            if (req.files && req.files.w9_document) {
+                w9_document = req.files.w9_document[0].location;
+            }
+
+            // Create an object with the fields you want to update
+            let updatedObj = {
+                full_name: reqObj.full_name,
+                phone_number: reqObj.phone_number,
+                owner_name: reqObj.owner_name,
+                service_type: reqObj.service_type.split(","),
+
+                routing_no: reqObj.routing_no,
+                account_holder_name: reqObj.account_holder_name,
+                account_number: reqObj.account_number,
+                bank_name: reqObj.bank_name,
+                bic_swift_code: reqObj.bic_swift_code,
+                bank_address: reqObj.bank_address,
+
+                w9: reqObj.w9,
+                w9_document: w9_document
+            }
+
+            // Check if there are changes in w9 or w9_document, if so set w9_verified to false
+            if (reqObj.w9 !== userData.w9 || w9_document !== userData.w9_document) {
+                updatedObj.w9_verified = false;
+            }
+
+            // Check if any bank information is changed, if so set bank_verified to false
+            if (
+                reqObj.routing_no !== userData.routing_no ||
+                reqObj.account_holder_name !== userData.account_holder_name ||
+                reqObj.account_number !== userData.account_number ||
+                reqObj.bank_name !== userData.bank_name ||
+                reqObj.bic_swift_code !== userData.bic_swift_code ||
+                reqObj.bank_address !== userData.bank_address
+            ) {
+                updatedObj.bank_verified = false;
+            }
+
+            if (reqObj.availability && Array.isArray(reqObj.availability)) {
+                updatedObj.availability = reqObj.availability.map(item => ({
+                    day: item.day,
+                    isClosed: item.isClosed || false,
+                    timeSlots: item.timeSlots ? item.timeSlots.map(slot => ({
+                        from: slot.from,
+                        to: slot.to
+                    })) : []
+                }));
+            }
+            // Update the user data in the database
+            let updateProfile = await userDbHandler.updateById(id, updatedObj);
+            responseData.msg = `Data updated!`;
+            responseData.data = await userDbHandler.getById(id); // Return updated user data
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to update user profile with error::', error);
+            responseData.msg = 'Failed to update data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+
 
     /**
      * Method to handle change password

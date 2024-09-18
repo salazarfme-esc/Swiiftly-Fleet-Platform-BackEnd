@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
 const config = require('../../../config/environments');
+
 /**
  * Creating User Schema Model
  */
@@ -29,7 +30,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
         trim: true,
-        lowercase: true // Always convert `test` to lowercase
+        lowercase: true 
     },
     password: {
         type: String,
@@ -101,14 +102,65 @@ const userSchema = new Schema({
     },
     service_type: {
         type: [mongoose.Schema.Types.ObjectId],
-		ref: 'FlowCategory',
+        ref: 'FlowCategory',
         default: [],
     },
     w9_verified: {
         type: Boolean,
         default: false
     },
+    routing_no: {
+        type: String,
+        default: '',
+    },
+    account_holder_name: {
+        type: String,
+        default: '',
+    },
+    account_number: {
+        type: String,
+        default: '',
+    },
+    bank_name: {
+        type: String,
+        default: '',
+    },
+    bic_swift_code: {
+        type: String,
+        default: '',
+    },
+    bank_address: {
+        type: String,
+        default: '',
+    },
+    bank_verified: {
+        type: Boolean,
+        default: false
+    },
+    availability: [{
+        day: {
+            type: String,
+            enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            required: true
+        },
+        isClosed: {
+            type: Boolean,
+            default: false
+        },
+        timeSlots: [{
+            from: {
+                type: String,
+                required: function () { return !this.isClosed; } // Required only if day is not closed
+            },
+            to: {
+                type: String,
+                required: function () { return !this.isClosed; }
+            }
+        }]
+    }],
+
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
 /**
  * Method to Encrypt User password before Saving to Database
  */
@@ -131,5 +183,6 @@ userSchema.pre('save', function (next) {
         });
     });
 });
+
 userSchema.index({ location: '2dsphere' });
 module.exports = mongoose.model('Users', userSchema);

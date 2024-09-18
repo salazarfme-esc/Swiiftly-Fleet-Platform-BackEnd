@@ -103,6 +103,7 @@ module.exports = () => {
     );
     Router.get('/profile', userInfoController.profile);
     Router.put('/update-profile', [multerService.uploadFile('file').single('avatar'), validationMiddleware(userInfoValidationSchema.updateProfile, 'body')], userInfoController.updateProfile);
+    Router.put('/update-vendor-profile', [multerService.uploadFile('file').fields([{ name: 'avatar', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userInfoValidationSchema.updateVendorProfileValidation, 'body')], userInfoController.updateVendorProfile);
 
     /**
      * Routes for handle change password

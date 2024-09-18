@@ -120,7 +120,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await FlowCategoryDbHandler.getByQuery({ name: reqObj.name });
-            if (getData.length) {
+            if (getData.length && getData[0]._id !== id) {
                 responseData.msg = "Flow type with this name already exist!";
                 return responseHelper.error(res, responseData);
             }
@@ -138,6 +138,82 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+    * Method to handle delete flow category
+    */
+    deleteFlowCategory: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.id;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getDataById = await FlowCategoryDbHandler.getById(id);
+            if (!getDataById) {
+                responseData.msg = "Category does not exist!";
+                return responseHelper.error(res, responseData);
+            }
+            let getFlowQuestion = await FlowQuestionDbHandler.getByQuery({ flow_category: id });
+            if (getFlowQuestion.length) {
+                responseData.msg = "Cannot delete category because flow questions are associated with it!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getFlowData = await FlowDbHandler.getByQuery({ flow_category: id });
+            if (getFlowData.length) {
+                responseData.msg = "Cannot delete category because a flow sequence is associated with it!";
+                return responseHelper.error(res, responseData);
+            }
+
+
+            // Delete category by ID
+            let deleteData = await FlowCategoryDbHandler.deleteById(id);
+            responseData.msg = "Category deleted successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to delete category with error::', error);
+            responseData.msg = "Failed to delete category";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+     * Method to get flow category by ID
+     */
+    getFlowCategoryById: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.id;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getDataById = await FlowCategoryDbHandler.getById(id);
+            if (!getDataById) {
+                responseData.msg = "Category does not exist!";
+                return responseHelper.error(res, responseData);
+            }
+
+            responseData.msg = "Category fetched successfully!";
+            responseData.data = getDataById;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to fetch category with error::', error);
+            responseData.msg = "Failed to fetch category";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 
 
@@ -204,6 +280,76 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+    * Method to get flow Question by ID
+    */
+    getFlowQuestionById: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.id;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getDataById = await FlowQuestionDbHandler.getById(id).populate("flow_category");
+            if (!getDataById) {
+                responseData.msg = "Question does not exist!";
+                return responseHelper.error(res, responseData);
+            }
+
+            responseData.msg = "Question fetched successfully!";
+            responseData.data = getDataById;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to fetch Question with error::', error);
+            responseData.msg = "Failed to fetch question";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+   * Method to handle delete flow Question
+   */
+    deleteFlowQuestion: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.id;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getDataById = await FlowQuestionDbHandler.getById(id);
+            if (!getDataById) {
+                responseData.msg = "Question does not exist!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getFlowData = await FlowDbHandler.getByQuery({ flow_question: id });
+            if (getFlowData.length) {
+                responseData.msg = "Cannot delete question because a flow sequence is associated with it!";
+                return responseHelper.error(res, responseData);
+            }
+
+
+            // Delete category by ID
+            let deleteData = await FlowQuestionDbHandler.deleteById(id);
+            responseData.msg = "Question deleted successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to delete category with error::', error);
+            responseData.msg = "Failed to delete category";
+            return responseHelper.error(res, responseData);
+        }
+    },
     /**
      * Method to handle update flow question
      */
@@ -224,7 +370,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await FlowQuestionDbHandler.getByQuery({ question: reqObj.question });
-            if (getData.length) {
+            if (getData.length && getData[0]._id !== id) {
                 responseData.msg = "Flow question with this question already exist!";
                 return responseHelper.error(res, responseData);
             }

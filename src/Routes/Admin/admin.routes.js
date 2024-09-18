@@ -76,9 +76,13 @@ module.exports = () => {
     Router.post("/flow-category", validationMiddleware(florValidationSchema.flowCategory, "body"), adminFlowController.addFlowCategory);
     Router.get("/flow-category", adminFlowController.getFlowCategory);
     Router.put("/flow-category/:id", validationMiddleware(florValidationSchema.flowCategory, "body"), adminFlowController.updateFlowCategory);
+    Router.get("/flow-category-detail/:id", adminFlowController.getFlowCategoryById);
+    Router.delete("/flow-category/:id", adminFlowController.deleteFlowCategory);
     Router.post("/flow-question", validationMiddleware(florValidationSchema.flowQuestion, "body"), adminFlowController.addFlowQuestion);
     Router.get("/flow-question", adminFlowController.getFlowQuestion);
     Router.put("/flow-question/:id", validationMiddleware(florValidationSchema.flowQuestion, "body"), adminFlowController.updateFlowQuestion);
+    Router.get("/flow-question-detail/:id", adminFlowController.getFlowQuestionById);
+    Router.delete("/flow-question/:id", adminFlowController.deleteFlowQuestion);
     Router.post("/flow", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.addFlow);
     Router.get("/flow", adminFlowController.getFlow);
     Router.put("/flow/:id", validationMiddleware(florValidationSchema.flow, "body"), adminFlowController.updateFlow);

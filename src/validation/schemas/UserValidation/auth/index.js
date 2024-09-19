@@ -20,6 +20,8 @@ module.exports = {
                 'string.min': 'Password must be at least 6 characters long.',
                 'any.required': 'Password is required.'
             }),
+        user_role: Joi.string().valid("fleet", "vendor").required().label('User Role'),
+
     }),
     signup: Joi.object().keys({
         phone_number: Joi.string()

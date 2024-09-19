@@ -402,32 +402,58 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.body;
+
         try {
+            // Check admin validity
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await FlowDbHandler.getByQuery({ sequence: reqObj.sequence, flow_category: reqObj.flow_category, flow_question: reqObj.flow_question });
-            if (getData.length) {
-                responseData.msg = "Sequence already exist!";
+
+            // Fetch all flows in the same category
+            let flows = await FlowDbHandler.getByQuery({ flow_category: reqObj.flow_category });
+            if (!flows || flows.length === 0) {
+                responseData.msg = "No flows found for the specified category!";
                 return responseHelper.error(res, responseData);
             }
+
+            // Sort flows by their sequence
+            flows.sort((a, b) => a.sequence - b.sequence);
+
+            // Check if the new sequence already exists
+            let existingFlowAtSequence = flows.find(flow => flow.sequence === reqObj.sequence);
+            if (existingFlowAtSequence) {
+                // Shift flows with sequence >= reqObj.sequence by 1
+                for (let i = 0; i < flows.length; i++) {
+                    if (flows[i].sequence >= reqObj.sequence) {
+                        let updateSequence = await FlowDbHandler.updateById(flows[i]._id, { sequence: flows[i].sequence + 1 });
+                        if (!updateSequence) {
+                            responseData.msg = "Failed to update existing flow sequences!";
+                            return responseHelper.error(res, responseData);
+                        }
+                    }
+                }
+            }
+
+            // Create the new flow with the desired sequence
             let submitData = {
                 flow_category: reqObj.flow_category,
                 flow_question: reqObj.flow_question,
-                sequence: reqObj.sequence,
+                sequence: reqObj.sequence, // This is now guaranteed to be unique
                 status: 'draft' // default to draft status
             };
             let createData = await FlowDbHandler.create(submitData);
-            responseData.msg = "Data added successfully!";
+
+            responseData.msg = "Flow added and sequence adjusted successfully!";
             return responseHelper.success(res, responseData);
         } catch (error) {
-            log.error('failed to add data with error::', error);
-            responseData.msg = "failed to add data";
+            log.error('Failed to add flow with error::', error);
+            responseData.msg = "Failed to add flow";
             return responseHelper.error(res, responseData);
         }
     },
+
     /**
      * Method to handle get flow
      */

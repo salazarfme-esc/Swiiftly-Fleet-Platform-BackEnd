@@ -81,7 +81,8 @@ module.exports = {
         let responseData = {};
         try {
             let query = {
-                email: reqObj.email.toLowerCase()
+                email: reqObj.email.toLowerCase(),
+                user_role: reqObj.user_role
             }
             let getUser = await userDbHandler.getByQuery(query).lean();
             if (!getUser.length) {

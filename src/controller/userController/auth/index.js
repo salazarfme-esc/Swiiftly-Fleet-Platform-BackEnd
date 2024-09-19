@@ -84,7 +84,7 @@ module.exports = {
                 email: reqObj.email.toLowerCase(),
                 user_role: reqObj.user_role
             }
-            let getUser = await userDbHandler.getByQuery(query).lean();
+            let getUser = await userDbHandler.getByQuery(query).lean().populate("service_type");
             if (!getUser.length) {
                 responseData.msg = "Invalid email ID. Please provide a valid one.";
                 return responseHelper.error(res, responseData);

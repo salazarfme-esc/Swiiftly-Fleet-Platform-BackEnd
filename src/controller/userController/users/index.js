@@ -78,7 +78,7 @@ module.exports = {
         log.info('Received request for User Profile for User:', user);
         let responseData = {};
         try {
-            let userData = await userDbHandler.getById(id, { user_password: 0 });
+            let userData = await userDbHandler.getById(id, { user_password: 0 }).populate("service_type");
             responseData.msg = `Data Fetched Successfully!`;
             responseData.data = userData;
             return responseHelper.success(res, responseData);

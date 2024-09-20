@@ -67,8 +67,8 @@ module.exports = {
         isClosed: Joi.boolean().required().label("Is Closed"),
         timeSlots: Joi.array().items(
           Joi.object({
-            from: Joi.string().required().label("From Time"),
-            to: Joi.string().required().label("To Time")
+            from: Joi.string().required().allow("").label("From Time"),
+            to: Joi.string().required().allow("").label("To Time")
           })
         ).when('isClosed', {
           is: false, // Time slots are required only if the day is not closed

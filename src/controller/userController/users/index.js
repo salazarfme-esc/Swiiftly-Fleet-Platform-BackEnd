@@ -211,6 +211,42 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    updateVendorProfileStatus: async (req, res) => {
+        let reqObj = req.query;
+        let user = req.user;
+        let id = user.sub;
+        log.info('Received request for User Profile status update:', reqObj);
+        let responseData = {};
+
+        try {
+            // Fetch user data by ID
+            let userData = await userDbHandler.getById(id, { user_password: 0 });
+            if (!userData) {
+                responseData.msg = 'Invalid user or token expired. Please login again to continue!';
+                return responseHelper.error(res, responseData);
+            }
+
+
+
+            // Create an object with the fields you want to update
+            let updatedObj = {
+                profile_completed: reqObj.profile_completed === "true",
+
+            }
+
+
+            // Update the user data in the database
+            let updateProfile = await userDbHandler.updateById(id, updatedObj);
+            responseData.msg = `Data updated!`;
+            responseData.data = await userDbHandler.getById(id); // Return updated user data
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to update user profile with error::', error);
+            responseData.msg = 'Failed to update data!';
+            return responseHelper.error(res, responseData);
+        }
+    },
 
 
 

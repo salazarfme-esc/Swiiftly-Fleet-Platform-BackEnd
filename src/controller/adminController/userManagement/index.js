@@ -75,7 +75,7 @@ module.exports = {
                 w9: reqObj.w9,
                 w9_document: w9_document,
                 net: reqObj.net,
-                service_type: reqObj.service_type.split(","),
+                service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
                 owner_name: reqObj.owner_name,
                 profile_completed: false
             }

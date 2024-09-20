@@ -30,7 +30,7 @@ const userSchema = new Schema({
         type: String,
         required: true,
         trim: true,
-        lowercase: true 
+        lowercase: true
     },
     password: {
         type: String,
@@ -158,6 +158,14 @@ const userSchema = new Schema({
             }
         }]
     }],
+    profile_completed: {
+        type: Boolean,
+        default: false
+    },
+    business_address: {
+        type: String,
+        default: '',
+    },
 
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

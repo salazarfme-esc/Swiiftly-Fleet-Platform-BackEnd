@@ -167,7 +167,9 @@ module.exports = {
                 bank_address: reqObj.bank_address,
 
                 w9: reqObj.w9,
-                w9_document: w9_document
+                w9_document: w9_document,
+                business_address: reqObj.business_address,
+                avatar: avatar
             }
 
             // Check if there are changes in w9 or w9_document, if so set w9_verified to false

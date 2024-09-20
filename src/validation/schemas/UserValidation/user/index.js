@@ -56,7 +56,7 @@ module.exports = {
     bank_address: Joi.string().trim().optional().allow("").label('Bank Address'),
 
     w9: Joi.string().trim().optional().allow("").label('W9'),
-    w9_document: Joi.string().trim().optional().allow("").label('W9 Document'),
+    business_address: Joi.string().trim().optional().allow("").label('Business Address'),
 
     availability: Joi.array().items(
       Joi.object({

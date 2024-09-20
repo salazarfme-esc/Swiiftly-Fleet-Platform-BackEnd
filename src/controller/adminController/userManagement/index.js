@@ -11,6 +11,7 @@ const emailService = require('../../../services/sendEmail');
 const adminDbHandler = dbService.Admin;
 const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
+const SubJobDbHandler = dbService.SubJob;
 const VehicleDbHandler = dbService.Vehicle;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
 const MainJobAggregate = require("../../../services/db/models/mainJob")
@@ -75,7 +76,8 @@ module.exports = {
                 w9_document: w9_document,
                 net: reqObj.net,
                 service_type: reqObj.service_type.split(","),
-                owner_name: reqObj.owner_name
+                owner_name: reqObj.owner_name,
+                profile_completed: false
             }
             if (w9_document || reqObj.w9) {
                 submitData.w9_verified = true
@@ -110,30 +112,70 @@ module.exports = {
         log.info("Received request for getting the vendor or fleet manager.", reqObj);
 
         try {
+            // Fetch admin details
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
 
-            let users = await UserDbHandler.getByQuery({ user_role: reqObj.user_role, is_delete: false }).populate("service_type")
-                .skip(skip)
-                .limit(limit)
-                .sort({ "created_at": -1 });
+            // Set base query for users
+            let userQuery = { user_role: reqObj.user_role, is_delete: false };
 
-            let usersWithDetails = await Promise.all(users.map(async (user) => {
-                let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: user._id }).countDocuments();
-                let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: user._id, status: 'in-progress' }).countDocuments();
+            // If the user role is 'vendor', apply additional filters
+            if (reqObj.user_role === 'vendor') {
+                // Apply the filter for service_type using $in
+                if (reqObj.service_type) {
+                    userQuery['service_type'] = { $in: reqObj.service_type.split(",") };
+                }
 
-                return {
-                    ...user._doc, // Spread the existing user data
-                    totalVehicles,
-                    inProgressJobs
+                // Check the verified parameter
+                if (reqObj.verified === 'true') {
+                    // Both band_verified and w9_verified must be true
+                    userQuery['$and'] = [{ band_verified: true }, { w9_verified: true }];
+                } else if (reqObj.verified === 'false') {
+                    // Either band_verified or w9_verified must be false
+                    userQuery['$or'] = [{ band_verified: false }, { w9_verified: false }];
+                }
+
+                // Fetch the filtered vendors
+                let vendors = await UserDbHandler.getByQuery(userQuery).populate("service_type")
+                    .skip(skip)
+                    .limit(limit)
+                    .sort({ "created_at": -1 });
+
+                responseData.msg = "Vendors data fetched successfully!";
+                responseData.data = {
+                    count: await UserDbHandler.getByQuery(userQuery).countDocuments(),
+                    data: vendors
                 };
-            }));
+            }
+            // For fleet role, run the original logic
+            else if (reqObj.user_role === 'fleet') {
+                let users = await UserDbHandler.getByQuery(userQuery).populate("service_type")
+                    .skip(skip)
+                    .limit(limit)
+                    .sort({ "created_at": -1 });
 
-            responseData.msg = "Data fetched successfully!";
-            responseData.data = { count: await UserDbHandler.getByQuery({ user_role: reqObj.user_role, is_delete: false }).countDocuments(), data: usersWithDetails };
+                // Fetch total vehicles and in-progress jobs for each user
+                let usersWithDetails = await Promise.all(users.map(async (user) => {
+                    let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: user._id }).countDocuments();
+                    let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: user._id, status: 'in-progress' }).countDocuments();
+
+                    return {
+                        ...user._doc, // Spread the existing user data
+                        totalVehicles,
+                        inProgressJobs
+                    };
+                }));
+
+                responseData.msg = "Fleet data fetched successfully!";
+                responseData.data = {
+                    count: await UserDbHandler.getByQuery(userQuery).countDocuments(),
+                    data: usersWithDetails
+                };
+            }
+
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch data with error::', error);
@@ -141,30 +183,42 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
     GetUserDetail: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.query;
-        let userId = req.params.userId
-        console.log("🚀 ~ GetUserDetail: ~ userId:", userId)
+        let userId = req.params.userId;
+        console.log("🚀 ~ GetUserDetail: ~ userId:", userId);
         log.info("Received request for getting the vendor or fleet manager.", reqObj);
 
         try {
+            // Fetch admin details
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
 
-            let users = await UserDbHandler.getByQuery({ _id: userId }).populate("service_type").lean();
+            // Fetch user details by userId
+            let user = await UserDbHandler.getByQuery({ _id: userId }).populate("service_type").lean();
 
-            let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: users[0]._id }).countDocuments();
-            let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: users[0]._id, status: 'in-progress' }).countDocuments();
-            users[0].totalVehicles = totalVehicles
-            users[0].inProgressJobs = inProgressJobs
+            if (!user || user.length === 0) {
+                responseData.msg = "User not found!";
+                return responseHelper.error(res, responseData);
+            }
 
+            // If the user role is 'fleet', add extra information
+            if (user[0].user_role === 'fleet') {
+                let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: user[0]._id }).countDocuments();
+                let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: user[0]._id, status: 'in-progress' }).countDocuments();
+                user[0].totalVehicles = totalVehicles;
+                user[0].inProgressJobs = inProgressJobs;
+            }
+
+            // If user is vendor, do not add extra vehicle/job details
             responseData.msg = "Data fetched successfully!";
-            responseData.data = users[0];
+            responseData.data = user[0];
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch data with error::', error);
@@ -172,6 +226,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
     GetUserVehiclesData: async (req, res) => {
         let userId = req.params.userId; // Assuming the user ID is passed as a path parameter
         let admin = req.admin.sub;
@@ -379,10 +434,6 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-
-
-
-
     /**
     * Method to handle delete Vendor or Fleet
     */
@@ -390,26 +441,61 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         let id = req.params.id;
-        log.info("Received request for deleting the vendor or fleet manager.", id)
+        log.info("Received request for deleting the vendor or fleet manager.", id);
+
         try {
+            // Fetch admin details
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let Data = await UserDbHandler.getByQuery({ _id: id });
-            if (!Data.length) {
+
+            // Fetch the user details
+            let user = await UserDbHandler.getByQuery({ _id: id });
+            if (!user.length) {
                 responseData.msg = "Invalid request!";
                 return responseHelper.error(res, responseData);
             }
 
-            await UserDbHandler.updateById(id, { is_delete: true })
-            responseData.msg = "Data deleted successfully!";
+            // Check for 'fleet' user role
+            if (user[0].user_role === 'fleet') {
+                // Check if any main job is not equal to "completed" or "draft"
+                let mainJobsInProgress = await MainJobDbHandler.getByQuery({
+                    user_id: user[0]._id,
+                    status: { $nin: ['completed', 'draft'] }
+                }).countDocuments();
+
+                if (mainJobsInProgress > 0) {
+                    responseData.msg = "Cannot delete user because a job is in progress.";
+                    return responseHelper.error(res, responseData);
+                }
+            }
+
+            // Check for 'vendor' user role
+            if (user[0].user_role === 'vendor') {
+                // Check if any sub-jobs exist with the vendor_id and status not equal to 'vendor_accepted', 'vendor_assigned', 'in-progress', 'delayed'
+                let subJobsInProgress = await SubJobDbHandler.getByQuery({
+                    vendor_id: user[0]._id,
+                    status: { $nin: ['vendor_accepted', 'vendor_assigned', 'in-progress', 'delayed'] }
+                }).countDocuments();
+
+                if (subJobsInProgress > 0) {
+                    responseData.msg = "Cannot delete user because sub-jobs are in an invalid state.";
+                    return responseHelper.error(res, responseData);
+                }
+            }
+
+            // Proceed to delete the user (soft delete)
+            await UserDbHandler.updateById(id, { is_delete: true });
+            responseData.msg = "User deleted successfully!";
             return responseHelper.success(res, responseData);
+
         } catch (error) {
-            log.error('failed to delete data with error::', error);
-            responseData.msg = "failed to delete data";
+            log.error('Failed to delete user with error::', error);
+            responseData.msg = "Failed to delete user";
             return responseHelper.error(res, responseData);
         }
     },
+
 };

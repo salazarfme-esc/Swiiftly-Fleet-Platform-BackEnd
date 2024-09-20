@@ -411,12 +411,12 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Fetch all flows in the same category
-            let flows = await FlowDbHandler.getByQuery({ flow_category: reqObj.flow_category });
-            if (!flows || flows.length === 0) {
-                responseData.msg = "No flows found for the specified category!";
-                return responseHelper.error(res, responseData);
-            }
+            // // Fetch all flows in the same category
+            // let flows = await FlowDbHandler.getByQuery({ flow_category: reqObj.flow_category });
+            // if (!flows || flows.length === 0) {
+            //     responseData.msg = "No flows found for the specified category!";
+            //     return responseHelper.error(res, responseData);
+            // }
 
             // Sort flows by their sequence
             flows.sort((a, b) => a.sequence - b.sequence);

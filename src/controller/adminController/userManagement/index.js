@@ -16,6 +16,7 @@ const VehicleDbHandler = dbService.Vehicle;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
 const MainJobAggregate = require("../../../services/db/models/mainJob")
 const Flow = require("../../../services/db/models/flow")
+const User = require("../../../services/db/models/user")
 const config = require('../../../config/environments');
 const { response } = require('express');
 const crypto = require('crypto');
@@ -121,6 +122,9 @@ module.exports = {
 
             // Set base query for users
             let userQuery = { user_role: reqObj.user_role, is_delete: false };
+            if (reqObj.search) {
+                userQuery['full_name'] = { $regex: reqObj.search, $options: 'i' };
+            }
 
             // If the user role is 'vendor', apply additional filters
             if (reqObj.user_role === 'vendor') {
@@ -152,26 +156,70 @@ module.exports = {
             }
             // For fleet role, run the original logic
             else if (reqObj.user_role === 'fleet') {
-                let users = await UserDbHandler.getByQuery(userQuery).populate("service_type")
-                    .skip(skip)
-                    .limit(limit)
-                    .sort({ "created_at": -1 });
+                // Start the aggregation pipeline
+                let aggregationPipeline = [
+                    { $match: userQuery }, // Match fleet users
+                    {
+                        $lookup: {
+                            from: 'vehicles',
+                            localField: '_id',
+                            foreignField: 'user_id',
+                            as: 'vehicles'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'main_jobs',
+                            let: { userId: '$_id' },
+                            pipeline: [
+                                { $match: { $expr: { $and: [{ $eq: ['$user_id', '$$userId'] }, { $eq: ['status', 'in-progress'] }] } } }
+                            ],
+                            as: 'inProgressJobs'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            totalVehicles: { $size: '$vehicles' }, // Count the number of vehicles
+                            inProgressJobs: { $size: '$inProgressJobs' } // Count the in-progress jobs
+                        }
+                    },
+                    { $sort: { "created_at": -1 } }, // Sort by creation date
+                    { $skip: skip }, // Skip the required number of documents
+                    { $limit: limit } // Limit the result set
+                ];
 
-                // Fetch total vehicles and in-progress jobs for each user
-                let usersWithDetails = await Promise.all(users.map(async (user) => {
-                    let totalVehicles = await VehicleDbHandler.getByQuery({ user_id: user._id }).countDocuments();
-                    let inProgressJobs = await MainJobDbHandler.getByQuery({ user_id: user._id, status: 'in-progress' }).countDocuments();
+                // Apply filters for totalVehicles and inProgressJobs
+                if (reqObj.minVehicles || reqObj.maxVehicles) {
+                    aggregationPipeline.push({
+                        $match: {
+                            totalVehicles: {
+                                ...(reqObj.minVehicles ? { $gte: parseInt(reqObj.minVehicles) } : {}),
+                                ...(reqObj.maxVehicles ? { $lte: parseInt(reqObj.maxVehicles) } : {})
+                            }
+                        }
+                    });
+                }
 
-                    return {
-                        ...user._doc, // Spread the existing user data
-                        totalVehicles,
-                        inProgressJobs
-                    };
-                }));
+                if (reqObj.minInProgressJobs || reqObj.maxInProgressJobs) {
+                    aggregationPipeline.push({
+                        $match: {
+                            inProgressJobs: {
+                                ...(reqObj.minInProgressJobs ? { $gte: parseInt(reqObj.minInProgressJobs) } : {}),
+                                ...(reqObj.maxInProgressJobs ? { $lte: parseInt(reqObj.maxInProgressJobs) } : {})
+                            }
+                        }
+                    });
+                }
+
+                // Execute the aggregation
+                let usersWithDetails = await User.aggregate(aggregationPipeline);
+
+
+                let totalCount = await User.aggregate(aggregationPipeline).count("total");
 
                 responseData.msg = "Fleet data fetched successfully!";
                 responseData.data = {
-                    count: await UserDbHandler.getByQuery(userQuery).countDocuments(),
+                    count: totalCount.length > 0 ? totalCount[0].total : 0,
                     data: usersWithDetails
                 };
             }

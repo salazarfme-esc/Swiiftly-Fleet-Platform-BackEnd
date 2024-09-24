@@ -120,7 +120,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await FlowCategoryDbHandler.getByQuery({ name: reqObj.name });
-            if (getData.length && getData[0]._id !== id) {
+            if (getData.length && getData[0]._id != id) {
                 responseData.msg = "Flow type with this name already exist!";
                 return responseHelper.error(res, responseData);
             }
@@ -370,7 +370,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await FlowQuestionDbHandler.getByQuery({ question: reqObj.question });
-            if (getData.length && getData[0]._id !== id) {
+            if (getData.length && getData[0]._id != id) {
                 responseData.msg = "Flow question with this question already exist!";
                 return responseHelper.error(res, responseData);
             }

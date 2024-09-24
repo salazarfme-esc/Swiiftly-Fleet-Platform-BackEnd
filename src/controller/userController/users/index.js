@@ -203,7 +203,7 @@ module.exports = {
             // Update the user data in the database
             let updateProfile = await userDbHandler.updateById(id, updatedObj);
             responseData.msg = `Data updated!`;
-            responseData.data = await userDbHandler.getById(id); // Return updated user data
+            responseData.data = await userDbHandler.getById(id).populate("service_type"); // Return updated user data
             return responseHelper.success(res, responseData);
 
         } catch (error) {

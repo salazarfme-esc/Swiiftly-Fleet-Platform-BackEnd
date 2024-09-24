@@ -188,9 +188,44 @@ module.exports = {
                     { $limit: limit } // Limit the result set
                 ];
 
+                let aggregationPipelineCount = [
+                    { $match: userQuery }, // Match fleet users
+                    {
+                        $lookup: {
+                            from: 'vehicles',
+                            localField: '_id',
+                            foreignField: 'user_id',
+                            as: 'vehicles'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: 'main_jobs',
+                            let: { userId: '$_id' },
+                            pipeline: [
+                                { $match: { $expr: { $and: [{ $eq: ['$user_id', '$$userId'] }, { $eq: ['status', 'in-progress'] }] } } }
+                            ],
+                            as: 'inProgressJobs'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            totalVehicles: { $size: '$vehicles' }, // Count the number of vehicles
+                            inProgressJobs: { $size: '$inProgressJobs' } // Count the in-progress jobs
+                        }
+                    },
+                ];
                 // Apply filters for totalVehicles and inProgressJobs
                 if (reqObj.minVehicles || reqObj.maxVehicles) {
                     aggregationPipeline.push({
+                        $match: {
+                            totalVehicles: {
+                                ...(reqObj.minVehicles ? { $gte: parseInt(reqObj.minVehicles) } : {}),
+                                ...(reqObj.maxVehicles ? { $lte: parseInt(reqObj.maxVehicles) } : {})
+                            }
+                        }
+                    });
+                    aggregationPipelineCount.push({
                         $match: {
                             totalVehicles: {
                                 ...(reqObj.minVehicles ? { $gte: parseInt(reqObj.minVehicles) } : {}),
@@ -209,13 +244,21 @@ module.exports = {
                             }
                         }
                     });
+                    aggregationPipelineCount.push({
+                        $match: {
+                            inProgressJobs: {
+                                ...(reqObj.minInProgressJobs ? { $gte: parseInt(reqObj.minInProgressJobs) } : {}),
+                                ...(reqObj.maxInProgressJobs ? { $lte: parseInt(reqObj.maxInProgressJobs) } : {})
+                            }
+                        }
+                    });
                 }
 
                 // Execute the aggregation
                 let usersWithDetails = await User.aggregate(aggregationPipeline);
 
 
-                let totalCount = await User.aggregate(aggregationPipeline).count("total");
+                let totalCount = await User.aggregate(aggregationPipelineCount).count("total");
 
                 responseData.msg = "Fleet data fetched successfully!";
                 responseData.data = {

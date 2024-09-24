@@ -100,6 +100,7 @@ module.exports = () => {
     Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
     Router.get("/user-detail/:userId", adminUserManagementController.GetUserDetail);
+    Router.put("/vendor-update-status/:userId",validationMiddleware(userManagementSchema.UpdateVendorStatus, "body"), adminUserManagementController.UpdateVendorStatus);
 
     /**
    * Middleware for Handling Job Requests

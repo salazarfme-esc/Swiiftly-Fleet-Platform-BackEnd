@@ -589,4 +589,46 @@ module.exports = {
         }
     },
 
+    /**
+    * Method to handle update Vendor status
+    */
+    UpdateVendorStatus: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.userId;
+        let reqObj = req.body;
+        log.info("Received request for updating the vendor status.", id);
+
+        try {
+            // Fetch admin details
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Fetch the user details
+            let user = await UserDbHandler.getByQuery({ _id: id, user_role: 'vendor' });
+            if (!user.length) {
+                responseData.msg = "Invalid request!";
+                return responseHelper.error(res, responseData);
+            }
+            let updateData = {
+                bank_verified: reqObj.bank_verified,
+                w9_verified: reqObj.w9_verified
+            }
+
+
+            // Proceed to delete the user (soft delete)
+            await UserDbHandler.updateById(id, updateData);
+            responseData.msg = "Vendor status updated successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to update vendor with error::', error);
+            responseData.msg = "Failed to update vendor status";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 };

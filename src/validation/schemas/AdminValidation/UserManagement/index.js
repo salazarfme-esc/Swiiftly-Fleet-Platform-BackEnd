@@ -36,5 +36,9 @@ module.exports = {
             then: Joi.string().required().label('Owner Name'),
             otherwise: Joi.string().required().allow('').label('Owner Name')
         }),
+    }),
+    UpdateVendorStatus: Joi.object().keys({
+        bank_verified: Joi.boolean().required().label('Bank Status'),
+        w9_verified: Joi.boolean().required().label('W9 Status'),
     })
 };

@@ -135,11 +135,11 @@ module.exports = {
 
                 // Check the verified parameter
                 if (reqObj.verified === 'true') {
-                    // Both band_verified and w9_verified must be true
-                    userQuery['$and'] = [{ band_verified: true }, { w9_verified: true }];
+                    // Both bank_verified and w9_verified must be true
+                    userQuery['$and'] = [{ bank_verified: true }, { w9_verified: true }];
                 } else if (reqObj.verified === 'false') {
-                    // Either band_verified or w9_verified must be false
-                    userQuery['$or'] = [{ band_verified: false }, { w9_verified: false }];
+                    // Either bank_verified or w9_verified must be false
+                    userQuery['$or'] = [{ bank_verified: false }, { w9_verified: false }];
                 }
 
                 // Fetch the filtered vendors

@@ -64,6 +64,8 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.query;
+        const limit = parseInt(req.query.limit); // Ensure limit is a number
+        const skip = parseInt(req.query.skip); // Ensure skip is a number
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
@@ -71,11 +73,13 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Get all categories
-            let allCategories = await FlowCategoryDbHandler.getByQuery({});
 
-            // Only filter categories if isFlow is true
+
+
+            // Only filter categories if isFlow is trues
             if (reqObj.isFlow === "true") {
+                let allCategories = await FlowCategoryDbHandler.getByQuery({});
+
                 // Get all flow questions to check if flows exist for categories
                 let allFlows = await FlowDbHandler.getByQuery({});
 
@@ -85,10 +89,11 @@ module.exports = {
                 );
 
                 responseData.msg = "Data fetched successfully!";
-                responseData.data = filteredCategories;
+                responseData.data = { count: filteredCategories.length, data: filteredCategories };
             } else {
+                let allCategories = await FlowCategoryDbHandler.getByQuery({}).skip(skip).limit(limit);
                 responseData.msg = "Data fetched successfully!";
-                responseData.data = allCategories;
+                responseData.data = { count: await FlowCategoryDbHandler.getByQuery({}).countDocuments(), data: allCategories };
             }
 
             return responseHelper.success(res, responseData);
@@ -413,7 +418,7 @@ module.exports = {
 
             // Fetch all flows in the same category
             let flows = await FlowDbHandler.getByQuery({ flow_category: reqObj.flow_category });
-           
+
 
             // Sort flows by their sequence
             flows.sort((a, b) => a.sequence - b.sequence);
@@ -458,6 +463,8 @@ module.exports = {
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.body;
+        const limit = parseInt(req.query.limit); // Ensure limit is a number
+        const skip = parseInt(req.query.skip); // Ensure skip is a number
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
@@ -534,11 +541,90 @@ module.exports = {
                     $sort: {
                         'flow_category.created_at': -1
                     }
+                },
+                {
+                    $skip: parseInt(skip) // Skipping documents based on the provided skip value
+                },
+                {
+                    $limit: parseInt(limit) // Limiting the number of documents returned
+                }
+            ]);
+
+            let getDataCount = await Flow.aggregate([
+                {
+                    $lookup: {
+                        from: 'flowcategories', // The collection name for FlowCategory
+                        localField: 'flow_category',
+                        foreignField: '_id',
+                        as: 'flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_category'
+                },
+                {
+                    $lookup: {
+                        from: 'flowquestions', // The collection name for FlowQuestion
+                        localField: 'flow_question',
+                        foreignField: '_id',
+                        as: 'flow_question'
+                    }
+                },
+                {
+                    $unwind: '$flow_question'
+                },
+                {
+                    $lookup: {
+                        from: 'flowcategories', // Lookup for the independent flow_category key in question_details
+                        localField: 'flow_question.flow_category',
+                        foreignField: '_id',
+                        as: 'flow_question.flow_category'
+                    }
+                },
+                {
+                    $unwind: '$flow_question.flow_category'
+                },
+                {
+                    $addFields: {
+                        "flow_category.status": "$status"
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$flow_category._id',
+                        category: { $first: '$flow_category' },
+                        questions: {
+                            $push: {
+                                sequence: '$sequence',
+                                question_details: '$$ROOT', // Push the entire document
+                                created_at: '$created_at',
+                                updated_at: '$updated_at',
+                                __v: '$__v'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        flow_category: '$category',
+                        questions: {
+                            $sortArray: {
+                                input: '$questions',
+                                sortBy: { sequence: 1 }
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        'flow_category.created_at': -1
+                    }
                 }
             ]);
 
             responseData.msg = "Data fetched successfully!";
-            responseData.data = getData;
+            responseData.data = { count: getDataCount.length, data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);

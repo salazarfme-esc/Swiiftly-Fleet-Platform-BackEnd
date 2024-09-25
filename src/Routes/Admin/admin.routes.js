@@ -101,6 +101,7 @@ module.exports = () => {
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
     Router.get("/user-detail/:userId", adminUserManagementController.GetUserDetail);
     Router.put("/vendor-update-status/:userId",validationMiddleware(userManagementSchema.UpdateVendorStatus, "body"), adminUserManagementController.UpdateVendorStatus);
+    Router.put("/vendor-update-info/:userId",multerService.uploadFile('file').single('w9_document'),validationMiddleware(userManagementSchema.UpdateVendorInfo, "body"), adminUserManagementController.UpdateVendorInfo);
 
     /**
    * Middleware for Handling Job Requests

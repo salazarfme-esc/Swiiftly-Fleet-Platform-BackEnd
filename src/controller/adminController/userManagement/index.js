@@ -631,4 +631,58 @@ module.exports = {
         }
     },
 
+    /**
+    * Method to handle update Vendor Info
+    */
+    UpdateVendorInfo: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let id = req.params.userId;
+        let reqObj = req.body;
+        log.info("Received request for updating the vendor info.", id);
+
+        try {
+            // Fetch admin details
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Fetch the user details
+            let user = await UserDbHandler.getByQuery({ _id: id, user_role: 'vendor' });
+            if (!user.length) {
+                responseData.msg = "Invalid request!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let w9_document = user[0].w9_document;
+            if (req.file) {
+                w9_document = req.file.location;
+            }
+            let updateData = {
+                routing_no: reqObj.routing_no,
+                account_holder_name: reqObj.account_holder_name,
+                account_number: reqObj.account_number,
+                bank_name: reqObj.bank_name,
+                bic_swift_code: reqObj.bic_swift_code,
+                bank_address: reqObj.bank_address,
+
+                w9: reqObj.w9,
+                w9_document: w9_document,
+            }
+
+
+            // Proceed to delete the user (soft delete)
+            await UserDbHandler.updateById(id, updateData);
+            responseData.msg = "Vendor information updated successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to update vendor with error::', error);
+            responseData.msg = "Failed to update vendor information!";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 };

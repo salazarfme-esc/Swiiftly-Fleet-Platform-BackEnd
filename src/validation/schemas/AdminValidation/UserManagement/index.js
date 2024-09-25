@@ -40,5 +40,88 @@ module.exports = {
     UpdateVendorStatus: Joi.object().keys({
         bank_verified: Joi.boolean().required().label('Bank Status'),
         w9_verified: Joi.boolean().required().label('W9 Status'),
+    }),
+    UpdateVendorInfo: Joi.object().keys({
+        routing_no: Joi.string()
+            .length(9)
+            .pattern(/^[0-9]{9}$/)
+            .optional()
+            .allow("")
+            .label('Routing Number')
+            .messages({
+                'string.length': 'Routing Number must be exactly 9 digits long.',
+                'string.pattern.base': 'Routing Number must contain only numbers.'
+            }),
+
+        account_holder_name: Joi.string()
+            .trim()
+            .max(100)
+            .required()
+            .allow("")
+            .pattern(/^[A-Za-z\s'-.]+$/)
+            .label('Account Holder Name')
+            .messages({
+                'string.max': 'Account Holder Name must be less than or equal to 100 characters.',
+                'any.required': 'Account Holder Name is required.',
+                'string.pattern.base': 'Account Holder Name must only contain letters, spaces, apostrophes, and hyphens.'
+            }),
+
+        account_number: Joi.string()
+            .trim()
+            .min(8)
+            .max(20)
+            .required()
+            .allow("")
+            .pattern(/^[A-Za-z0-9]+$/)
+            .label('Account Number')
+            .messages({
+                'string.min': 'Account Number must be at least 8 characters long.',
+                'string.max': 'Account Number must be less than or equal to 20 characters.',
+                'any.required': 'Account Number is required.',
+                'string.pattern.base': 'Account Number must not contain special characters.'
+            }),
+
+        bank_name: Joi.string()
+            .trim()
+            .max(100)
+            .required()
+            .allow("")
+            .pattern(/^[A-Za-z\s'-.]+$/)
+            .label('Bank Name')
+            .messages({
+                'string.max': 'Bank Name must be less than or equal to 100 characters.',
+                'any.required': 'Bank Name is required.',
+                'string.pattern.base': 'Bank Name must only contain letters, spaces, apostrophes, and hyphens.'
+            }),
+
+        bic_swift_code: Joi.string()
+            .trim()
+            .required()
+            .length(8) // First check for 8 characters
+            .label('BIC/SWIFT Code')
+            .messages({
+                'string.empty': 'BIC/SWIFT Code is required.',
+                'string.length': 'BIC/SWIFT Code must be either 8 or 11 characters long.',
+            })
+            .custom((value, helpers) => {
+                if (value.length !== 8 && value.length !== 11) {
+                    return helpers.message('BIC/SWIFT Code must be either 8 or 11 characters long.');
+                }
+                return value;
+            }),
+
+        bank_address: Joi.string()
+            .trim()
+            .max(150)
+            .required()
+            .allow("")
+            .label('Bank Address')
+            .messages({
+                'string.max': 'Bank Address must be less than or equal to 150 characters.',
+                'any.required': 'Bank Address is required.',
+                'string.pattern.base': 'Bank Address must only contain letters, numbers, spaces, and common punctuation (e.g., commas, periods, slashes).'
+            }),
+
+        w9: Joi.string().trim().optional().allow("").label('W9'),
     })
 };

@@ -142,10 +142,12 @@ module.exports = {
                 responseData.msg = 'Invalid user or token expired. Please login again to continue!';
                 return responseHelper.error(res, responseData);
             }
-            let user1 = await userDbHandler.getByQuery({ account_number: reqObj.account_number });
-            if (user1.length && user1[0]._id != id) {
-                responseData.msg = "Bank account number already exist!";
-                return responseHelper.error(res, responseData);
+            if (reqObj.account_number != "") {
+                let user1 = await userDbHandler.getByQuery({ account_number: reqObj.account_number });
+                if (user1.length && user1[0]._id != id) {
+                    responseData.msg = "Bank account number already exist!";
+                    return responseHelper.error(res, responseData);
+                }
             }
 
             let avatar = userData.avatar;

@@ -380,6 +380,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let submitData = {
+                action: reqObj.action,
                 flow_category: reqObj.flow_category,  // this should be the ObjectId of the related FlowCategory
                 question: reqObj.question,            // this should be a string
                 question_type: reqObj.question_type,  // this should be 'single_choice' or 'multiple_choice'

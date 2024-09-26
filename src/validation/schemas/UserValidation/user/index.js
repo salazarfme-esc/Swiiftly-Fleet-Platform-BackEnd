@@ -101,19 +101,17 @@ module.exports = {
     bic_swift_code: Joi.string()
       .trim()
       .required()
-      .custom((value, helpers) => {
-        if (value.length !== 8 && value.length !== 11) {
-          return helpers.message('BIC/SWIFT Code must be either 8 or 11 characters long.');
-        }
-        return value;
-      })
+      .min(8)  // Minimum 8 characters
+      .max(11) // Maximum 11 characters
       .regex(/^[A-Z0-9]+$/) // Ensure only uppercase letters and numbers are allowed
       .label('BIC/SWIFT Code')
       .messages({
         'string.empty': 'BIC/SWIFT Code is required.',
+        'string.min': 'BIC/SWIFT Code must be at least 8 characters long.',
+        'string.max': 'BIC/SWIFT Code must be no more than 11 characters long.',
         'string.pattern.base': 'BIC/SWIFT Code must contain only uppercase letters and numbers.',
-        'any.custom': 'BIC/SWIFT Code must be either 8 or 11 characters long.',
       }),
+
 
     bank_address: Joi.string()
       .trim()

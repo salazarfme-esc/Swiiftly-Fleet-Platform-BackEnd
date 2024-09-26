@@ -670,6 +670,13 @@ module.exports = {
 
                 w9: reqObj.w9,
                 w9_document: w9_document,
+                full_name: reqObj.full_name,
+                net: reqObj.net,
+                service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
+                owner_name: reqObj.owner_name,
+                phone_number: reqObj.phone_number,
+                business_address: reqObj.business_address,
+
             }
 
 

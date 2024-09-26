@@ -42,6 +42,12 @@ module.exports = {
         w9_verified: Joi.boolean().required().label('W9 Status'),
     }),
     UpdateVendorInfo: Joi.object().keys({
+        full_name: Joi.string().required().label('Full Name'),
+        phone_number: Joi.string().pattern(/^[0-9]{6,16}$/).required().label('Phone Number'),
+        owner_name: Joi.string().trim().optional().allow("").label("Owner Name"),
+        service_type: Joi.string().required().label('Service Type'),
+        business_address: Joi.string().trim().optional().allow("").label('Business Address'),
+        net: Joi.string().required().label('Net'),
         routing_no: Joi.string()
             .length(9)
             .pattern(/^[0-9]{9}$/)

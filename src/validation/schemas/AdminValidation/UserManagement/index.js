@@ -42,12 +42,12 @@ module.exports = {
         w9_verified: Joi.boolean().required().label('W9 Status'),
     }),
     UpdateVendorInfo: Joi.object().keys({
-        full_name: Joi.string().required().label('Full Name'),
-        phone_number: Joi.string().pattern(/^[0-9]{6,16}$/).required().label('Phone Number'),
-        owner_name: Joi.string().trim().optional().allow("").label("Owner Name"),
-        service_type: Joi.string().required().label('Service Type'),
-        business_address: Joi.string().trim().optional().allow("").label('Business Address'),
-        net: Joi.string().required().label('Net'),
+        full_name: Joi.string().allow("").label('Full Name'),
+        phone_number: Joi.string().pattern(/^[0-9]{6,16}$/).allow("").label('Phone Number'),
+        owner_name: Joi.string().trim().allow("").label("Owner Name"),
+        service_type: Joi.string().allow("").label('Service Type'),
+        business_address: Joi.string().trim().allow("").label('Business Address'),
+        net: Joi.string().allow("").label('Net'),
         routing_no: Joi.string()
             .length(9)
             .pattern(/^[0-9]{9}$/)
@@ -104,6 +104,7 @@ module.exports = {
             .trim()
             .required()
             .length(8) // First check for 8 characters
+            .allow("")
             .label('BIC/SWIFT Code')
             .messages({
                 'string.empty': 'BIC/SWIFT Code is required.',
@@ -128,6 +129,6 @@ module.exports = {
                 'string.pattern.base': 'Bank Address must only contain letters, numbers, spaces, and common punctuation (e.g., commas, periods, slashes).'
             }),
 
-        w9: Joi.string().trim().optional().allow("").label('W9'),
+        w9: Joi.string().trim().allow("").label('W9'),
     })
 };

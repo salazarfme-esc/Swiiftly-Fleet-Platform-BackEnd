@@ -655,6 +655,11 @@ module.exports = {
                 responseData.msg = "Invalid request!";
                 return responseHelper.error(res, responseData);
             }
+            let user1 = await UserDbHandler.getByQuery({ account_number: reqObj.account_number });
+            if (user1.length && user1[0]._id != id) {
+                responseData.msg = "Bank account number already exist!";
+                return responseHelper.error(res, responseData);
+            }
 
             let w9_document = user[0].w9_document;
             if (req.file) {

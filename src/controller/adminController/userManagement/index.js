@@ -183,6 +183,11 @@ module.exports = {
                             inProgressJobs: { $size: '$inProgressJobs' } // Count the in-progress jobs
                         }
                     },
+                    {
+                        $project: {
+                            vehicles: 0 // Remove the 'vehicles' field after counting
+                        }
+                    },
                     { $sort: { "created_at": -1 } }, // Sort by creation date
                     { $skip: skip }, // Skip the required number of documents
                     { $limit: limit } // Limit the result set
@@ -212,6 +217,11 @@ module.exports = {
                         $addFields: {
                             totalVehicles: { $size: '$vehicles' }, // Count the number of vehicles
                             inProgressJobs: { $size: '$inProgressJobs' } // Count the in-progress jobs
+                        }
+                    },
+                    {
+                        $project: {
+                            vehicles: 0 // Remove the 'vehicles' field after counting
                         }
                     },
                 ];

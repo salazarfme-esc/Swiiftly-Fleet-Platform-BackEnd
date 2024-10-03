@@ -131,6 +131,10 @@ module.exports = {
                 model: modelId, // Store the model ID
                 color: reqObj.color || '',
                 registration_due_date: reqObj.registration_due_date || '',
+                issue_date: reqObj.issue_date || "",
+                registration_place: reqObj.registration_place || "",
+                in_fleet: reqObj.in_fleet || "",
+                de_fleet: reqObj.de_fleet || "",
                 last_oil_change: reqObj.last_oil_change || '',
                 license_plate: reqObj.license_plate || '',
                 address: {
@@ -904,6 +908,10 @@ module.exports = {
                 model: modelId, // Use the model ID
                 color: reqObj.color || vehicleData[0].color,
                 registration_due_date: reqObj.registration_due_date || vehicleData[0].registration_due_date,
+                issue_date: reqObj.issue_date || vehicleData[0].issue_date,
+                registration_place: reqObj.registration_place || vehicleData[0].registration_place,
+                in_fleet: reqObj.in_fleet || vehicleData[0].in_fleet,
+                de_fleet: reqObj.de_fleet || vehicleData[0].de_fleet,
                 last_oil_change: reqObj.last_oil_change || vehicleData[0].last_oil_change,
                 license_plate: reqObj.license_plate || vehicleData[0].license_plate,
                 address: {

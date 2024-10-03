@@ -19,7 +19,7 @@ module.exports = {
         issue_date: Joi.string().trim().required().label("Issue Date"),
         registration_place: Joi.string().trim().required().label("Registration Place"),
         in_fleet: Joi.string().trim().required().label("In FLeet Date"),
-        de_fleet: Joi.string().trim().required().label("De Fleet Date"),
+        de_fleet: Joi.string().trim().allow("").label("De Fleet Date"),
         street: Joi.string().trim().required().label("Street"),
         address: Joi.string().trim().required().label("address"),
         city: Joi.string().trim().required().label("City"),
@@ -27,6 +27,7 @@ module.exports = {
         state: Joi.string().trim().required().label("State"),
         pin: Joi.string().trim().required().label("PIN"),
         country: Joi.string().trim().required().allow("").label("Country"),
+        gas_electric: Joi.string().trim().required().valid('gas', 'electric').label("Gas Or Electric"),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
     }),
     updateVehicle: Joi.object().keys({
@@ -42,7 +43,7 @@ module.exports = {
         issue_date: Joi.string().trim().required().label("Issue Date"),
         registration_place: Joi.string().trim().required().label("Registration Place"),
         in_fleet: Joi.string().trim().required().label("In FLeet Date"),
-        de_fleet: Joi.string().trim().required().label("De Fleet Date"),
+        de_fleet: Joi.string().trim().allow("").label("De Fleet Date"),
         street: Joi.string().trim().required().label("Street"),
         address: Joi.string().trim().required().label("address"),
         city: Joi.string().trim().required().label("City"),
@@ -52,6 +53,7 @@ module.exports = {
         country: Joi.string().trim().required().allow("").label("Country"),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
         delete_media: Joi.string().required().allow("").trim().label("Delete Media"),
+        gas_electric: Joi.string().trim().required().valid('gas', 'electric').label("Gas Or Electric"),
         delete_documents: Joi.string().required().allow("").trim().label("Delete Documents"),
     }),
     searchVehicle: Joi.object().keys({

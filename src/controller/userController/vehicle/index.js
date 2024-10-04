@@ -134,7 +134,7 @@ module.exports = {
                 issue_date: reqObj.issue_date || "",
                 registration_place: reqObj.registration_place || "",
                 in_fleet: reqObj.in_fleet || "",
-                // last_oil_change: reqObj.last_oil_change || '',
+                gas_electric: reqObj.gas_electric || '',
                 license_plate: reqObj.license_plate || '',
                 address: {
                     street: reqObj.street || '',
@@ -913,6 +913,7 @@ module.exports = {
                 de_fleet: reqObj.de_fleet || vehicleData[0].de_fleet,
                 last_oil_change: reqObj.last_oil_change || vehicleData[0].last_oil_change,
                 license_plate: reqObj.license_plate || vehicleData[0].license_plate,
+                gas_electric: reqObj.gas_electric || vehicleData[0].gas_electric,
                 address: {
                     street: reqObj.street || vehicleData[0].address.street,
                     address: reqObj.address || vehicleData[0].address.address,

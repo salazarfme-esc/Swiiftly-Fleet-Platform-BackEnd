@@ -63,7 +63,7 @@ const VehicleSchema = new Schema({
     },
     last_oil_change: {
         type: String,
-        required: true
+        required: false
     },
     address: {
         street: { type: String, default: "" },

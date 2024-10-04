@@ -9,7 +9,7 @@ module.exports = {
     addVehicle: Joi.object().keys({
         identification_number: Joi.string().trim().required().label("Identification Number"),
         license_plate: Joi.string().trim().required().label("License Plate"),
-        last_oil_change: Joi.string().trim().required().label("Last Oil Change"),
+        // last_oil_change: Joi.string().trim().required().label("Last Oil Change"),
         nickname: Joi.string().trim().required().label("Nickname"),
         year: Joi.string().trim().required().label("Year"),
         make: Joi.string().trim().required().label("Make"),
@@ -19,7 +19,6 @@ module.exports = {
         issue_date: Joi.string().trim().required().label("Issue Date"),
         registration_place: Joi.string().trim().required().label("Registration Place"),
         in_fleet: Joi.string().trim().required().label("In FLeet Date"),
-        de_fleet: Joi.string().trim().allow("").label("De Fleet Date"),
         street: Joi.string().trim().required().label("Street"),
         address: Joi.string().trim().required().label("address"),
         city: Joi.string().trim().required().label("City"),
@@ -33,7 +32,7 @@ module.exports = {
     updateVehicle: Joi.object().keys({
         identification_number: Joi.string().trim().required().label("Identification Number"),
         license_plate: Joi.string().trim().required().label("License Plate"),
-        last_oil_change: Joi.string().trim().required().label("Last Oil Change"),
+        // last_oil_change: Joi.string().trim().allow("").label("Last Oil Change"),
         nickname: Joi.string().trim().required().label("Nickname"),
         year: Joi.string().trim().required().label("Year"),
         make: Joi.string().trim().required().label("Make"),

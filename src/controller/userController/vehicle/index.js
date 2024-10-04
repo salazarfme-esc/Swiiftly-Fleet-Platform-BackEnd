@@ -134,8 +134,7 @@ module.exports = {
                 issue_date: reqObj.issue_date || "",
                 registration_place: reqObj.registration_place || "",
                 in_fleet: reqObj.in_fleet || "",
-                de_fleet: reqObj.de_fleet || "",
-                last_oil_change: reqObj.last_oil_change || '',
+                // last_oil_change: reqObj.last_oil_change || '',
                 license_plate: reqObj.license_plate || '',
                 address: {
                     street: reqObj.street || '',

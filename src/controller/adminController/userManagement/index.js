@@ -156,7 +156,6 @@ module.exports = {
             }
             // For fleet role, run the original logic
             else if (reqObj.user_role === 'fleet') {
-                // Start the aggregation pipeline
                 let aggregationPipeline = [
                     { $match: userQuery }, // Match fleet users
                     {
@@ -187,44 +186,11 @@ module.exports = {
                         $project: {
                             vehicles: 0 // Remove the 'vehicles' field after counting
                         }
-                    },
-                    { $sort: { "created_at": -1 } }, // Sort by creation date
-                    { $skip: skip }, // Skip the required number of documents
-                    { $limit: limit } // Limit the result set
+                    }
                 ];
-
-                let aggregationPipelineCount = [
-                    { $match: userQuery }, // Match fleet users
-                    {
-                        $lookup: {
-                            from: 'vehicles',
-                            localField: '_id',
-                            foreignField: 'user_id',
-                            as: 'vehicles'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: 'main_jobs',
-                            let: { userId: '$_id' },
-                            pipeline: [
-                                { $match: { $expr: { $and: [{ $eq: ['$user_id', '$$userId'] }, { $eq: ['status', 'in-progress'] }] } } }
-                            ],
-                            as: 'inProgressJobs'
-                        }
-                    },
-                    {
-                        $addFields: {
-                            totalVehicles: { $size: '$vehicles' }, // Count the number of vehicles
-                            inProgressJobs: { $size: '$inProgressJobs' } // Count the in-progress jobs
-                        }
-                    },
-                    {
-                        $project: {
-                            vehicles: 0 // Remove the 'vehicles' field after counting
-                        }
-                    },
-                ];
+            
+                let aggregationPipelineCount = [...aggregationPipeline]; // Copy the base pipeline for counting
+            
                 // Apply filters for totalVehicles and inProgressJobs
                 if (reqObj.minVehicles || reqObj.maxVehicles) {
                     aggregationPipeline.push({
@@ -244,7 +210,7 @@ module.exports = {
                         }
                     });
                 }
-
+            
                 if (reqObj.minInProgressJobs || reqObj.maxInProgressJobs) {
                     aggregationPipeline.push({
                         $match: {
@@ -263,13 +229,19 @@ module.exports = {
                         }
                     });
                 }
-
+            
+                // Add sort, skip, and limit stages after the filters are applied
+                aggregationPipeline.push(
+                    { $sort: { "created_at": -1 } },
+                    { $skip: skip },
+                    { $limit: limit }
+                );
+            
                 // Execute the aggregation
                 let usersWithDetails = await User.aggregate(aggregationPipeline);
-
-
+            
                 let totalCount = await User.aggregate(aggregationPipelineCount).count("total");
-
+            
                 responseData.msg = "Fleet data fetched successfully!";
                 responseData.data = {
                     count: totalCount.length > 0 ? totalCount[0].total : 0,

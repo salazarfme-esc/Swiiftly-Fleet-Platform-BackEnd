@@ -45,6 +45,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await Flow.aggregate([
+                {$match : {status: {$ne : 'draft'}}},
                 {
                     $lookup: {
                         from: 'flowcategories', // The collection name for FlowCategory

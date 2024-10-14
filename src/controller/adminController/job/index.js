@@ -103,7 +103,7 @@ module.exports = {
             ]).exec();
 
             responseData.msg = "Data fetched successfully!";
-            responseData.data = finalData;
+            responseData.data = {count :await MainJobDbHandler.getByQuery({ status: 'created' }).countDocuments(), data: finalData};
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);

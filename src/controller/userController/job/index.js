@@ -346,16 +346,40 @@ module.exports = {
         let responseData = {};
         let user = req.user.sub;
         log.info("Received request to get Root tickets");
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
         try {
             let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
             if (!getByQuery.length) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await MainJobDbHandler.getByQuery({ user_id: user }).populate("service_category").populate("vehicle_id");
+            let getData = await MainJobDbHandler.getByQuery({ user_id: user }).populate("service_category").populate("vehicle_id").skip(skip).limit(limit);
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = getData;
+            responseData.data = { count :await MainJobDbHandler.getByQuery({ user_id: user }).countDocuments(), data:getData};
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    GetRootTicketByID: async (req, res) => {
+        let responseData = {};
+        let user = req.user.sub;
+        let root_ticket_id = req.params.root_ticket_id;
+        log.info("Received request to get Root tickets");
+        try {
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            let getData = await MainJobDbHandler.getByQuery({ user_id: user, _id: root_ticket_id }).populate("service_category").populate("vehicle_id");
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData[0];
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);
@@ -379,7 +403,7 @@ module.exports = {
             }
 
             let getData = await SubJobDbHandler.getByQuery({ root_ticket_id: req.params.root_ticket_id })
-                .populate("root_ticket_id").populate("service_category").populate("question_id").sort({ "sequence": 1 });
+                .populate("service_category").populate("question_id").sort({ "sequence": 1 });
 
             responseData.msg = "Tickets fetched successfully!";
             responseData.data = getData;
@@ -445,7 +469,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).skip(skip).limit(limit)
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";

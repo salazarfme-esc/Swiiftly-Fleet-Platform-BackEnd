@@ -387,7 +387,7 @@ module.exports = {
             const vehicleIds = vehicles.map(vehicle => vehicle._id);
             const inServiceJobs = await MainJobDbHandler.getByQuery({
                 vehicle_id: { $in: vehicleIds },
-                $or: [{ status: { $ne: 'completed' } }, { status: { $ne: 'rejected' } }]
+                $or: [{status: { $ne: 'rejected' }},{status: { $ne: 'rejected' }}]
             }).lean();
 
             const inServiceVehicleIds = new Set(inServiceJobs.map(job => job.vehicle_id.toString()));
@@ -396,6 +396,7 @@ module.exports = {
                 ...vehicle,
                 inService: inServiceVehicleIds.has(vehicle._id.toString())
             }));
+
 
             // Step 4: Filter based on inService status if provided
             if (status === "inService") {
@@ -900,32 +901,32 @@ module.exports = {
             }
 
             let updateData = {
-                identification_number: reqObj.identification_number,
+                identification_number: reqObj.identification_number ,
                 nickname: reqObj.nickname,
                 year: reqObj.year,
                 make: makeId, // Use the make ID
                 model: modelId, // Use the model ID
-                color: reqObj.color,
-                registration_due_date: reqObj.registration_due_date,
-                issue_date: reqObj.issue_date,
-                registration_place: reqObj.registration_place,
-                in_fleet: reqObj.in_fleet,
+                color: reqObj.color ,
+                registration_due_date: reqObj.registration_due_date ,
+                issue_date: reqObj.issue_date ,
+                registration_place: reqObj.registration_place ,
+                in_fleet: reqObj.in_fleet ,
                 de_fleet: reqObj.de_fleet,
                 last_oil_change: reqObj.last_oil_change,
                 license_plate: reqObj.license_plate,
                 gas_electric: reqObj.gas_electric,
                 address: {
-                    street: reqObj.street,
-                    address: reqObj.address,
+                    street: reqObj.street ,
+                    address: reqObj.address ,
                     city: reqObj.city,
-                    district: reqObj.district,
-                    state: reqObj.state,
-                    pin: reqObj.pin,
-                    country: reqObj.country,
+                    district: reqObj.district ,
+                    state: reqObj.state ,
+                    pin: reqObj.pin ,
+                    country: reqObj.country ,
                 },
                 location: {
                     type: 'Point',
-                    coordinates: reqObj.coordinates,
+                    coordinates: reqObj.coordinates ,
                 },
                 media: media,
                 document: document,

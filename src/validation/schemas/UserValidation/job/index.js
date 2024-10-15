@@ -24,7 +24,7 @@ module.exports = {
         root_ticket_id: Joi.string().required().label('Parent Ticket ID'), // Should be ObjectId as a string
         question_id: Joi.string().required().label('Question ID'),
         answer: Joi.string().required().label('Answer'),
-        note: Joi.string().required().label('Note'),
+        note: Joi.string().required().allow("").label('Note'),
     }),
     submitRequest: Joi.object().keys({
         root_ticket_id: Joi.string().required().label('Parent Ticket ID'), // Should be ObjectId as a string

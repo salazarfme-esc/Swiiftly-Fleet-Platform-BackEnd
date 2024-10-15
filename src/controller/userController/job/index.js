@@ -354,10 +354,10 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).populate("service_category").populate("vehicle_id").skip(skip).limit(limit);
+            let getData = await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).populate("service_category").populate("vehicle_id").populate("make").populate("model").skip(skip).limit(limit);
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = { count :await MainJobDbHandler.getByQuery({ user_id: user }).countDocuments(), data:getData};
+            responseData.data = { count :await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).countDocuments(), data:getData};
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);

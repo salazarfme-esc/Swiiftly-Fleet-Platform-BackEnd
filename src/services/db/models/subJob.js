@@ -38,7 +38,7 @@ const SubJobSchema = new Schema({
     note: {
         type: String,
         default: "",
-        required: true
+        required: false
     },
     media: {
         type: [String],

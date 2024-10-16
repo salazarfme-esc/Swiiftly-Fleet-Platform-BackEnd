@@ -45,7 +45,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let getData = await Flow.aggregate([
-                {$match : {status: {$ne : 'draft'}}},
+                { $match: { status: { $ne: 'draft' } } },
                 {
                     $lookup: {
                         from: 'flowcategories', // The collection name for FlowCategory
@@ -292,7 +292,7 @@ module.exports = {
             // Save sub-ticket to database
             let saveData = await SubJobDbHandler.create(submitData);
             responseData.msg = "Sub-ticket created successfully!";
-            responseData.data = saveData;
+            responseData.data = await SubJobDbHandler.getById(saveData._id).populate("question_id");
             return responseHelper.success(res, responseData);
 
         } catch (error) {
@@ -357,7 +357,7 @@ module.exports = {
             let getData = await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).populate("service_category").populate("vehicle_id").populate("make").populate("model").skip(skip).limit(limit);
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = { count :await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).countDocuments(), data:getData};
+            responseData.data = { count: await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);

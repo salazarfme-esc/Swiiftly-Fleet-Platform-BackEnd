@@ -387,7 +387,7 @@ module.exports = {
             const vehicleIds = vehicles.map(vehicle => vehicle._id);
             const inServiceJobs = await MainJobDbHandler.getByQuery({
                 vehicle_id: { $in: vehicleIds },
-                $or: [{status: { $ne: 'rejected' }},{status: { $ne: 'rejected' }}]
+                $or: [{status: { $ne: 'completed' }},{status: { $ne: 'rejected' }},{status: { $ne: 'draft' }}]
             }).lean();
 
             const inServiceVehicleIds = new Set(inServiceJobs.map(job => job.vehicle_id.toString()));

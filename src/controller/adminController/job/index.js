@@ -118,16 +118,20 @@ module.exports = {
     getAcceptedJobs: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const limit = parseInt(req.query.limit)
-        const skip = parseInt(req.query.skip)
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
         log.info("Received request to get the Accepted Job Requests");
-
+    
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
+    
+            // Get the total count of documents matching the criteria
+            let count = await MainJobAggregate.countDocuments({ status: req.query.status });
+    
             // Use aggregation pipeline for more efficient querying and populating
             let finalData = await MainJobAggregate.aggregate([
                 { $match: { status: req.query.status } }, // Match the updated job request with status 'created'
@@ -223,9 +227,9 @@ module.exports = {
                     }
                 }
             ]).exec();
-
+    
             responseData.msg = "Data fetched successfully!";
-            responseData.data = finalData;
+            responseData.data = { count: count, data: finalData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -233,6 +237,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    
 
 
 

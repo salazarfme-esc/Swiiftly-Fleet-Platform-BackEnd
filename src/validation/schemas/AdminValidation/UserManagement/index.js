@@ -63,6 +63,7 @@ module.exports = {
             .trim()
             .max(100)
             .required()
+            .allow("")
             .pattern(/^[A-Za-z\s'-.]+$/)
             .label('Account Holder Name')
             .messages({
@@ -76,6 +77,7 @@ module.exports = {
             .min(8)
             .max(20)
             .required()
+            .allow("")
             .pattern(/^[A-Za-z0-9]+$/)
             .label('Account Number')
             .messages({
@@ -89,6 +91,7 @@ module.exports = {
             .trim()
             .max(100)
             .required()
+            .allow("")
             .pattern(/^[A-Za-z\s'-.]+$/)
             .label('Bank Name')
             .messages({
@@ -100,6 +103,7 @@ module.exports = {
         bic_swift_code: Joi.string()
             .trim()
             .required()
+            .allow(0)
             .min(8)  // Minimum 8 characters
             .max(11) // Maximum 11 characters
             .regex(/^[A-Z0-9]+$/) // Ensure only uppercase letters and numbers are allowed
@@ -116,6 +120,7 @@ module.exports = {
             .trim()
             .max(150)
             .required()
+            .allow("")
             .allow("")
             .label('Bank Address')
             .messages({

@@ -103,7 +103,7 @@ module.exports = {
         bic_swift_code: Joi.string()
             .trim()
             .required()
-            .allow(0)
+            .allow("")
             .min(8)  // Minimum 8 characters
             .max(11) // Maximum 11 characters
             .regex(/^[A-Z0-9]+$/) // Ensure only uppercase letters and numbers are allowed
@@ -120,7 +120,6 @@ module.exports = {
             .trim()
             .max(150)
             .required()
-            .allow("")
             .allow("")
             .label('Bank Address')
             .messages({

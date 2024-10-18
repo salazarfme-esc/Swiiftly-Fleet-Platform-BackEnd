@@ -13,6 +13,9 @@ const MainJobAggregate = require("../../../services/db/models/mainJob")
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
 const { response } = require('express');
+const mongoose = require('mongoose');
+const moment = require('moment');
+
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -118,8 +121,8 @@ module.exports = {
     getAcceptedJobs: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const limit = parseInt(req.query.limit);
-        const skip = parseInt(req.query.skip);
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = parseInt(req.query.skip) || 0;
         log.info("Received request to get the Accepted Job Requests");
     
         try {
@@ -129,12 +132,41 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
     
+            // Define match criteria based on query parameters
+            let matchCriteria = { status: req.query.status };
+    
+            // Apply optional filters if they exist in the query
+            if (req.query.user_id) {
+                matchCriteria.user_id = mongoose.Types.ObjectId(req.query.user_id);
+            }
+            if (req.query.service_category_id) {
+                matchCriteria.service_category = mongoose.Types.ObjectId(req.query.service_category_id);
+            }
+            if (req.query.date) {
+                // Parse the input date (assuming the format is MM-DD-YYYY)
+                const inputDate = new Date(req.query.date);
+                
+                // Set the start and end of the date range
+                const startDate = new Date(inputDate.setHours(0, 0, 0, 0)); // start of the day
+                const endDate = new Date(inputDate.setHours(23, 59, 59, 999)); // end of the day
+                console.log(`Filtering by date range: ${startDate} to ${endDate}`);
+
+
+                // Update match criteria to use the date range
+                matchCriteria.created_at = {
+                    $gte: startDate,
+                    $lte: endDate
+                };
+            }
+            console.log("Match criteria:", matchCriteria);
+
+    
             // Get the total count of documents matching the criteria
-            let count = await MainJobAggregate.countDocuments({ status: req.query.status });
+            let count = await MainJobAggregate.countDocuments(matchCriteria);
     
             // Use aggregation pipeline for more efficient querying and populating
             let finalData = await MainJobAggregate.aggregate([
-                { $match: { status: req.query.status } }, // Match the updated job request with status 'created'
+                { $match: matchCriteria },
                 { $skip: skip },
                 { $limit: limit },
                 {
@@ -167,10 +199,9 @@ module.exports = {
                 {
                     $lookup: {
                         from: "subjobs",
-                        localField: "_id",
-                        foreignField: "root_ticket_id",
-                        as: "child",
+                        let: { mainJobId: "$_id" },
                         pipeline: [
+                            { $match: { $expr: { $eq: ["$root_ticket_id", "$$mainJobId"] } } },
                             {
                                 $lookup: {
                                     from: "flowcategories",
@@ -207,9 +238,22 @@ module.exports = {
                                         }
                                     }
                                 }
-                            }
-                        ]
+                            },
+                            // Apply vendor_id filter if provided
+                            ...(req.query.vendor_id ? [
+                                { $match: { vendor_id: mongoose.Types.ObjectId(req.query.vendor_id) } }
+                            ] : [])
+                        ],
+                        as: "child"
                     }
+                },
+                {
+                    $addFields: {
+                        childCount: { $size: "$child" } // Add the count of subjobs
+                    }
+                },
+                {
+                    $match: req.query.subjob_count ? { childCount: parseInt(req.query.subjob_count) } : {} // Filter by subjob count if provided
                 },
                 {
                     $addFields: {
@@ -237,6 +281,7 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    
     
 
 

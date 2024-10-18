@@ -191,9 +191,10 @@ module.exports = {
                 {
                     $lookup: {
                         from: "subjobs",
-                        let: { mainJobId: "$_id" },
+                        localField: "_id",
+                        foreignField: "root_ticket_id",
+                        as: "child",
                         pipeline: [
-                            { $match: { $expr: { $eq: ["$root_ticket_id", "$$mainJobId"] } } },
                             {
                                 $lookup: {
                                     from: "flowcategories",
@@ -231,21 +232,10 @@ module.exports = {
                                     }
                                 }
                             },
-                            // Apply vendor_id filter if provided
-                            ...(req.query.vendor_id ? [
-                                { $match: { vendor_id: mongoose.Types.ObjectId(req.query.vendor_id) } }
-                            ] : [])
-                        ],
-                        as: "child"
+                            // Add sorting here
+                            { $sort: { sequence: 1 } } // Replace 'sequence' with the appropriate field name you want to sort by
+                        ]
                     }
-                },
-                {
-                    $addFields: {
-                        childCount: { $size: "$child" } // Add the count of subjobs
-                    }
-                },
-                {
-                    $match: req.query.subjob_count ? { childCount: parseInt(req.query.subjob_count) } : {} // Filter by subjob count if provided
                 },
                 {
                     $addFields: {

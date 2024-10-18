@@ -144,19 +144,12 @@ module.exports = {
                 matchCriteria.service_category = mongoose.Types.ObjectId(req.query.service_category_id);
             }
             if (req.query.date) {
-                const inputDate = new Date(req.query.date);
-
-                const startDate = new Date(inputDate);
-                startDate.setHours(0, 0, 0, 0);
-
-                const endDate = new Date(inputDate);
-                endDate.setHours(23, 59, 59, 999);
-                
-                matchCriteria.created_at = {
-                    $gte: startDate,
-                    $lt: endDate
-                };
+                const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(req.query.date).setUTCHours(23, 59, 59, 999);
+                matchCriteria.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
             }
+
+
             console.log("Match criteria:", matchCriteria);
 
 

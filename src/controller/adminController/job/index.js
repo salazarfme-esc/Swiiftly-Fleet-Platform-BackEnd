@@ -132,6 +132,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
+
             // Define match criteria based on query parameters
             let matchCriteria = { status: req.query.status };
 
@@ -143,22 +144,17 @@ module.exports = {
                 matchCriteria.service_category = mongoose.Types.ObjectId(req.query.service_category_id);
             }
             if (req.query.date) {
-                // Parse the input date from the query parameter
                 const inputDate = new Date(req.query.date);
 
-                // Create a start date (beginning of the day in UTC)
-                const startDate = new Date(inputDate.setUTCHours(0, 0, 0, 0));
+                const startDate = new Date(inputDate);
+                startDate.setHours(0, 0, 0, 0);
 
-                // Create an end date (end of the day in UTC)
-                const endDate = new Date(inputDate.setUTCHours(23, 59, 59, 999));
-
-                // Log the generated dates for debugging
-                log.info(`Filtering by date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-
-                // Use the correct field name for filtering
-                matchCriteria.createdAt = {
+                const endDate = new Date(inputDate);
+                endDate.setHours(23, 59, 59, 999);
+                
+                matchCriteria.created_at = {
                     $gte: startDate,
-                    $lte: endDate
+                    $lt: endDate
                 };
             }
             console.log("Match criteria:", matchCriteria);

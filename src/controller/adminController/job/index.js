@@ -106,7 +106,7 @@ module.exports = {
             ]).exec();
 
             responseData.msg = "Data fetched successfully!";
-            responseData.data = {count :await MainJobDbHandler.getByQuery({ status: 'created' }).countDocuments(), data: finalData};
+            responseData.data = { count: await MainJobDbHandler.getByQuery({ status: 'created' }).countDocuments(), data: finalData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);
@@ -124,17 +124,17 @@ module.exports = {
         const limit = parseInt(req.query.limit) || 10;
         const skip = parseInt(req.query.skip) || 0;
         log.info("Received request to get the Accepted Job Requests");
-    
+
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             // Define match criteria based on query parameters
             let matchCriteria = { status: req.query.status };
-    
+
             // Apply optional filters if they exist in the query
             if (req.query.user_id) {
                 matchCriteria.user_id = mongoose.Types.ObjectId(req.query.user_id);
@@ -143,27 +143,30 @@ module.exports = {
                 matchCriteria.service_category = mongoose.Types.ObjectId(req.query.service_category_id);
             }
             if (req.query.date) {
-                // Parse the input date (assuming the format is MM-DD-YYYY)
+                // Parse the input date from the query parameter
                 const inputDate = new Date(req.query.date);
-                
-                // Set the start and end of the date range
-                const startDate = new Date(inputDate.setHours(0, 0, 0, 0)); // start of the day
-                const endDate = new Date(inputDate.setHours(23, 59, 59, 999)); // end of the day
-                console.log(`Filtering by date range: ${startDate} to ${endDate}`);
 
+                // Create a start date (beginning of the day in UTC)
+                const startDate = new Date(inputDate.setUTCHours(0, 0, 0, 0));
 
-                // Update match criteria to use the date range
-                matchCriteria.created_at = {
+                // Create an end date (end of the day in UTC)
+                const endDate = new Date(inputDate.setUTCHours(23, 59, 59, 999));
+
+                // Log the generated dates for debugging
+                log.info(`Filtering by date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+                // Use the correct field name for filtering
+                matchCriteria.createdAt = {
                     $gte: startDate,
                     $lte: endDate
                 };
             }
             console.log("Match criteria:", matchCriteria);
 
-    
+
             // Get the total count of documents matching the criteria
             let count = await MainJobAggregate.countDocuments(matchCriteria);
-    
+
             // Use aggregation pipeline for more efficient querying and populating
             let finalData = await MainJobAggregate.aggregate([
                 { $match: matchCriteria },
@@ -271,7 +274,7 @@ module.exports = {
                     }
                 }
             ]).exec();
-    
+
             responseData.msg = "Data fetched successfully!";
             responseData.data = { count: count, data: finalData };
             return responseHelper.success(res, responseData);
@@ -281,8 +284,8 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    
-    
+
+
 
 
 

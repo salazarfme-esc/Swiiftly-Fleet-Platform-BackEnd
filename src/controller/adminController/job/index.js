@@ -463,7 +463,7 @@ module.exports = {
             }
 
             responseData.msg = "Vendor assigned to sub-ticket successfully!";
-            responseData.data = await SubJobDbHandler.getById(subTicketId)
+            responseData.data = await SubJobDbHandler.getById(subTicketId).populate("vendor_id")
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to assign vendor to sub-ticket with error:', error);

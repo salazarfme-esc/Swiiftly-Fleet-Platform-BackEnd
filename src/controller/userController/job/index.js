@@ -469,11 +469,11 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, status: req.query.status }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = { count: await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).countDocuments(), data: getData };
+            responseData.data = { count: await SubJobDbHandler.getByQuery({ vendor_id: user, status: req.query.status }).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);

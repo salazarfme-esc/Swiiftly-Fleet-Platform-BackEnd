@@ -435,7 +435,7 @@ module.exports = {
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = getData;
+            responseData.data = { count: await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: "vendor_assigned" }).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);
@@ -473,7 +473,7 @@ module.exports = {
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = getData;
+            responseData.data = { count: await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: req.query.status }).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);

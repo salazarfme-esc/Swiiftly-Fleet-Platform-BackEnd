@@ -148,6 +148,9 @@ module.exports = {
                 const endOfDay = new Date(req.query.date).setUTCHours(23, 59, 59, 999);
                 matchCriteria.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
             }
+            if (req.query.root_ticket_id) {
+                matchCriteria._id = mongoose.Types.ObjectId(req.query.root_ticket_id);
+            }
 
 
             console.log("Match criteria:", matchCriteria);
@@ -263,11 +266,6 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-
-
-
-
-
     /**
      * Method to handle Accept or Reject for the Job Requests
      */
@@ -461,9 +459,9 @@ module.exports = {
                     return responseHelper.error(res, responseData);
                 }
             }
-
+            let returnData = await SubJobDbHandler.getByQuery({ _id: subTicketId }).populate("vendor_id");
             responseData.msg = "Vendor assigned to sub-ticket successfully!";
-            responseData.data = await SubJobDbHandler.getById(subTicketId).populate("vendor_id")
+            responseData.data = returnData[0];
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to assign vendor to sub-ticket with error:', error);

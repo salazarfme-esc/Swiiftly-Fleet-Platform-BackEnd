@@ -501,6 +501,7 @@ module.exports = {
 
             let updateObjData = {
                 password: await _encryptPassword(reqObj.new_password),
+                temporary_password: false
             }
             let updateUser1 = await userDbHandler.updateById(getUser[0]._id, updateObjData)
             getUser[0].token = token

@@ -472,6 +472,64 @@ module.exports = {
         }
     },
 
+    /**
+     * Method to get child tickets (sub-jobs) for a specific vendor
+     */
+    getVendorChildTickets: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        const vendorId = req.query.vendorId;
+        console.log("🚀 ~ getVendorChildTickets: ~ vendorId:", vendorId)
+        const skip = parseInt(req.query.skip);
+        const limit = parseInt(req.query.limit);
+
+        log.info(`Received request to get child tickets for vendor: ${vendorId}`);
+
+        try {
+            // Validate admin
+            let adminData = await adminDbHandler.getById(admin);
+            if (!adminData) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Validate vendor
+            let vendorData = await VendorDbHandler.getById(vendorId);
+            if (!vendorData) {
+                responseData.msg = "Vendor not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Query to fetch child tickets
+            const query = { vendor_id: mongoose.Types.ObjectId(vendorId), status: req.query.status };
+
+            // Get total count
+            const totalCount = await SubJobDbHandler.getByQuery(query).countDocuments();
+
+            // Fetch child tickets with pagination
+            const childTickets = await SubJobDbHandler.getByQuery(query)
+                .populate('root_ticket_id')
+                .populate('service_category')
+                .populate('question_id')
+                .sort({ created_at: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean();
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = {
+                count: totalCount,
+                data: childTickets
+            };
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to fetch vendor child tickets with error:', error);
+            responseData.msg = "Failed to fetch data";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
 
 };

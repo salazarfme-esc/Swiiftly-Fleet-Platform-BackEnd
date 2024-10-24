@@ -111,6 +111,7 @@ module.exports = () => {
     Router.put("/accept-or-reject/:root_ticket_id", validationMiddleware(adminJobValidationSchema.acceptOrRejectRequest, "body"), adminJobController.AcceptRejectRequest);
     Router.put("/child-sequence-update/:root_ticket_id", validationMiddleware(adminJobValidationSchema.updateSubJobSequence, "body"), adminJobController.UpdateSubJobSequence);
     Router.put("/assign-vendor", validationMiddleware(adminJobValidationSchema.assignVendorToSubTicket, "body"), adminJobController.AssignVendorToSubTicket);
+    Router.get("/vendor-child-tickets", adminJobController.getVendorChildTickets);
 
 
 

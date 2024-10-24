@@ -46,7 +46,13 @@ module.exports = {
             is: 'completed',
             then: Joi.string().required().label('Cost Estimation'), // Required if status is 'delayed'
             otherwise: Joi.allow("") // Not allowed for other statuses
-        })
+        }),
+        vendor_note: Joi.string().required().allow("").label('Vendor Note'), // Must be a valid string and is required
+        meter_reading: Joi.when('status', {
+            is: 'completed',
+            then: Joi.string().required().label('Meter Reading'), // Required if status is 'delayed'
+            otherwise: Joi.allow("") // Not allowed for other statuses
+        }),
 
     })
 

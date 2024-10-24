@@ -40,6 +40,11 @@ const SubJobSchema = new Schema({
         default: "",
         required: false
     },
+    vendor_note: {
+        type: String,
+        default: "",
+        required: false
+    },
     media: {
         type: [String],
         default: [],

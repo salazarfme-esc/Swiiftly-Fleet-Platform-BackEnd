@@ -538,7 +538,7 @@ module.exports = {
     VendorUpdateJobStatus: async (req, res) => {
         let responseData = {};
         let vendor = req.user.sub;
-        const { subTicketId, status, time_estimation, cost_estimation } = req.body;
+        const { subTicketId, status, time_estimation, cost_estimation, vendor_note, meter_reading } = req.body;
         log.info("Received request from vendor to update job status");
 
         // Define allowed statuses
@@ -580,23 +580,27 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            if (status === 'completed' && !media.length) {
-                responseData.msg = "Vendor media is required when the status is set to completed!";
-                return responseHelper.error(res, responseData);
-            }
+            // if (status === 'completed' && !media.length) {
+            //     responseData.msg = "Vendor media is required when the status is set to completed!";
+            //     return responseHelper.error(res, responseData);
+            // }
 
             if (status === 'delayed') {
                 updateData.time_estimation = time_estimation;
+
             }
 
             if (status === 'completed') {
                 updateData.vendor_media = media;
                 updateData.active = false;
                 updateData.cost_estimation = cost_estimation;
+                updateData.vendor_note = vendor_note;
             }
 
             // Update the sub-ticket with the new status and additional data
             let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+            let rootTicketData = await MainJobDbHandler.getByQuery({ _id: subTicketData[0].root_ticket_id });
+            let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { meter_reading: meter_reading });
 
             if (!updateSubTicket) {
                 responseData.msg = "Failed to update the sub-ticket status!";

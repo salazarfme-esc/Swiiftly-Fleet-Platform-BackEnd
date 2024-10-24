@@ -65,6 +65,10 @@ const VehicleSchema = new Schema({
         type: String,
         required: false
     },
+    meter_reading: {
+        type: String,
+        required: false
+    },
     address: {
         street: { type: String, default: "" },
         address: { type: String, default: "" },

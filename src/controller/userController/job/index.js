@@ -39,7 +39,7 @@ module.exports = {
         let user = req.user.sub;
         log.info("Received request to get the Job Types")
         try {
-            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            let getByQuery = await userDbHandler.getByQuery({ _id: user });
             if (!getByQuery.length) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);

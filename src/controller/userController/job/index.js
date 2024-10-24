@@ -431,7 +431,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: "vendor_assigned" }).skip(skip).limit(limit)
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, active: true, status: "vendor_assigned" }).sort({ created_at: -1 }).skip(skip).limit(limit)
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";
@@ -469,7 +469,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, status: req.query.status }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
+            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, status: req.query.status }).sort({ created_at: -1 }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";

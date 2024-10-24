@@ -164,6 +164,8 @@ module.exports = {
                 { $match: matchCriteria },
                 { $skip: skip },
                 { $limit: limit },
+                { $sort: { created_at: -1 } },
+
                 {
                     $lookup: {
                         from: "flowcategories",

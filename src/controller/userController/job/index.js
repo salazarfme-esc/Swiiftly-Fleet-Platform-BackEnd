@@ -481,8 +481,16 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-
-            let getData = await SubJobDbHandler.getByQuery({ vendor_id: user, status: req.query.status }).sort({ created_at: -1 }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
+            let query = { vendor_id: user, status: req.query.status };
+            if (req.query.service_category) {
+                query.service_category = req.query.service_category;
+            }
+            if (req.query.date) {
+                const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(req.query.date).setUTCHours(23, 59, 59, 999);
+                query.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
+            }
+            let getData = await SubJobDbHandler.getByQuery(query).sort({ created_at: -1 }).skip(skip).limit(limit).populate("question_id").populate("root_ticket_id").populate("service_category")
                 .populate("root_ticket_id").populate("service_category").populate("question_id");
 
             responseData.msg = "Tickets fetched successfully!";

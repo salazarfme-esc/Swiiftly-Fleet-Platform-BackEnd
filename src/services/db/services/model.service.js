@@ -38,7 +38,7 @@ class Model {
         return this._ModelController.findByIdAndRemove(ModelId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._ModelController.deleteMany(query);
     }
 }
 module.exports = new Model();

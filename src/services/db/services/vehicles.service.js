@@ -38,7 +38,7 @@ class Vehicle {
         return this._VehicleController.findByIdAndRemove(VehicleId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._VehicleController.deleteMany(query);
     }
 }
 module.exports = new Vehicle();

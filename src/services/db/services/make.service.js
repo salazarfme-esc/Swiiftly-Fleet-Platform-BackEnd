@@ -38,7 +38,7 @@ class Make {
         return this._MakeController.findByIdAndRemove(MakeId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._MakeController.deleteMany(query);
     }
 }
 module.exports = new Make();

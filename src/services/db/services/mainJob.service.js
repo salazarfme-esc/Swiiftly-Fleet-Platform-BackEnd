@@ -38,7 +38,7 @@ class MainJob {
         return this._MainJobController.findByIdAndRemove(MainJobId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._MainJobController.deleteMany(query);
     }
 }
 module.exports = new MainJob();

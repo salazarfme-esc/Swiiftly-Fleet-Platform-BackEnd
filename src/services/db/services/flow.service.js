@@ -38,7 +38,7 @@ class Flow {
         return this._FlowController.findByIdAndRemove(FlowId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._FlowController.deleteMany(query);
     }
 }
 module.exports = new Flow();

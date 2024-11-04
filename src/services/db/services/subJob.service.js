@@ -38,7 +38,7 @@ class SubJob {
         return this._SubJobController.findByIdAndRemove(SubJobId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._SubJobController.deleteMany(query);
     }
 }
 module.exports = new SubJob();

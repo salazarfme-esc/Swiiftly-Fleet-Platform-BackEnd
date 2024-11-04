@@ -36,7 +36,7 @@ class Admin {
 		return this._adminController.findByIdAndRemove(adminId);
 	}
 	deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._adminController.deleteMany(query);
     }
 }
 module.exports = new Admin();

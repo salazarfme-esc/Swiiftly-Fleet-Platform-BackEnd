@@ -38,7 +38,7 @@ class VendorInvoice {
         return this._VendorInvoiceController.findByIdAndRemove(VendorInvoiceId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._VendorInvoiceController.deleteMany(query);
     }
 }
 module.exports = new VendorInvoice();

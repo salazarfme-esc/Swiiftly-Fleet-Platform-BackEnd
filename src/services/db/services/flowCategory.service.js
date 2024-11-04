@@ -38,7 +38,7 @@ class FlowCategory {
         return this._FlowCategoryController.findByIdAndRemove(FlowCategoryId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._FlowCategoryController.deleteMany(query);
     }
 }
 module.exports = new FlowCategory();

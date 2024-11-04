@@ -30,7 +30,7 @@ class Verification {
 		return this._verificationController.findByIdAndRemove(id);
 	}
 	deleteByQuery(query) {
-		return this._Controller.deleteMany(query);
+		return this._verificationController.deleteMany(query);
 	}
 }
 module.exports = new Verification();

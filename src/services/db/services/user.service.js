@@ -40,7 +40,7 @@ class User {
         return this._userController.findByIdAndRemove(userId);
     }
     deleteByQuery(query) {
-        return this._Controller.deleteMany(query);
+        return this._userController.deleteMany(query);
     }
 }
 module.exports = new User();

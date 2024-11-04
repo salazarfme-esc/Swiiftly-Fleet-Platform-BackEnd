@@ -168,10 +168,19 @@ module.exports = {
                     },
                     {
                         $lookup: {
-                            from: 'main_jobs',
+                            from: "mainjobs",
                             let: { userId: '$_id' },
                             pipeline: [
-                                { $match: { $expr: { $and: [{ $eq: ['$user_id', '$$userId'] }, { $eq: ['status', 'in-progress'] }] } } }
+                                {
+                                    $match: {
+                                        $expr: {
+                                            $and: [
+                                                { $eq: ['$user_id', '$$userId'] },
+                                                { $eq: ['$status', 'in-progress'] }
+                                            ]
+                                        }
+                                    }
+                                }
                             ],
                             as: 'inProgressJobs'
                         }
@@ -188,9 +197,9 @@ module.exports = {
                         }
                     }
                 ];
-            
+
                 let aggregationPipelineCount = [...aggregationPipeline]; // Copy the base pipeline for counting
-            
+
                 // Apply filters for totalVehicles and inProgressJobs
                 if (reqObj.minVehicles || reqObj.maxVehicles) {
                     aggregationPipeline.push({
@@ -210,7 +219,7 @@ module.exports = {
                         }
                     });
                 }
-            
+
                 if (reqObj.minInProgressJobs || reqObj.maxInProgressJobs) {
                     aggregationPipeline.push({
                         $match: {
@@ -229,19 +238,19 @@ module.exports = {
                         }
                     });
                 }
-            
+
                 // Add sort, skip, and limit stages after the filters are applied
                 aggregationPipeline.push(
                     { $sort: { "created_at": -1 } },
                     { $skip: skip },
                     { $limit: limit }
                 );
-            
+
                 // Execute the aggregation
                 let usersWithDetails = await User.aggregate(aggregationPipeline);
-            
+
                 let totalCount = await User.aggregate(aggregationPipelineCount).count("total");
-            
+
                 responseData.msg = "Fleet data fetched successfully!";
                 responseData.data = {
                     count: totalCount.length > 0 ? totalCount[0].total : 0,

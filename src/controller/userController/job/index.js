@@ -338,6 +338,45 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    /**
+    * Method to handle delete request for main job and sub-jobs if status is draft
+    */
+    DeleteDraftRequest: async (req, res) => {
+        let responseData = {};
+        const { root_ticket_id } = req.params;
+        let user = req.user.sub;
+        log.info("Received request to delete draft request", { root_ticket_id });
+
+        try {
+            // Check if the user is valid
+            let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
+            if (!getByQuery.length) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Check if the main job is in draft status
+            let getParentTicket = await MainJobDbHandler.getByQuery({ _id: root_ticket_id, user_id: user, status: 'draft' });
+            if (!getParentTicket.length) {
+                responseData.msg = "No draft main job found with the provided ID!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Delete the main job
+            await MainJobDbHandler.deleteById(root_ticket_id);
+
+            // Delete associated sub-jobs
+            await SubJobDbHandler.deleteByQuery({ root_ticket_id, status: 'draft' });
+
+            responseData.msg = "Draft request and associated sub-jobs deleted successfully!";
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to delete draft request with error::', error);
+            responseData.msg = "Failed to delete draft request";
+            return responseHelper.error(res, responseData);
+        }
+    },
 
     /**
     * Method to handle get Root Tickets

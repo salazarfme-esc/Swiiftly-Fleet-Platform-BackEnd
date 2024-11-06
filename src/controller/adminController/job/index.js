@@ -9,7 +9,8 @@ const adminDbHandler = dbService.Admin;
 const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const VendorDbHandler = dbService.User;
-const MainJobAggregate = require("../../../services/db/models/mainJob")
+const FlowCategoryDbHandler = dbService.FlowCategory;
+const MainJobAggregate = require("../../../services/db/models/mainJob");
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
 const { response } = require('express');
@@ -501,9 +502,28 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Query to fetch child tickets
+            // Base query
             const query = { vendor_id: mongoose.Types.ObjectId(vendorId), status: req.query.status };
 
+            // Apply date filter if provided
+            if (req.query.date) {
+                const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(req.query.date).setUTCHours(23, 59, 59, 999);
+                query.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
+            }
+
+            // Find service category IDs if serviceCategoryName is provided
+            let serviceCategoryIds = [];
+            if (req.query.serviceCategoryName) {
+                const serviceCategories = await FlowCategoryDbHandler.getByQuery({
+                    name: { $regex: req.query.serviceCategoryName, $options: 'i' } // Case-insensitive substring search
+                });
+
+                serviceCategoryIds = serviceCategories.map(category => category._id);
+                query.service_category = { $in: serviceCategoryIds };
+            }
+
+            
             // Get total count
             const totalCount = await SubJobDbHandler.getByQuery(query).countDocuments();
 

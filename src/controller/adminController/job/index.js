@@ -44,12 +44,19 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Use aggregation pipeline for more efficient querying and populating
-            let finalData = await MainJobAggregate.aggregate([
-                { $match: { status: 'created' } }, // Match the updated job request with status 'created'
-                { $sort: { created_at: -1 } }, // Sort by created_at in descending order
-                { $skip: skip },
-                { $limit: limit },
+            // Define match criteria
+            let matchCriteria = { status: 'created' };
+
+            // Apply date filter if provided
+            if (req.query.date) {
+                const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(req.query.date).setUTCHours(23, 59, 59, 999);
+                matchCriteria.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
+            }
+
+            // Use aggregation pipeline with $facet for counting and data retrieval
+            let results = await MainJobAggregate.aggregate([
+                { $match: matchCriteria },
                 {
                     $lookup: {
                         from: "flowcategories",
@@ -78,37 +85,58 @@ module.exports = {
                 { $unwind: "$vehicle_id" },
                 { $unwind: "$user_id" },
                 {
-                    $lookup: {
-                        from: "subjobs",
-                        localField: "_id",
-                        foreignField: "root_ticket_id",
-                        as: "child",
-                        pipeline: [
+                    $match: {
+                        $and: [
+                            { "service_category.name": { $regex: req.query.serviceCategoryName || '', $options: 'i' } },
+                            { "user_id.user_name": { $regex: req.query.userName || '', $options: 'i' } }
+                        ]
+                    }
+                },
+                {
+                    $facet: {
+                        totalCount: [{ $count: "count" }],
+                        data: [
+                            { $sort: { created_at: -1 } },
+                            { $skip: skip },
+                            { $limit: limit },
                             {
                                 $lookup: {
-                                    from: "flowcategories",
-                                    localField: "service_category",
-                                    foreignField: "_id",
-                                    as: "service_category"
+                                    from: "subjobs",
+                                    localField: "_id",
+                                    foreignField: "root_ticket_id",
+                                    as: "child",
+                                    pipeline: [
+                                        {
+                                            $lookup: {
+                                                from: "flowcategories",
+                                                localField: "service_category",
+                                                foreignField: "_id",
+                                                as: "service_category"
+                                            }
+                                        },
+                                        {
+                                            $lookup: {
+                                                from: "flowquestions",
+                                                localField: "question_id",
+                                                foreignField: "_id",
+                                                as: "question_id"
+                                            }
+                                        },
+                                        { $unwind: "$service_category" },
+                                        { $unwind: "$question_id" }
+                                    ]
                                 }
-                            },
-                            {
-                                $lookup: {
-                                    from: "flowquestions",
-                                    localField: "question_id",
-                                    foreignField: "_id",
-                                    as: "question_id"
-                                }
-                            },
-                            { $unwind: "$service_category" },
-                            { $unwind: "$question_id" }
+                            }
                         ]
                     }
                 }
             ]).exec();
 
+            const totalCount = results[0].totalCount[0] ? results[0].totalCount[0].count : 0;
+            const finalData = results[0].data;
+
             responseData.msg = "Data fetched successfully!";
-            responseData.data = { count: await MainJobDbHandler.getByQuery({ status: 'created' }).countDocuments(), data: finalData };
+            responseData.data = { count: totalCount, data: finalData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to fetch data with error::', error);

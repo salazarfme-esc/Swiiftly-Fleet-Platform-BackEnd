@@ -54,6 +54,11 @@ module.exports = {
                 matchCriteria.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
             }
 
+            // Apply service category filter if provided
+            if (req.query.serviceCategoryId) {
+                matchCriteria.service_category = mongoose.Types.ObjectId(req.query.serviceCategoryId);
+            }
+
             // Use aggregation pipeline with $facet for counting and data retrieval
             let results = await MainJobAggregate.aggregate([
                 { $match: matchCriteria },

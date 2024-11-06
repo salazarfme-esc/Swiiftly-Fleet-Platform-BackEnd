@@ -46,6 +46,7 @@ module.exports = {
             // Use aggregation pipeline for more efficient querying and populating
             let finalData = await MainJobAggregate.aggregate([
                 { $match: { status: 'created' } }, // Match the updated job request with status 'created'
+                { $sort: { created_at: -1 } }, // Sort by created_at in descending order
                 { $skip: skip },
                 { $limit: limit },
                 {

@@ -21,7 +21,7 @@ module.exports = {
         street: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Street"), otherwise: Joi.string().trim().required().allow("").label("Street") }),
         address: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Address"), otherwise: Joi.string().trim().required().allow("").label("Address") }),
         city: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("City"), otherwise: Joi.string().trim().required().allow("").label("City") }),
-        district: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("District"), otherwise: Joi.string().trim().required().allow("").label("District") }),
+        // district: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("District"), otherwise: Joi.string().trim().required().allow("").label("District") }),
         state: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("State"), otherwise: Joi.string().trim().required().allow("").label("State") }),
         pin: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("PIN"), otherwise: Joi.string().trim().required().allow("").label("PIN") }),
         country: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Country"), otherwise: Joi.string().trim().required().allow("").label("Country") }),

@@ -431,7 +431,7 @@ module.exports = {
                     street: reqObj.street,
                     address: reqObj.address,
                     city: reqObj.city,
-                    district: reqObj.district,
+                    district: "",
                     state: reqObj.state,
                     pin: reqObj.pin,
                     country: reqObj.country,
@@ -523,7 +523,7 @@ module.exports = {
                 query.service_category = { $in: serviceCategoryIds };
             }
 
-            
+
             // Get total count
             const totalCount = await SubJobDbHandler.getByQuery(query).countDocuments();
 

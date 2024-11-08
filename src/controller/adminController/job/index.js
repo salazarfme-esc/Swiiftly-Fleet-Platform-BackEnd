@@ -54,9 +54,9 @@ module.exports = {
                 matchCriteria.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) };
             }
 
-            // Apply service category filter if provided
+            // Apply service category filter if provided (split for vendor role)
             if (req.query.serviceCategoryId) {
-                matchCriteria.service_category = mongoose.Types.ObjectId(req.query.serviceCategoryId);
+                matchCriteria.service_category = { $in: req.query.serviceCategoryId.split(',').map(id => mongoose.Types.ObjectId(id.trim())) }; // Use $in for multiple IDs
             }
 
             // Use aggregation pipeline with $facet for counting and data retrieval
@@ -167,7 +167,6 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-
             // Define match criteria based on query parameters
             let matchCriteria = { status: req.query.status };
 
@@ -176,7 +175,7 @@ module.exports = {
                 matchCriteria.user_id = mongoose.Types.ObjectId(req.query.user_id);
             }
             if (req.query.service_category_id) {
-                matchCriteria.service_category = mongoose.Types.ObjectId(req.query.service_category_id);
+                matchCriteria.service_category = { $in: req.query.service_category_id.split(',').map(id => mongoose.Types.ObjectId(id.trim())) }; // Use $in for multiple IDs
             }
             if (req.query.date) {
                 const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);
@@ -187,9 +186,7 @@ module.exports = {
                 matchCriteria._id = mongoose.Types.ObjectId(req.query.root_ticket_id);
             }
 
-
             console.log("Match criteria:", matchCriteria);
-
 
             // Get the total count of documents matching the criteria
             let count = await MainJobAggregate.countDocuments(matchCriteria);

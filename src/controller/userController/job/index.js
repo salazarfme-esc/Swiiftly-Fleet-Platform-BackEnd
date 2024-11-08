@@ -387,13 +387,32 @@ module.exports = {
         log.info("Received request to get Root tickets");
         const limit = parseInt(req.query.limit);
         const skip = parseInt(req.query.skip);
+        const { service_category, date, vehicle_nickname } = req.query; // Extracting new query parameters
         try {
             let getByQuery = await userDbHandler.getByQuery({ _id: user, user_role: "fleet" });
             if (!getByQuery.length) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).sort({ created_at: -1 })
+
+            // Prepare filters
+            let filters = { user_id: user, status: req.query.status };
+            if (service_category) {
+                filters.service_category = { $in: service_category.split(',').map(id => id.trim()) }; // Convert to array
+            }
+            if (date) {
+                const startOfDay = new Date(date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(date).setUTCHours(23, 59, 59, 999);
+                filters.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) }; // Date filter
+            }
+            if (vehicle_nickname) {
+                // Find vehicle IDs by nickname
+                const vehicles = await VehicleDbHandler.getByQuery({ nickname: { $regex: vehicle_nickname, $options: 'i' } }); // Case insensitive substring search
+                const vehicleIds = vehicles.map(vehicle => vehicle._id);
+                filters.vehicle_id = { $in: vehicleIds }; // Filter by vehicle IDs
+            }
+
+            let getData = await MainJobDbHandler.getByQuery(filters).sort({ created_at: -1 })
                 .populate("service_category").populate("vehicle_id").populate("make").populate("model").skip(skip).limit(limit);
 
             // Fetch child tickets for each root ticket
@@ -409,7 +428,7 @@ module.exports = {
                 };
             }));
             responseData.msg = "Tickets fetched successfully!";
-            responseData.data = { count: await MainJobDbHandler.getByQuery({ user_id: user, status: req.query.status }).countDocuments(), data: rootTicketsWithChildren };
+            responseData.data = { count: await MainJobDbHandler.getByQuery(filters).countDocuments(), data: rootTicketsWithChildren };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch tickets with error::', error);
@@ -530,7 +549,7 @@ module.exports = {
             }
             let query = { vendor_id: user, status: req.query.status };
             if (req.query.service_category) {
-                query.service_category = req.query.service_category;
+                query.service_category = { $in: service_type.split(',').map(id => id.trim()) };
             }
             if (req.query.date) {
                 const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);

@@ -548,8 +548,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let query = { vendor_id: user, status: req.query.status };
-            if (req.query.service_category) {
-                query.service_category = { $in: service_type.split(',').map(id => id.trim()) };
+            if (req.query.service_type) {
+                query.service_category = { $in: req.query.service_type.split(',').map(id => id.trim()) };
             }
             if (req.query.date) {
                 const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);

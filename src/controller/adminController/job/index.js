@@ -174,8 +174,8 @@ module.exports = {
             if (req.query.user_id) {
                 matchCriteria.user_id = mongoose.Types.ObjectId(req.query.user_id);
             }
-            if (req.query.service_category_id) {
-                matchCriteria.service_category = { $in: req.query.service_category_id.split(',').map(id => mongoose.Types.ObjectId(id.trim())) }; // Use $in for multiple IDs
+            if (req.query.service_type) {
+                matchCriteria.service_category = { $in: req.query.service_type.split(',').map(id => mongoose.Types.ObjectId(id.trim())) }; // Use $in for multiple IDs
             }
             if (req.query.date) {
                 const startOfDay = new Date(req.query.date).setUTCHours(0, 0, 0, 0);

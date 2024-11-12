@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const bcrypt = require("bcryptjs");
 const config = require("../../../config/environments");
+
 /**
  * Creating User Schema Model
  */
@@ -34,9 +35,27 @@ const adminUserSchema = new Schema(
       type: String,
       default: ""
     },
-    permission: {
-      type: [String],
-      enum: ["Dashboard", "Store Locate", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback"],
+    permissions: {
+      type: [
+        {
+          tab: {
+            type: String,
+            enum: [
+              "Dashboard", "Users", "Vendor", "Work Flow", "Invoices",
+              "Fleet Manager", "Reports", "Service Request", "Feedback"
+            ],
+            required: true
+          },
+          read: {
+            type: Boolean,
+            default: false
+          },
+          edit: {
+            type: Boolean,
+            default: false
+          }
+        }
+      ],
       default: []
     },
     otp_verified: {
@@ -46,10 +65,23 @@ const adminUserSchema = new Schema(
     avatar: {
       type: String,
       default: '',
-  },
+    },
+    temporary_password: {
+      type: Boolean,
+      default: false
+    },
+    is_deleted: {
+      type: Boolean,
+      default: false
+    },
+    is_active: {
+      type: Boolean,
+      default: true
+    },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
+
 /**
  * Method to Encrypt Admin password before Saving to Database
  */

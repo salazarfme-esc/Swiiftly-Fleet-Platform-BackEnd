@@ -55,7 +55,10 @@ module.exports = () => {
     Router.get("/get-admin/:id", adminAuthController.getSingleAdmin);
     Router.put("/update-admin", [multerService.uploadFile('file').single('avatar'), validationMiddleware(adminValidationSchema.update_admin, "body")], adminAuthController.updateAdmin);
     Router.post("/add-admin", validationMiddleware(adminValidationSchema.add_admin, "body"), adminAuthController.addAdmin);
+    Router.put("/update-sub-admin/:id", validationMiddleware(adminValidationSchema.update_Sub_Admin, "body"), adminAuthController.updateSubAdmin);
     Router.put("/change-password", validationMiddleware(adminValidationSchema.changePassword, "body"), adminAuthController.changeAdminPassword);
+    Router.put("/change-status-sub-admin/:id", validationMiddleware(adminValidationSchema.changeStatusSubAdmin, "query"), adminAuthController.changeStatusSubAdmin);
+    Router.delete("/delete-sub-admin/:id",validationMiddleware(adminValidationSchema.deleteSubAdmin, "query"), adminAuthController.deleteSubAdmin);
 
 
     // Routes for Make

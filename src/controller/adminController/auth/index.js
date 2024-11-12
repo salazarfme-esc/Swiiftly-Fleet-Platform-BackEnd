@@ -11,6 +11,8 @@ const verificationDbHandler = dbService.AdminVerification;
 const config = require('../../../config/environments');
 const templates = require('../../../utils/templates/template');
 const emailService = require('../../../services/sendEmail');
+const crypto = require('crypto');
+
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -60,6 +62,9 @@ let _encryptPassword = (password) => {
         });
     });
 };
+function generateStrongPassword(length = 16) {
+    return crypto.randomBytes(length).toString('base64').slice(0, length);
+}
 /**************************
  * END OF PRIVATE FUNCTIONS
  **************************/
@@ -72,51 +77,73 @@ module.exports = {
         log.info('Received request for Admin Login:', reqObj);
         let responseData = {};
         try {
-            let emails = [
-                'admin@swiiftly.com'
-            ];
-            let query = {
-                email: reqObj.email
+            let superAdminEmail = 'admin@swiiftly.com';
+            let query = { 
+                email: reqObj.email,
+                is_deleted: false, // Check if the admin is not deleted
+                is_active: true    // Check if the admin is active
             };
-            //check if admin email is present in the database, then only login request will process
+
+            // Check if admin email is present in the database, then only login request will process
             let adminData = await adminDbHandler.getByQuery(query).lean();
-            //if no admin found, return error
+
             if (adminData.length) {
                 log.info('Admin login found', adminData);
                 let reqPassword = reqObj.password;
                 let adminPassword = adminData[0].password;
-                //compare req body password and user password,
+
+                // Compare request body password and stored password
                 let isPasswordMatch = await _comparePassword(reqPassword, adminPassword);
-                //if password does not match, return error
+
                 if (!isPasswordMatch) {
                     responseData.msg = 'Incorrect Password';
                     return responseHelper.error(res, responseData);
                 }
-                //patch token data obj
-                let tokenData = {
-                    sub: adminData[0]._id,
-                    email: adminData[0].email
-                };
+
+                // If the user is super admin, ensure the role and permissions are set
+                if (reqObj.email === superAdminEmail) {
+                    adminData[0].role = "super_admin";
+                    adminData[0].permissions = [
+                        { tab: "Dashboard", read: true, edit: true },
+                        { tab: "Users", read: true, edit: true },
+                        { tab: "Vendor", read: true, edit: true },
+                        { tab: "Work Flow", read: true, edit: true },
+                        { tab: "Invoices", read: true, edit: true },
+                        { tab: "Fleet Manager", read: true, edit: true },
+                        { tab: "Reports", read: true, edit: true },
+                        { tab: "Work Flow", read: true, edit: true }
+                    ];
+                }
+
+                // Generate JWT token and update last login
+                let tokenData = { sub: adminData[0]._id, email: adminData[0].email };
                 await adminDbHandler.updateById(adminData[0]._id, { last_login: new Date() });
-                //update the response Data
-                //generate jwt token with the token obj
                 let jwtToken = _generateAdminToken(tokenData);
                 adminData[0].token = jwtToken;
                 responseData.msg = 'Welcome';
                 responseData.data = adminData[0];
                 return responseHelper.success(res, responseData);
-            } else if (emails.includes(reqObj.email)) {
+            } else if (reqObj.email === superAdminEmail) {
+                // Create a new super admin if not found in database
                 reqObj.last_login = new Date();
-                reqObj.role = "1";
+                reqObj.role = "super_admin";
+                reqObj.permissions = [
+                    { tab: "Dashboard", read: true, edit: true },
+                    { tab: "Users", read: true, edit: true },
+                    { tab: "Vendor", read: true, edit: true },
+                    { tab: "Work Flow", read: true, edit: true },
+                    { tab: "Invoices", read: true, edit: true },
+                    { tab: "Fleet Manager", read: true, edit: true },
+                    { tab: "Reports", read: true, edit: true },
+                    { tab: "Work Flow", read: true, edit: true }
+                ];
+
+                // Create new admin entry
                 let newAdmin = await adminDbHandler.create(reqObj);
-                log.info('new admin login created', newAdmin);
-                //patch token data obj
-                let tokenData = {
-                    sub: newAdmin._id,
-                    email: newAdmin.email
-                };
-                //update the response Data
-                //generate jwt token with the token obj
+                log.info('New super admin created', newAdmin);
+
+                // Generate JWT token
+                let tokenData = { sub: newAdmin._id, email: newAdmin.email };
                 newAdmin = await adminDbHandler.getById(newAdmin._id).lean();
                 let jwtToken = _generateAdminToken(tokenData);
                 newAdmin.token = jwtToken;
@@ -124,25 +151,45 @@ module.exports = {
                 responseData.data = newAdmin;
                 return responseHelper.success(res, responseData);
             }
-            responseData.msg = 'Admin doesn\'t exists';
+
+            responseData.msg = 'Admin doesn\'t exist or is inactive/deleted';
             return responseHelper.error(res, responseData);
         } catch (error) {
-            log.error('failed to get admin login with error::', error);
-            responseData.msg = 'failed to get admin login';
+            log.error('Failed to get admin login with error::', error);
+            responseData.msg = 'Failed to get admin login';
             return responseHelper.error(res, responseData);
         }
     },
 
+
     getAllAdmin: async (req, res) => {
         let responseData = {};
+        const limit = parseInt(req.query.limit) ; // Default limit
+        const skip = parseInt(req.query.skip) ; // Default skip
+        const searchQuery = req.query.search || ''; // Get search query from request
+
         try {
-            let getAdminList = await adminDbHandler.getByQuery({}, { admin_password: 0 });
+            // Build the search criteria
+            const searchCriteria = {
+                $or: [
+                    { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for name
+                    { email: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for email
+                    { role: { $regex: searchQuery, $options: 'i' } } // Case-insensitive search for role
+                ]
+            };
+
+            // Fetch admin list with pagination, sorting, and search
+            let getAdminList = await adminDbHandler.getByQuery(
+                searchCriteria,
+                { admin_password: 0 }
+            ).skip(skip).limit(limit).sort({ created_at: -1 });
+
             responseData.msg = "Data fetched successfully!";
             responseData.data = getAdminList;
             return responseHelper.success(res, responseData);
         } catch (error) {
-            log.error('failed to fetch data with error::', error);
-            responseData.msg = 'failed to fetch data';
+            log.error('Failed to fetch data with error::', error);
+            responseData.msg = 'Failed to fetch data';
             return responseHelper.error(res, responseData);
         }
     },
@@ -168,7 +215,7 @@ module.exports = {
         let admin = req.admin;
         let id = admin.sub;
         let reqObj = req.body;
-    
+
         try {
             let getByQuery = await adminDbHandler.getByQuery({ _id: id });
             if (!getByQuery.length) {
@@ -179,13 +226,13 @@ module.exports = {
             if (req.file) {
                 image = req.file.location;
             }
-    
+
             let updatedData = {
                 name: reqObj.name,
                 phone_number: reqObj.phone_number, // Update phone_number as well
                 avatar: image
             };
-    
+
             let updateAdmin = await adminDbHandler.updateById(id, updatedData);
             responseData.msg = "Data updated!";
             responseData.data = await adminDbHandler.getById(id);
@@ -196,29 +243,86 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    
+    updateSubAdmin: async (req, res) => {
+        let responseData = {};
+        let adminId = req.params.id; // Assuming the admin ID is passed in the URL
+        let admin = req.admin;
+        let id = admin.sub;
+        let reqObj = req.body;
+
+        try {
+            let getByQuery = await adminDbHandler.getByQuery({ _id: id });
+            if (!getByQuery.length) {
+                responseData.msg = "Admin not found!";
+                return responseHelper.error(res, responseData);
+            }
+            // Fetch the existing admin data
+            let existingAdmin = await adminDbHandler.getById(adminId);
+            if (!existingAdmin) {
+                responseData.msg = "Details not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Prepare the updated data
+            let updatedData = {
+                name: reqObj.name , 
+                role: reqObj.role , 
+                phone_number: reqObj.phone_number , 
+                permissions: reqObj.permissions  
+            };
+
+            // Update the admin entry
+            let updatedAdmin = await adminDbHandler.updateById(adminId, updatedData);
+            responseData.msg = "Admin updated successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to update admin with error::', error);
+            responseData.msg = "Failed to update admin";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 
     addAdmin: async (req, res) => {
         let responseData = {};
         let user = req.admin;
         let reqObj = req.body;
+
         try {
+            // Check if the email already exists
             let getByQuery = await adminDbHandler.getByQuery({ email: reqObj.email });
             if (getByQuery.length) {
-                responseData.msg = "This Email-Id already taken";
+                responseData.msg = "This Email-Id is already taken";
                 return responseHelper.error(res, responseData);
             }
+
+            // Prepare the data for the new admin
             let Data = {
                 name: reqObj.name,
                 email: reqObj.email,
-                password: reqObj.password,
-            }
+                password: generateStrongPassword(), 
+                phone_number: reqObj.phone_number, 
+                role: reqObj.role , 
+                permissions: reqObj.permissions || [],
+                temporary_password: true 
+            };
+
+            // Create the new admin entry
             let Admin = await adminDbHandler.create(Data);
-            responseData.msg = "Data added successfully!";
+            if (Admin) {
+                let emailBody = {
+                    recipientsAddress: Admin.email,
+                    subject: 'Security Code for Account Verification',
+                    body: templates.invitationToJoinAdmin(Data)
+                };
+                let emailInfo = await emailService.sendEmail(emailBody);
+            }
+            responseData.msg = "Admin added successfully!";
+            responseData.data = Admin; // Optionally return the created admin data
             return responseHelper.success(res, responseData);
         } catch (error) {
-            log.error('failed to update data with error::', error);
-            responseData.msg = "failed to add data";
+            log.error('Failed to add admin with error::', error);
+            responseData.msg = "Failed to add admin";
             return responseHelper.error(res, responseData);
         }
     },
@@ -255,8 +359,8 @@ module.exports = {
 
             let otpBody = {
                 otp: OTP,
-                name : "Swiiftly-Admin"
-                
+                name: "Swiiftly-Admin"
+
             };
 
             //if password verification data found update it with new token, else create new entry
@@ -413,35 +517,81 @@ module.exports = {
         let id = admin.sub;
         log.info('Received request for Admin password update:', reqObj);
         let responseData = {};
-        
+
         try {
             let adminData = await adminDbHandler.getById(id);
-    
+
             let comparePassword = await _comparePassword(reqObj.old_password, adminData.password);
             if (!comparePassword) {
                 responseData.msg = "Invalid old password!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             let compareNewAndOld = await _comparePassword(reqObj.new_password, adminData.password);
             if (compareNewAndOld) {
                 responseData.msg = "New password must be different from old password!";
                 return responseHelper.error(res, responseData);
             }
-    
+
             let updatedObj = {
-                password: await _createHashPassword(reqObj.new_password)
+                password: await _createHashPassword(reqObj.new_password),
+                temporary_password: false
             };
-    
+
             let updateProfile = await adminDbHandler.updateById(id, updatedObj);
             responseData.msg = "Password updated successfully!";
             return responseHelper.success(res, responseData);
-    
+
         } catch (error) {
             log.error('Failed to update password with error:', error);
             responseData.msg = "Failed to change password!";
             return responseHelper.error(res, responseData);
         }
     },
-    
+
+    deleteSubAdmin: async (req, res) => {
+        let responseData = {};
+        let adminId = req.params.id; // Assuming the admin ID is passed in the URL
+
+        try {
+            // Fetch the existing admin data
+            let existingAdmin = await adminDbHandler.getById(adminId);
+            if (!existingAdmin) {
+                responseData.msg = "Admin not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Mark the admin as deleted
+            await adminDbHandler.updateById(adminId, { is_deleted: req.query.is_deleted });
+            responseData.msg = "Sub-admin deleted successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to delete sub-admin with error::', error);
+            responseData.msg = "Failed to delete sub-admin";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    changeStatusSubAdmin: async (req, res) => {
+        let responseData = {};
+        let adminId = req.params.id; // Assuming the admin ID is passed in the URL
+
+        try {
+            // Fetch the existing admin data
+            let existingAdmin = await adminDbHandler.getById(adminId);
+            if (!existingAdmin) {
+                responseData.msg = "Admin not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Mark the admin as deleted
+            await adminDbHandler.updateById(adminId, { is_active: req.query.is_active });
+            responseData.msg = "Sub-admin status changed successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to change status for sub-admin with error::', error);
+            responseData.msg = "Status updated!";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
 };

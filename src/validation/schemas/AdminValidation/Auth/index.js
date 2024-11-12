@@ -25,20 +25,68 @@ module.exports = {
 			.label("Name"),
 		email: Joi
 			.string()
+			.email()
 			.trim()
 			.required()
 			.label('Email'),
-		password: Joi
+		phone_number: Joi
 			.string()
-			.min(8)
+			.trim()
+			.pattern(/^[0-9]{6,16}$/)
 			.required()
-			.label('Password'),
-		confirm_password: Joi
+			.label('Phone Number')
+			.messages({
+				'string.pattern.base': 'Phone Number must be between 6 and 16 digits long and contain only numbers.',
+				'any.required': 'Phone Number is required.'
+			}),
+		role: Joi
 			.string()
-			.min(8)
-			.valid(Joi.ref('password'))
+			.trim()
+			.label('Role')
+			.required(),
+		permissions: Joi.array()
+			.items(Joi.object({
+				tab: Joi.string()
+					.valid("Dashboard", "Users", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback")
+					.required(),
+				read: Joi.boolean().required(),
+				edit: Joi.boolean().required()
+			}))
 			.required()
-			.error(new Error('Confirm password and password must be same')),
+			.label('Permissions')
+	}),
+	update_Sub_Admin: 
+	Joi.object().keys({
+		name: Joi
+			.string()
+			.trim()
+			.required()
+			.label("Name"),
+		role: Joi
+			.string()
+			.trim()
+			.required()
+			.label('Role'),
+		phone_number: Joi
+			.string()
+			.trim()
+			.pattern(/^[0-9]{6,16}$/) // Ensure phone number is between 6 and 16 digits
+			.required()
+			.label('Phone Number')
+			.messages({
+				'string.pattern.base': 'Phone Number must be between 6 and 16 digits long and contain only numbers.',
+				'any.required': 'Phone Number is required.'
+			}),
+		permissions: Joi.array()
+			.items(Joi.object({
+				tab: Joi.string()
+					.valid("Dashboard", "Users", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback")
+					.required(),
+				read: Joi.boolean().required(),
+				edit: Joi.boolean().required()
+			}))
+			.required() // Ensure permissions are provided
+			.label('Permissions')
 	}),
 	update_admin: Joi.object().keys({
 		name: Joi
@@ -85,5 +133,11 @@ module.exports = {
 				'any.only': 'Confirm Password must match the New Password.',
 				'any.required': 'Confirm Password is required.'
 			})
+	}),
+	changeStatusSubAdmin: Joi.object().keys({
+		is_active: Joi.boolean().required().label('Is Active?')
+	}),
+	deleteSubAdmin: Joi.object().keys({
+		is_deleted: Joi.boolean().required().label('Is Delete?')
 	}),
 };

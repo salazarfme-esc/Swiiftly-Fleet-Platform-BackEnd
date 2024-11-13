@@ -42,7 +42,7 @@ const VehicleSchema = new Schema({
     },
     issue_date: {
         type: String,
-        required: true
+        required: false
     },
     in_fleet: {
         type: String,
@@ -54,7 +54,7 @@ const VehicleSchema = new Schema({
     },
     registration_place: {
         type: String,
-        required: true
+        required: false
     },
     gas_electric: {
         type: String,

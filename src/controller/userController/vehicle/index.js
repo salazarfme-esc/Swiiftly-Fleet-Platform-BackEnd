@@ -224,8 +224,8 @@ module.exports = {
             for (let record of excelData.Sheet1) { // Assuming the sheet name is 'Sheet1'
                 try {
                     // Validate uniqueness of VIN and License Plate
-                    let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: reqObj.identification_number });
-                    let checkVehicle1 = await VehicleDbHandler.getByQuery({ license_plate: reqObj.license_plate });
+                    let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: record.identification_number });
+                    let checkVehicle1 = await VehicleDbHandler.getByQuery({ license_plate: record.license_plate });
 
                     if (checkVehicle.length) {
                         response.failureCount++;

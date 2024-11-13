@@ -10,10 +10,10 @@ const templates = require('../../utils/templates/template');
 // Function to calculate the start and end dates of the last week
 function getLastWeekRange() {
     const now = moment().utc();
-    // Find the start of the current week (Sunday)
-    const startOfWeek = now.clone().startOf('week').subtract(1, 'week'); // Previous week Sunday
-    // Calculate the end of the week (Saturday)
-    const endOfWeek = startOfWeek.clone().endOf('week'); // Saturday
+    // Find the start of the previous week (Monday)
+    const startOfWeek = now.clone().startOf('week').subtract(1, 'week').add(1, 'days'); // Previous week Monday
+    // Calculate the end of the week (Sunday)
+    const endOfWeek = startOfWeek.clone().endOf('week'); // Previous week Sunday
 
     return { start: startOfWeek.toDate(), end: endOfWeek.toDate() };
 }
@@ -28,12 +28,10 @@ function generateInvoiceNumber() {
  *********************************************/
 module.exports = {
     Crons: () => {
-        // Schedule job every Sunday at midnight (00:00 UTC)
-        cron.schedule('0 0 * * 0', async () => {
+        // Schedule job every Monday at midnight (00:00 UTC)
+        cron.schedule('0 0 * * 1', async () => {
             try {
                 const { start, end } = getLastWeekRange();
-                console.log("🚀 ~ cron.schedule ~ end:", end)
-                console.log("🚀 ~ cron.schedule ~ start:", start)
 
                 // Fetch all completed sub-jobs from the last week
                 let completedSubJobs = await SubJobDbHandler.getByQuery({
@@ -52,7 +50,6 @@ module.exports = {
 
                 // Create invoices for each vendor
                 for (const [vendorId, jobs] of Object.entries(vendorJobs)) {
-                    console.log("🚀 ~ cron.schedule ~ jobs:", jobs)
                     const totalAmount = jobs.reduce((sum, job) => sum + parseFloat(job.cost_estimation), 0);
                     const invoiceNumber = generateInvoiceNumber(); // Generate a unique invoice number
 

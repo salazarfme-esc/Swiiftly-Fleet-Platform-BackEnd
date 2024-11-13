@@ -26,8 +26,8 @@ const InvoiceSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'paid', 'overdue'],
-        default: 'pending'
+        enum: ['draft', 'published', 'paid', 'overdue'],
+        default: 'draft'
     },
     sub_jobs: [{
         sub_job_id: {

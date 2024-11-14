@@ -78,7 +78,7 @@ module.exports = {
         let responseData = {};
         try {
             let superAdminEmail = 'admin@swiiftly.com';
-            let query = { 
+            let query = {
                 email: reqObj.email,
                 is_deleted: false, // Check if the admin is not deleted
                 is_active: true    // Check if the admin is active
@@ -164,8 +164,8 @@ module.exports = {
 
     getAllAdmin: async (req, res) => {
         let responseData = {};
-        const limit = parseInt(req.query.limit) ; // Default limit
-        const skip = parseInt(req.query.skip) ; // Default skip
+        const limit = parseInt(req.query.limit); // Default limit
+        const skip = parseInt(req.query.skip); // Default skip
         const searchQuery = req.query.search || ''; // Get search query from request
 
         try {
@@ -175,7 +175,8 @@ module.exports = {
                     { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for name
                     { email: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for email
                     { role: { $regex: searchQuery, $options: 'i' } } // Case-insensitive search for role
-                ]
+                ],
+                _id: { $ne: req.admin.sub }
             };
 
             // Fetch admin list with pagination, sorting, and search
@@ -184,8 +185,13 @@ module.exports = {
                 { admin_password: 0 }
             ).skip(skip).limit(limit).sort({ created_at: -1 });
 
+            let getAdminListCount = await adminDbHandler.getByQuery(
+                searchCriteria,
+                { admin_password: 0 }
+            ).countDocuments();
+
             responseData.msg = "Data fetched successfully!";
-            responseData.data = getAdminList;
+            responseData.data = { count: getAdminListCount, data: getAdminList };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch data with error::', error);
@@ -265,10 +271,10 @@ module.exports = {
 
             // Prepare the updated data
             let updatedData = {
-                name: reqObj.name , 
-                role: reqObj.role , 
-                phone_number: reqObj.phone_number , 
-                permissions: reqObj.permissions  
+                name: reqObj.name,
+                role: reqObj.role,
+                phone_number: reqObj.phone_number,
+                permissions: reqObj.permissions
             };
 
             // Update the admin entry
@@ -300,11 +306,11 @@ module.exports = {
             let Data = {
                 name: reqObj.name,
                 email: reqObj.email,
-                password: generateStrongPassword(), 
-                phone_number: reqObj.phone_number, 
-                role: reqObj.role , 
+                password: generateStrongPassword(),
+                phone_number: reqObj.phone_number,
+                role: reqObj.role,
                 permissions: reqObj.permissions || [],
-                temporary_password: true 
+                temporary_password: true
             };
 
             // Create the new admin entry

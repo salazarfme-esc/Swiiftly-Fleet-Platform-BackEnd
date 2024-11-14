@@ -11,6 +11,7 @@ const SubJobDbHandler = dbService.SubJob;
 const config = require('../../../config/environments');
 const { response } = require('express');
 const mongoose = require("mongoose");
+const moment = require('moment'); // Import Moment.js
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -34,42 +35,38 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Calculate the start of the current week (Monday)
-            const today = new Date(); // Use the current date
-            const currentDay = today.getDay(); // 0 (Sunday) to 6 (Saturday)
-            const currentDate = today.getDate();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
+            // Get today's date in UTC
+            const today = moment.utc(); // Current date in UTC
+            const currentDay = today.day(); // 0 (Sunday) to 6 (Saturday)
 
-            // Calculate the date of the last Monday
-            const lastMonday = new Date(currentYear, currentMonth, currentDate - (currentDay + 6) % 7);
-            const startOfCurrentWeek = new Date(currentYear, currentMonth, currentDate - currentDay, 0, 0, 0); // Set to 12:00 AM
-            const startOfNextWeek = new Date(currentYear, currentMonth, currentDate + (7 - currentDay), 0, 0, 0); // Set to 12:00 AM
+            // Calculate the start of the current week (Monday) in UTC
+            const startOfCurrentWeek = today.clone().startOf('isoWeek'); // Start of the current week (Monday)
+            const startOfNextWeek = startOfCurrentWeek.clone().add(1, 'week'); // Start of next week (next Monday)
+            console.log("🚀 ~ getVendorInvoices: ~ startOfNextWeek:", startOfNextWeek)
 
             let queryDate;
 
             if (latest === 'true') {
-                // If today is Monday, use the previous Monday
+                // If today is Monday
                 if (currentDay === 1) {
-                    queryDate = new Date(lastMonday.getFullYear(), lastMonday.getMonth(), lastMonday.getDate() - 7, 0, 0, 0); // Previous Monday at 12:00 AM
+                    // Set queryDate to the previous Monday at 12:00 AM UTC
+                    queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
                 } else {
                     // If today is not Monday, use the current week's Monday
-                    queryDate = startOfCurrentWeek; // Current week's Monday at 12:00 AM
+                    queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
                 }
             } else {
-                // If today is Monday, return data before the previous Monday
+                // If today is Monday
                 if (currentDay === 1) {
-                    queryDate = new Date(lastMonday.getFullYear(), lastMonday.getMonth(), lastMonday.getDate() - 7, 0, 0, 0); // Previous Monday at 12:00 AM
+                    // Set queryDate to the previous Monday at 12:00 AM UTC
+                    queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
                 } else {
                     // If today is not Monday, return data before the current week's Monday
-                    queryDate = startOfCurrentWeek; // Current week's Monday at 12:00 AM
+                    queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
                 }
             }
 
-            // Adjust queryDate to ensure it is in the correct time zone
-            queryDate.setUTCHours(0, 0, 0, 0); // Set to 12:00 AM UTC
-
-            console.log("🚀 ~ getVendorInvoices: ~ queryDate:", queryDate)
+            console.log("🚀 ~ getVendorInvoices: ~ queryDate:", queryDate.toISOString());
 
             // Fetch invoices based on the calculated date
             let getData;
@@ -77,15 +74,15 @@ module.exports = {
                 getData = await VendorInvoiceDbHandler.getByQuery({
                     status,
                     created_at: {
-                        $gte: queryDate,
-                        $lt: startOfNextWeek
+                        $gte: queryDate.toDate(), // Convert to JavaScript Date object
+                        $lt: startOfNextWeek.startOf('day').toDate() // Convert to JavaScript Date object
                     }
                 }).sort({ created_at: -1 }).skip(parseInt(skip)).limit(parseInt(limit));
             } else {
                 getData = await VendorInvoiceDbHandler.getByQuery({
                     status,
                     created_at: {
-                        $lt: queryDate
+                        $lt: queryDate.toDate() // Convert to JavaScript Date object
                     }
                 }).sort({ created_at: -1 }).skip(parseInt(skip)).limit(parseInt(limit));
             }

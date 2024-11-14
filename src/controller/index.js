@@ -17,6 +17,7 @@ const adminFlowController = require("./adminController/flow");
 const adminUserManagementController = require("./adminController/userManagement");
 const adminJobController = require("./adminController/job");
 const adminMakeAndModelController = require("./adminController/makeAndModel");
+const adminInvoicesController = require("./adminController/invoices");
 
 module.exports = {
     /**
@@ -27,6 +28,7 @@ module.exports = {
     adminUserManagement: adminUserManagementController,
     adminJob: adminJobController,
     makeAndModel: adminMakeAndModelController,
+    adminInvoices: adminInvoicesController,
     /**
      * All User Controllers
      */

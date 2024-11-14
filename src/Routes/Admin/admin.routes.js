@@ -7,6 +7,7 @@ const adminFlowController = require("../../controller").adminFlow;
 const adminUserManagementController = require("../../controller").adminUserManagement;
 const adminJobController = require("../../controller").adminJob;
 const adminMakeAndModel = require("../../controller").makeAndModel;
+const adminInvoicesController = require("../../controller").adminInvoices;      
 
 /**
  * Middlewares
@@ -115,6 +116,10 @@ module.exports = () => {
     Router.put("/child-sequence-update/:root_ticket_id", validationMiddleware(adminJobValidationSchema.updateSubJobSequence, "body"), adminJobController.UpdateSubJobSequence);
     Router.put("/assign-vendor", validationMiddleware(adminJobValidationSchema.assignVendorToSubTicket, "body"), adminJobController.AssignVendorToSubTicket);
     Router.get("/vendor-child-tickets", adminJobController.getVendorChildTickets);
+
+    // Invoices Routes
+    Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);   
+    Router.put("/update-invoice", adminInvoicesController.updateInvoice);
 
 
 

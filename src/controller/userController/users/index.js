@@ -152,11 +152,15 @@ module.exports = {
 
             let avatar = userData.avatar;
             let w9_document = userData.w9_document;
+            let blank_check_or_bank_letter = userData.blank_check_or_bank_letter;
             if (req.files && req.files.avatar) {
                 avatar = req.files.avatar[0].location;
             }
             if (req.files && req.files.w9_document) {
                 w9_document = req.files.w9_document[0].location;
+            }
+            if (req.files && req.files.blank_check_or_bank_letter) {
+                blank_check_or_bank_letter = req.files.blank_check_or_bank_letter[0].location;
             }
 
             // Create an object with the fields you want to update
@@ -177,7 +181,9 @@ module.exports = {
                 w9_document: w9_document,
                 business_address: reqObj.business_address,
                 avatar: avatar,
+                blank_check_or_bank_letter: blank_check_or_bank_letter,
                 profile_completed: true
+
             }
 
             // Check if there are changes in w9 or w9_document, if so set w9_verified to false

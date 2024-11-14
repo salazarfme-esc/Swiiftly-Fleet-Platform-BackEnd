@@ -95,6 +95,10 @@ const userSchema = new Schema({
         type: String,
         default: '',
     },
+    blank_check_or_bank_letter: {
+        type: String,
+        default: '',
+    },
     net: {
         type: String,
         enum: ['30', '15', ''],

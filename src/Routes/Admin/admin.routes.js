@@ -7,7 +7,7 @@ const adminFlowController = require("../../controller").adminFlow;
 const adminUserManagementController = require("../../controller").adminUserManagement;
 const adminJobController = require("../../controller").adminJob;
 const adminMakeAndModel = require("../../controller").makeAndModel;
-const adminInvoicesController = require("../../controller").adminInvoices;      
+const adminInvoicesController = require("../../controller").adminInvoices;
 
 /**
  * Middlewares
@@ -59,7 +59,7 @@ module.exports = () => {
     Router.put("/update-sub-admin/:id", validationMiddleware(adminValidationSchema.update_Sub_Admin, "body"), adminAuthController.updateSubAdmin);
     Router.put("/change-password", validationMiddleware(adminValidationSchema.changePassword, "body"), adminAuthController.changeAdminPassword);
     Router.put("/change-status-sub-admin/:id", validationMiddleware(adminValidationSchema.changeStatusSubAdmin, "query"), adminAuthController.changeStatusSubAdmin);
-    Router.delete("/delete-sub-admin/:id",validationMiddleware(adminValidationSchema.deleteSubAdmin, "query"), adminAuthController.deleteSubAdmin);
+    Router.delete("/delete-sub-admin/:id", validationMiddleware(adminValidationSchema.deleteSubAdmin, "query"), adminAuthController.deleteSubAdmin);
 
 
     // Routes for Make
@@ -99,13 +99,13 @@ module.exports = () => {
     /**
    * Middleware for Handling User Management Requests
    */
-    Router.post("/user", [multerService.uploadFile('file').single('w9_document'), validationMiddleware(userManagementSchema.addUser, "body")], adminUserManagementController.addUser);
+    Router.post("/user", [multerService.uploadFile('file').fields([{ name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userManagementSchema.addUser, "body")], adminUserManagementController.addUser);
     Router.get("/user", adminUserManagementController.GetUser);
     Router.get("/user-vehicle/:userId", adminUserManagementController.GetUserVehiclesData);
     Router.delete("/user/:id", adminUserManagementController.DeleteUser);
     Router.get("/user-detail/:userId", adminUserManagementController.GetUserDetail);
-    Router.put("/vendor-update-status/:userId",validationMiddleware(userManagementSchema.UpdateVendorStatus, "body"), adminUserManagementController.UpdateVendorStatus);
-    Router.put("/vendor-update-info/:userId",multerService.uploadFile('file').single('w9_document'),validationMiddleware(userManagementSchema.UpdateVendorInfo, "body"), adminUserManagementController.UpdateVendorInfo);
+    Router.put("/vendor-update-status/:userId", validationMiddleware(userManagementSchema.UpdateVendorStatus, "body"), adminUserManagementController.UpdateVendorStatus);
+    Router.put("/vendor-update-info/:userId", multerService.uploadFile('file').fields([{ name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userManagementSchema.UpdateVendorInfo, "body"), adminUserManagementController.UpdateVendorInfo);
 
     /**
    * Middleware for Handling Job Requests
@@ -118,7 +118,7 @@ module.exports = () => {
     Router.get("/vendor-child-tickets", adminJobController.getVendorChildTickets);
 
     // Invoices Routes
-    Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);   
+    Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);
     Router.put("/update-invoice", adminInvoicesController.updateInvoice);
 
 

@@ -151,7 +151,8 @@ module.exports = {
                 },
                 media: media || [],
                 document: document || [],
-                user_id: id
+                user_id: id,
+                last_oil_change: reqObj.last_oil_change || ''
             }
 
             let saveData = await VehicleDbHandler.create(submitData);

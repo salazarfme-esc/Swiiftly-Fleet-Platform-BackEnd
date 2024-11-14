@@ -58,10 +58,17 @@ module.exports = {
             }
             let password = generateStrongPassword();
 
-            let w9_document = "";
 
-            if (req.file) {
-                w9_document = req.file.location;
+            let w9_document = '';
+            let blank_check_or_bank_letter = '';
+            if (req.files && req.files.avatar) {
+                avatar = req.files.avatar[0].location;
+            }
+            if (req.files && req.files.w9_document) {
+                w9_document = req.files.w9_document[0].location;
+            }
+            if (req.files && req.files.blank_check_or_bank_letter) {
+                blank_check_or_bank_letter = req.files.blank_check_or_bank_letter[0].location;
             }
             let submitData = {
                 full_name: reqObj.full_name,
@@ -75,6 +82,7 @@ module.exports = {
                 temporary_password: true,
                 w9: reqObj.w9,
                 w9_document: w9_document,
+                blank_check_or_bank_letter: blank_check_or_bank_letter,
                 net: reqObj.net,
                 service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
                 owner_name: reqObj.owner_name,
@@ -655,8 +663,12 @@ module.exports = {
             }
 
             let w9_document = user[0].w9_document;
-            if (req.file) {
-                w9_document = req.file.location;
+            let blank_check_or_bank_letter = user[0].blank_check_or_bank_letter;
+            if (req.files && req.files.w9_document) {
+                w9_document = req.files.w9_document[0].location;
+            }
+            if (req.files && req.files.blank_check_or_bank_letter) {
+                blank_check_or_bank_letter = req.files.blank_check_or_bank_letter[0].location;
             }
             let updateData = {
                 routing_no: reqObj.routing_no,
@@ -674,6 +686,7 @@ module.exports = {
                 owner_name: reqObj.owner_name,
                 phone_number: reqObj.phone_number,
                 business_address: reqObj.business_address,
+                blank_check_or_bank_letter: blank_check_or_bank_letter,
 
             }
 

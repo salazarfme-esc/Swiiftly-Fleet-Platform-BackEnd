@@ -1,78 +1,31 @@
 'use strict';
 const logger = require('../../../services/logger');
-const log = new logger('AdminInvoicesController').getChildLogger();
+const log = new logger('VendorInvoicesController').getChildLogger();
 const dbService = require('../../../services/db/services');
-const bcrypt = require('bcryptjs');
-const jwtService = require('../../../services/jwt');
 const responseHelper = require('../../../services/customResponse');
-const adminDbHandler = dbService.Admin;
+const UserDbHandler = dbService.User; // Assuming there's a Vendor handler
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const SubJobDbHandler = dbService.SubJob;
-const config = require('../../../config/environments');
-const { response } = require('express');
-const mongoose = require("mongoose");
 const moment = require('moment'); // Import Moment.js
-/*******************
- * PRIVATE FUNCTIONS
- ********************/
 
-
-/**************************
- * END OF PRIVATE FUNCTIONS
- **************************/
 module.exports = {
     /**
      * Method to handle get vendor draft invoices
      */
     getVendorInvoices: async (req, res) => {
         let responseData = {};
-        let admin = req.admin.sub;
-        const { status, skip, limit, latest, start_amount, end_amount, issue_date } = req.query;
+        let vendor = req.user.sub; // Assuming vendor information is stored here
+        const { status, skip, limit, start_amount, end_amount, issue_date } = req.query;
         try {
-            let getByQuery = await adminDbHandler.getById(admin);
+            let getByQuery = await UserDbHandler.getById(vendor);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
 
-            // Get today's date in UTC
-            const today = moment.utc(); // Current date in UTC
-            const currentDay = today.day(); // 0 (Sunday) to 6 (Saturday)
-
-            // Calculate the start of the current week (Monday) in UTC
-            const startOfCurrentWeek = today.clone().startOf('isoWeek'); // Start of the current week (Monday)
-            const startOfNextWeek = startOfCurrentWeek.clone().add(1, 'week'); // Start of next week (next Monday)
-
-            let queryDate;
-
-            if (latest === 'true') {
-                // If today is Monday
-                if (currentDay === 1) {
-                    // Set queryDate to the previous Monday at 12:00 AM UTC
-                    queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
-                } else {
-                    // If today is not Monday, use the current week's Monday
-                    queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
-                }
-            } else {
-                // If today is Monday
-                if (currentDay === 1) {
-                    // Set queryDate to the previous Monday at 12:00 AM UTC
-                    queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
-                } else {
-                    // If today is not Monday, return data before the current week's Monday
-                    queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
-                }
-            }
-
             // Build the query object
             let query = {
-                invoice_date: latest === 'true' ? {
-                    $gte: queryDate.toDate(),
-                    $lt: startOfNextWeek.startOf('day').toDate()
-                } : {
-                    $lt: queryDate.toDate()
-                }
+                vendor_id: vendor // Assuming you want to filter invoices by the logged-in vendor
             };
 
             // Apply filters if present
@@ -91,9 +44,9 @@ module.exports = {
                 query.invoice_date = { $gte: startOfIssueDate, $lte: endOfIssueDate }; // Filter by issue date range
             }
 
-            // Fetch invoices based on the constructed query
+            // Fetch all invoices, filtering by status if provided
             let getData = await VendorInvoiceDbHandler.getByQuery(query)
-                .sort({ invoice_date: -1 })
+                .sort({ created_at: -1 })
                 .skip(parseInt(skip))
                 .limit(parseInt(limit))
                 .populate("vendor_id")
@@ -108,18 +61,23 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+     * Method to handle updating vendor invoices
+     */
     updateInvoice: async (req, res) => {
-        let admin = req.admin.sub;
+        let vendor = req.user.sub; // Assuming vendor information is stored here
         const { invoiceId } = req.params; // Get invoice ID from URL parameters
         const { status, sub_jobs } = req.body; // Get status and sub_jobs from request body
         let responseData = {};
 
         try {
-            let getByQuery = await adminDbHandler.getById(admin);
+            let getByQuery = await UserDbHandler.getById(vendor);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
+
             // Find the invoice by ID
             const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId });
             if (!invoice.length) {
@@ -127,9 +85,19 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
+            // Check if the invoice date is today
+            const today = moment.utc().startOf('day'); // Get today's date at 00:00:00 UTC
+            const invoiceDate = moment(invoice[0].invoice_date).startOf('day'); // Get the invoice date at 00:00:00 UTC
+
+            // Check if the invoice date is not today
+            if (!invoiceDate.isSame(today, 'day')) {
+                responseData.msg = "Invoices can only be edited on the same day they were created!";
+                return responseHelper.error(res, responseData);
+            }
+
             // Update the invoice status
             if (status) {
-                invoice[0].status = status;
+                invoice[0].status = status; // Update to the provided status
             }
 
             // Update sub_jobs amounts and calculate total_amount
@@ -163,30 +131,32 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-    getInvoiceById: async (req, res) => {
-        let responseData = {};
-        let admin = req.admin.sub; // Assuming admin information is stored here
+
+    /**
+     * Method to handle getting an invoice by ID
+     */
+    getVendorInvoiceById: async (req, res) => {
+        let vendor = req.user.sub; // Assuming vendor information is stored here
         const { invoiceId } = req.params; // Get invoice ID from URL parameters
+        let responseData = {};
 
         try {
-            let getByQuery = await adminDbHandler.getById(admin);
+            let getByQuery = await UserDbHandler.getById(vendor);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
 
             // Find the invoice by ID
-            const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId })
-                .populate("vendor_id") // Populate vendor details
-                .populate("sub_jobs.sub_job_id"); // Populate subjob details
-
-            if (!invoice.length) {
+            const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId , vendor_id: vendor }).populate("vendor_id").populate("sub_jobs.sub_job_id");
+            if (!invoice) {
                 responseData.msg = "Invoice not found!";
                 return responseHelper.error(res, responseData);
             }
 
+
             responseData.msg = "Invoice fetched successfully!";
-            responseData.data = invoice[0]; // Return the first invoice object
+            responseData.data = invoice;
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to get invoice with error::', error);
@@ -194,4 +164,4 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-};
+}; 

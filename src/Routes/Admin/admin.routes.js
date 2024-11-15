@@ -18,6 +18,7 @@ const florValidationSchema = require("../../validation").flowSchema;
 const userManagementSchema = require("../../validation").userManagementSchema;
 const adminJobValidationSchema = require("../../validation").adminJobSchema;
 const adminMakeAndModelValidationSchema = require("../../validation").makeAndModel;
+const adminInvoicesValidationSchema = require("../../validation").adminInvoicesSchema;
 const validationMiddleware = require("../../utils/validationMiddleware");
 const multerService = require('../../services/multer');
 
@@ -119,8 +120,8 @@ module.exports = () => {
 
     // Invoices Routes
     Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);
-    Router.put("/update-invoice", adminInvoicesController.updateInvoice);
-
+    Router.put("/update-invoice/:invoiceId", validationMiddleware(adminInvoicesValidationSchema.updateInvoice, "body"), adminInvoicesController.updateInvoice);
+    Router.get("/invoice/:invoiceId", adminInvoicesController.getInvoiceById);
 
 
 

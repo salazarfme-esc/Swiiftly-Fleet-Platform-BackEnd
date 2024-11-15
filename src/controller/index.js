@@ -8,6 +8,7 @@ const userAuthController = require('./userController/auth');
 const userInfoController = require('./userController/users');
 const userVehicleController = require("./userController/vehicle");
 const userJobController = require("./userController/job");
+const userInvoicesController = require("./userController/invoices");
 
 /**
  * All Admin Controller
@@ -35,5 +36,6 @@ module.exports = {
     userAuth: userAuthController,
     userInfo: userInfoController,
     userVehicle: userVehicleController,
-    userJob: userJobController,
+    wuserJob: userJobController,
+    userInvoices: userInvoicesController,
 };

@@ -6,6 +6,7 @@ const userAuthController = require('../../controller').userAuth;
 const userInfoController = require('../../controller').userInfo;
 const userVehicleController = require("../../controller").userVehicle;
 const userJobController = require("../../controller").userJob;
+const userInvoicesController = require("../../controller").userInvoices;
 /**
  * All Middlewares
  */
@@ -15,6 +16,7 @@ const userValidationSchema = require('../../validation').authSchema;
 const userInfoValidationSchema = require('../../validation').userInfoSchema;
 const vehicleValidationSchema = require("../../validation").vehicleSchema;
 const jobValidationSchema = require("../../validation").jobSchema;
+const userInvoicesValidationSchema = require("../../validation").userInvoicesSchema;
 const validationMiddleware = require('../../utils/validationMiddleware');
 const multerService = require('../../services/multer');
 module.exports = () => {
@@ -146,6 +148,12 @@ module.exports = () => {
     Router.put('/vendor/status', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }]), validationMiddleware(jobValidationSchema.vendorUpdateJobStatusSchema, 'body')], userJobController.VendorUpdateJobStatus);
 
 
+    /**
+     * Routes for handle invoices
+     */
+    Router.get('/invoices', userInvoicesController.getVendorInvoices);
+    Router.get('/invoices/:invoiceId', userInvoicesController.getVendorInvoiceById);
+    Router.put('/invoices/:invoiceId', validationMiddleware(userInvoicesValidationSchema.updateInvoice, 'body'), userInvoicesController.updateInvoice);
 
 
 

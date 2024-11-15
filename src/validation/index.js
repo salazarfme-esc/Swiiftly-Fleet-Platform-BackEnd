@@ -10,6 +10,7 @@ module.exports = {
 	userManagementSchema: require("./schemas/AdminValidation/UserManagement"),
 	jobSchema: require("./schemas/UserValidation/job"),
 	adminJobSchema: require("./schemas/AdminValidation/Job"),
-	makeAndModel: require("./schemas/AdminValidation/MakeAndModel")
-	// driverSchema: require('./schemas/driver')
+	makeAndModel: require("./schemas/AdminValidation/MakeAndModel"),
+	adminInvoicesSchema: require("./schemas/AdminValidation/Invoices"),
+	userInvoicesSchema: require("./schemas/UserValidation/Invoices")
 };

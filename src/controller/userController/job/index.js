@@ -13,6 +13,7 @@ const FlowCategoryDbHandler = dbService.FlowCategory;
 const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const FlowDbHandler = dbService.Flow;
+const FleetInvoiceDbHandler = dbService.FleetInvoice;
 const Flow = require("../../../services/db/models/flow");
 const crypto = require('crypto');
 const mainJob = require('../../../services/db/models/mainJob');
@@ -27,6 +28,10 @@ const generateTicketId = () => {
     // Generate 3 bytes of random data
     return crypto.randomBytes(3).toString('hex').slice(0, 6);
 };
+// Function to generate a unique invoice number
+function generateInvoiceNumber() {
+    return `INV-${Date.now()}`;
+}
 /**************************
  * END OF PRIVATE FUNCTIONS
  **************************/
@@ -732,6 +737,19 @@ module.exports = {
 
                         if (!updateRootTicket) {
                             responseData.msg = "Failed to update the root ticket status!";
+                            return responseHelper.error(res, responseData);
+                        }
+                        let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId })
+                        let CreateObject = {
+                            fleet_id: rootTicketData[0].user_id,
+                            root_ticket_id: rootTicketId,
+                            total_amount: subJobs.reduce((sum, job) => sum + parseFloat(job.cost_estimation), 0),
+                            invoice_number: generateInvoiceNumber(),
+                            status: 'draft'
+                        }
+                        let createInvoice = await FleetInvoiceDbHandler.create(CreateObject);
+                        if (!createInvoice) {
+                            responseData.msg = "Failed to create the invoice!";
                             return responseHelper.error(res, responseData);
                         }
                     }

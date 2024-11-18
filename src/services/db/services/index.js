@@ -17,5 +17,6 @@ module.exports = {
 	AdminVerification: require("./verificationAdmin.service"),
 	Make: require("./make.service"),
 	Model: require("./model.service"),
+	FleetInvoice: require("./fleetInvoice.service"),
 
 };

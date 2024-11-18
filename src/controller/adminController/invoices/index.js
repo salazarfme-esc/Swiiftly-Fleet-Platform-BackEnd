@@ -8,6 +8,7 @@ const responseHelper = require('../../../services/customResponse');
 const adminDbHandler = dbService.Admin;
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const SubJobDbHandler = dbService.SubJob;
+const FleetInvoiceDbHandler = dbService.FleetInvoice;
 const config = require('../../../config/environments');
 const { response } = require('express');
 const mongoose = require("mongoose");
@@ -194,4 +195,51 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    getFleetInvoices: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        const { status, skip, limit, start_amount, end_amount, issue_date } = req.query;
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Build the query object without day restrictions
+            let query = {};
+            
+            // Apply filters if present
+            if (status) {
+                query.status = status; // Filter by status
+            }
+            if (start_amount) {
+                query.total_amount = { ...query.total_amount, $gte: parseFloat(start_amount) }; // Filter by start amount
+            }
+            if (end_amount) {
+                query.total_amount = { ...query.total_amount, $lte: parseFloat(end_amount) }; // Filter by end amount
+            }
+            if (issue_date) {
+                const startOfIssueDate = moment(issue_date).startOf('day').toDate(); // Start of the issue date
+                const endOfIssueDate = moment(issue_date).endOf('day').toDate(); // End of the issue date
+                query.invoice_date = { $gte: startOfIssueDate, $lte: endOfIssueDate }; // Filter by issue date range
+            }
+
+            // Fetch invoices based on the constructed query
+            let getData = await FleetInvoiceDbHandler.getByQuery(query)
+                .sort({ invoice_date: -1 })
+                .skip(parseInt(skip))
+                .limit(parseInt(limit))
+                .populate("fleet_id")
+                .populate("root_ticket_id");
+
+            responseData.msg = "Data fetched successfully!";
+            responseData.data = { count: getData.length, data: getData };
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('failed to get data with error::', error);
+            responseData.msg = "failed to get data";
+            return responseHelper.error(res, responseData);
+        }
+    }
 };

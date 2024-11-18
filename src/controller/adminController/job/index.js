@@ -91,7 +91,7 @@ module.exports = {
                 { $unwind: "$user_id" },
                 {
                     $match: {
-                        $and: [
+                        $or: [
                             { "service_category.name": { $regex: req.query.userName || '', $options: 'i' } },
                             { "user_id.user_name": { $regex: req.query.userName || '', $options: 'i' } }
                         ]

@@ -36,6 +36,6 @@ module.exports = {
     userAuth: userAuthController,
     userInfo: userInfoController,
     userVehicle: userVehicleController,
-    wuserJob: userJobController,
+    userJob: userJobController,
     userInvoices: userInvoicesController,
 };

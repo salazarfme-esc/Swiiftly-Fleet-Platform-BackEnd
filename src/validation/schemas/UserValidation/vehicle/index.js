@@ -9,7 +9,7 @@ module.exports = {
     addVehicle: Joi.object().keys({
         identification_number: Joi.string().trim().required().label("Identification Number"),
         license_plate: Joi.string().trim().required().label("License Plate"),
-        last_oil_change: Joi.string().trim().required().label("Last Oil Change"),
+        last_oil_change: Joi.string().trim().required().allow("").label("Last Oil Change"),
         nickname: Joi.string().trim().required().label("Nickname"),
         year: Joi.string().trim().required().label("Year"),
         make: Joi.string().trim().required().label("Make"),
@@ -32,7 +32,7 @@ module.exports = {
     updateVehicle: Joi.object().keys({
         identification_number: Joi.string().trim().required().label("Identification Number"),
         license_plate: Joi.string().trim().required().label("License Plate"),
-        last_oil_change: Joi.string().trim().allow("").label("Last Oil Change"),
+        last_oil_change: Joi.string().trim().required().allow("").label("Last Oil Change"),
         nickname: Joi.string().trim().required().label("Nickname"),
         year: Joi.string().trim().required().label("Year"),
         make: Joi.string().trim().required().label("Make"),

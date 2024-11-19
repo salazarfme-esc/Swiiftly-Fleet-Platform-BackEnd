@@ -286,6 +286,7 @@ module.exports = {
             if (tax) {
                 const taxAmount = (totalAmount * (parseFloat(tax) / 100)); // Calculate tax amount
                 totalAmount += taxAmount; // Add tax to total amount
+                invoice[0].tax = tax
             }
 
             invoice[0].total_amount = totalAmount; // Update the total_amount field

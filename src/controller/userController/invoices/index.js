@@ -7,7 +7,7 @@ const UserDbHandler = dbService.User; // Assuming there's a Vendor handler
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const SubJobDbHandler = dbService.SubJob;
 const moment = require('moment'); // Import Moment.js
-const FleetInvoiceDbHandler = dbService.fleetInvoice;
+const FleetInvoiceDbHandler = dbService.FleetInvoice;
 
 module.exports = {
     /**

@@ -295,7 +295,10 @@ module.exports = {
             await invoice[0].save();
 
             responseData.msg = "Fleet invoice updated successfully!";
-            responseData.data = invoice;
+            responseData.data = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })
+            .populate("fleet_id") // Populate fleet details
+            .populate("root_ticket_id")
+            .populate("sub_jobs.sub_job_id");
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to update fleet invoice with error::', error);

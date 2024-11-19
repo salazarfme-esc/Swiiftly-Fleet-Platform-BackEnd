@@ -739,14 +739,22 @@ module.exports = {
                             responseData.msg = "Failed to update the root ticket status!";
                             return responseHelper.error(res, responseData);
                         }
-                        let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId })
+                        let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId });
+                        // Prepare sub_jobs array with sub_job_id and amount
+                        let subJobsArray = subJobs.map(job => ({
+                            sub_job_id: job._id,
+                            amount: job.cost_estimation // Assuming cost_estimation is the amount
+                        }));
+
                         let CreateObject = {
                             fleet_id: rootTicketData[0].user_id,
                             root_ticket_id: rootTicketId,
                             total_amount: subJobs.reduce((sum, job) => sum + parseFloat(job.cost_estimation), 0),
                             invoice_number: generateInvoiceNumber(),
-                            status: 'draft'
-                        }
+                            status: 'draft',
+                            sub_jobs: subJobsArray // Added sub_jobs array
+                        };
+
                         let createInvoice = await FleetInvoiceDbHandler.create(CreateObject);
                         if (!createInvoice) {
                             responseData.msg = "Failed to create the invoice!";

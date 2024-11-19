@@ -208,7 +208,7 @@ module.exports = {
 
             // Build the query object without day restrictions
             let query = {};
-            
+
             // Apply filters if present
             if (status) {
                 query.status = status; // Filter by status
@@ -231,7 +231,8 @@ module.exports = {
                 .skip(parseInt(skip))
                 .limit(parseInt(limit))
                 .populate("fleet_id")
-                .populate("root_ticket_id");
+                .populate("root_ticket_id")
+                .populate("sub_jobs.sub_job_id");
 
             responseData.msg = "Data fetched successfully!";
             responseData.data = { count: getData.length, data: getData };
@@ -241,5 +242,96 @@ module.exports = {
             responseData.msg = "failed to get data";
             return responseHelper.error(res, responseData);
         }
-    }
+    },
+    updateFleetInvoice: async (req, res) => {
+        let admin = req.admin.sub;
+        const { invoiceId } = req.params; // Get invoice ID from URL parameters
+        const { status, sub_jobs, tax } = req.body; // Get status, sub_jobs, and tax from request body
+        let responseData = {};
+
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            // Find the invoice by ID
+            const invoice = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId });
+            if (!invoice.length) {
+                responseData.msg = "Invoice not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Update the invoice status
+            if (status) {
+                invoice[0].status = status;
+            }
+
+            // Update sub_jobs amounts and calculate total_amount
+            let totalAmount = 0; // Initialize total amount
+            if (sub_jobs && Array.isArray(sub_jobs)) {
+                for (const sub_job of sub_jobs) {
+                    const existingSubJob = invoice[0].sub_jobs.find(job => job.sub_job_id.toString() === sub_job.sub_job_id);
+                    if (existingSubJob) {
+                        // Update the amount in the invoice's sub_jobs
+                        existingSubJob.amount = sub_job.amount;
+                    }
+                }
+            }
+
+            // Calculate the total amount from sub_jobs
+            totalAmount = invoice[0].sub_jobs.reduce((sum, job) => sum + job.amount, 0);
+
+            // Add tax if provided
+            if (tax) {
+                const taxAmount = (totalAmount * (parseFloat(tax) / 100)); // Calculate tax amount
+                totalAmount += taxAmount; // Add tax to total amount
+            }
+
+            invoice[0].total_amount = totalAmount; // Update the total_amount field
+
+            // Save the updated invoice
+            await invoice[0].save();
+
+            responseData.msg = "Fleet invoice updated successfully!";
+            responseData.data = invoice;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to update fleet invoice with error::', error);
+            responseData.msg = "Failed to update fleet invoice";
+            return responseHelper.error(res, responseData);
+        }
+    },
+    getFleetInvoiceById: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub; // Assuming admin information is stored here
+        const { invoiceId } = req.params; // Get invoice ID from URL parameters
+
+        try {
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+
+            // Find the invoice by ID
+            const invoice = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })
+                .populate("fleet_id") // Populate fleet details
+                .populate("root_ticket_id")
+                .populate("sub_jobs.sub_job_id"); // Populate subjob details
+
+            if (!invoice.length) {
+                responseData.msg = "Invoice not found!";
+                return responseHelper.error(res, responseData);
+            }
+
+            responseData.msg = "Invoice fetched successfully!";
+            responseData.data = invoice[0]; // Return the first invoice object
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to get invoice with error::', error);
+            responseData.msg = "Failed to get invoice";
+            return responseHelper.error(res, responseData);
+        }
+    },
 };

@@ -34,6 +34,21 @@ const InvoiceSchema = new Schema({
         ref: 'MainJob',
         required: true
     },
+    sub_jobs: [{
+        sub_job_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'SubJob',
+            required: true
+        },
+        amount: {
+            type: Number,
+            required: true
+        }
+    }],
+    tax: {
+        type: Number,
+        default: 0
+    },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 // Add index for faster querying

@@ -122,6 +122,10 @@ module.exports = () => {
     Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);
     Router.put("/update-invoice/:invoiceId", validationMiddleware(adminInvoicesValidationSchema.updateInvoice, "body"), adminInvoicesController.updateInvoice);
     Router.get("/invoice/:invoiceId", adminInvoicesController.getInvoiceById);
+    Router.get("/fleet-invoices", adminInvoicesController.getFleetInvoices);
+    Router.get("/fleet-invoices/:invoiceId", adminInvoicesController.getFleetInvoiceById);
+    Router.put("/update-fleet-invoice/:invoiceId", validationMiddleware(adminInvoicesValidationSchema.updateFleetInvoice, "body"), adminInvoicesController.updateFleetInvoice);
+
 
 
 

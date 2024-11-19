@@ -154,6 +154,8 @@ module.exports = () => {
     Router.get('/invoices', userInvoicesController.getVendorInvoices);
     Router.get('/invoices/:invoiceId', userInvoicesController.getVendorInvoiceById);
     Router.put('/invoices/:invoiceId', validationMiddleware(userInvoicesValidationSchema.updateInvoice, 'body'), userInvoicesController.updateInvoice);
+    Router.get('/fleet-invoices', userInvoicesController.getFleetInvoices);
+    Router.get('/fleet-invoices/:invoiceId', userInvoicesController.getFleetInvoiceById);
 
 
 

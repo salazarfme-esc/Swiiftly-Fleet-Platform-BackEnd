@@ -51,8 +51,10 @@ module.exports = {
                 .skip(parseInt(skip))
                 .limit(parseInt(limit))
                 .populate("vendor_id")
-                .populate("sub_jobs.sub_job_id");
-
+                .populate({
+                    path: "sub_jobs.sub_job_id",
+                    populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+                });
             responseData.msg = "Data fetched successfully!";
             responseData.data = { count: getData.length, data: getData };
             return responseHelper.success(res, responseData);
@@ -149,7 +151,10 @@ module.exports = {
             }
 
             // Find the invoice by ID
-            const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId, vendor_id: vendor }).populate("vendor_id").populate("sub_jobs.sub_job_id");
+            const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId, vendor_id: vendor }).populate("vendor_id").populate({
+                path: "sub_jobs.sub_job_id",
+                populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+            });
             if (!invoice) {
                 responseData.msg = "Invoice not found!";
                 return responseHelper.error(res, responseData);
@@ -188,6 +193,8 @@ module.exports = {
             // Apply filters if present
             if (status) {
                 query.status = status; // Filter by status
+            } else {
+                query.status = { $ne: "draft" };
             }
             if (start_amount) {
                 query.total_amount = { ...query.total_amount, $gte: parseFloat(start_amount) }; // Filter by start amount
@@ -244,8 +251,14 @@ module.exports = {
             // Find the fleet invoice by ID
             const invoice = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId, fleet_id: fleet })
                 .populate("fleet_id")
-                .populate("root_ticket_id")
-                .populate("sub_jobs.sub_job_id");
+                .populate({
+                    path: "root_ticket_id",
+                    populate: { path: "vehicle_id" } // Populate vehicle_id inside root_ticket_id
+                })
+                .populate({
+                    path: "sub_jobs.sub_job_id",
+                    populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+                });
             if (!invoice) {
                 responseData.msg = "Fleet invoice not found!";
                 return responseHelper.error(res, responseData);

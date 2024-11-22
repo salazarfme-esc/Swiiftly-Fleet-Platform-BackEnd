@@ -98,8 +98,10 @@ module.exports = {
                 .skip(parseInt(skip))
                 .limit(parseInt(limit))
                 .populate("vendor_id")
-                .populate("sub_jobs.sub_job_id");
-
+                .populate({
+                    path: "sub_jobs.sub_job_id",
+                    populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+                });
             responseData.msg = "Data fetched successfully!";
             responseData.data = { count: getData.length, data: getData };
             return responseHelper.success(res, responseData);
@@ -179,8 +181,10 @@ module.exports = {
             // Find the invoice by ID
             const invoice = await VendorInvoiceDbHandler.getByQuery({ _id: invoiceId })
                 .populate("vendor_id") // Populate vendor details
-                .populate("sub_jobs.sub_job_id"); // Populate subjob details
-
+                .populate({
+                    path: "sub_jobs.sub_job_id",
+                    populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+                });
             if (!invoice.length) {
                 responseData.msg = "Invoice not found!";
                 return responseHelper.error(res, responseData);
@@ -325,8 +329,14 @@ module.exports = {
             const invoice = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })
                 .populate("fleet_id") // Populate fleet details
                 .populate("root_ticket_id")
-                .populate("sub_jobs.sub_job_id"); // Populate subjob details
-
+                .populate({
+                    path: "root_ticket_id",
+                    populate: { path: "vehicle_id" } // Populate vehicle_id inside root_ticket_id
+                })
+                .populate({
+                    path: "sub_jobs.sub_job_id",
+                    populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
+                });
             if (!invoice.length) {
                 responseData.msg = "Invoice not found!";
                 return responseHelper.error(res, responseData);

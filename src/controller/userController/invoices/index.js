@@ -265,7 +265,7 @@ module.exports = {
             }
 
             responseData.msg = "Fleet invoice fetched successfully!";
-            responseData.data = invoice;
+            responseData.data = invoice[0];
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to get fleet invoice with error::', error);

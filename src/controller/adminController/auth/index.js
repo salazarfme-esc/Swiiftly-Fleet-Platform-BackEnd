@@ -166,7 +166,7 @@ module.exports = {
         let responseData = {};
         const limit = parseInt(req.query.limit); // Default limit
         const skip = parseInt(req.query.skip); // Default skip
-        const searchQuery = req.query.search || ''; // Get search query from request
+        const searchQuery = req.query.searchQuery || ''; // Get search query from request
 
         try {
             // Build the search criteria

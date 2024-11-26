@@ -8,10 +8,18 @@ const responseHelper = require('../../../services/customResponse');
 const adminDbHandler = dbService.Admin;
 const contactInfoDbHandler = dbService.ContactInfo;
 const verificationDbHandler = dbService.AdminVerification;
+const VendorInvoiceDbHandler = dbService.vendorInvoice;
+const FleetInvoiceDbHandler = dbService.FleetInvoice;
+const VendorInvoiceDbAggregate = require('../../../services/db/models/vendorInvoice.js');
+const FleetInvoiceDbAggregate = require('../../../services/db/models/fleetInvoice.js');
+const UserDbAggregate = require('../../../services/db/models/user.js');
+const UserDbHandler = dbService.User;
+const MainJobDbHandler = dbService.MainJob;
 const config = require('../../../config/environments');
 const templates = require('../../../utils/templates/template');
 const emailService = require('../../../services/sendEmail');
 const crypto = require('crypto');
+const moment = require('moment');
 
 /*******************
  * PRIVATE FUNCTIONS
@@ -65,6 +73,104 @@ let _encryptPassword = (password) => {
 function generateStrongPassword(length = 16) {
     return crypto.randomBytes(length).toString('base64').slice(0, length);
 }
+
+
+
+
+
+// Helper function to get invoice graph data
+const getInvoiceGraphData = async (year, filterType) => {
+    const startDate = moment(`${year}-01-01`).startOf('year');
+    const endDate = moment(`${year}-12-31`).endOf('year');
+
+    let matchCriteria = {
+        invoice_date: { $gte: startDate.toDate(), $lte: endDate.toDate() }
+    };
+
+    if (filterType === 'vendor') {
+        matchCriteria.vendor_id = { $exists: true };
+    } else if (filterType === 'fleet') {
+        matchCriteria.fleet_id = { $exists: true };
+    }
+
+    const vendorInvoices = await VendorInvoiceDbAggregate.aggregate([
+        { $match: matchCriteria },
+        {
+            $group: {
+                _id: { $month: "$invoice_date" },
+                totalAmount: { $sum: "$total_amount" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ]);
+
+    const fleetInvoices = await FleetInvoiceDbAggregate.aggregate([
+        { $match: matchCriteria },
+        {
+            $group: {
+                _id: { $month: "$invoice_date" },
+                totalAmount: { $sum: "$total_amount" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ]);
+
+    // Combine results
+    const combinedData = [];
+    for (let month = 1; month <= 12; month++) {
+        const vendorData = vendorInvoices.find(v => v._id === month) || { totalAmount: 0, count: 0 };
+        const fleetData = fleetInvoices.find(f => f._id === month) || { totalAmount: 0, count: 0 };
+
+        combinedData.push({
+            month,
+            totalAmount: vendorData.totalAmount + fleetData.totalAmount,
+            count: vendorData.count + fleetData.count
+        });
+    }
+
+    return combinedData;
+};
+
+// Helper function to get user count graph data
+const getUserCountGraphData = async (year, filterType) => {
+    const startDate = moment(`${year}-01-01`).startOf('year');
+    const endDate = moment(`${year}-12-31`).endOf('year');
+
+    let matchCriteria = {
+        createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() }
+    };
+
+    if (filterType === 'vendor') {
+        matchCriteria.user_role = 'vendor';
+    } else if (filterType === 'fleet') {
+        matchCriteria.user_role = 'fleet';
+    }
+
+    const userCountData = await UserDbAggregate.aggregate([
+        { $match: matchCriteria },
+        {
+            $group: {
+                _id: { $month: "$createdAt" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ]);
+
+    // Prepare the final data structure
+    const userCountGraphData = [];
+    for (let month = 1; month <= 12; month++) {
+        const userData = userCountData.find(u => u._id === month) || { count: 0 };
+        userCountGraphData.push({
+            month,
+            count: userData.count
+        });
+    }
+
+    return userCountGraphData;
+};
 /**************************
  * END OF PRIVATE FUNCTIONS
  **************************/
@@ -274,7 +380,7 @@ module.exports = {
                 name: reqObj.name,
                 role: reqObj.role,
                 phone_number: reqObj.phone_number,
-                permissions: reqObj.permissions
+                permissions: existingAdmin.is_company ? existingAdmin.permissions : reqObj.permissions
             };
 
             // Update the admin entry
@@ -310,8 +416,81 @@ module.exports = {
                 phone_number: reqObj.phone_number,
                 role: reqObj.role,
                 permissions: reqObj.permissions || [],
-                temporary_password: true
+                temporary_password: true,
+                is_company: reqObj.is_company
             };
+            // Include company name and business address if is_company is true
+            if (reqObj.is_company) {
+                Data.company_name = reqObj.company_name;
+                Data.address = {
+                    street: reqObj.address.street,
+                    address: reqObj.address.address,
+                    city: reqObj.address.city,
+                    state: reqObj.address.state,
+                    pin: reqObj.address.pin,
+                    country: reqObj.address.country,
+                }
+                Data.permissions = [
+                    {
+                        "tab": "Dashboard",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Vendor",
+                        "read": false,
+                        "edit": false
+                    },
+                    {
+                        "tab": "Work Flow",
+                        "read": false,
+                        "edit": false
+                    },
+
+
+
+                    {
+                        "tab": "Invoices",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Fleet Manager",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Reports",
+                        "read": false,
+                        "edit": false
+                    },
+                    {
+                        "tab": "Service Request",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Feedback",
+                        "read": false,
+                        "edit": false
+                    },
+                    {
+                        "tab": "Company",
+                        "read": false,
+                        "edit": false
+                    },
+                    {
+                        "tab": "Roles",
+                        "read": false,
+                        "edit": false
+                    }
+                ]
+
+                Data.location = {
+                    type: 'Point',
+                    coordinates: reqObj.address.coordinates,
+                }
+            }
 
             // Create the new admin entry
             let Admin = await adminDbHandler.create(Data);
@@ -566,10 +745,15 @@ module.exports = {
                 responseData.msg = "Admin not found!";
                 return responseHelper.error(res, responseData);
             }
+            let userData = await UserDbHandler.getByQuery({ company_id: existingAdmin._id }).skip(0).limit(1);
+            if (existingAdmin.is_company && userData.length) {
+                responseData.msg = "Company has users associated with them! Cannot delete company!";
+                return responseHelper.error(res, responseData);
+            }
 
             // Mark the admin as deleted
             await adminDbHandler.updateById(adminId, { is_deleted: req.query.is_deleted });
-            responseData.msg = "Sub-admin deleted successfully!";
+            responseData.msg = existingAdmin.is_company ? "Company deleted successfully!" : "Sub-admin deleted successfully!";
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to delete sub-admin with error::', error);
@@ -599,5 +783,46 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+     * Method to get dashboard data
+     */
+    getDashboardData: async (req, res) => {
+        let responseData = {};
+        const { yearInvoices, filterTypeInvoices, yearUsers, filterTypeUsers } = req.query; // filterType can be 'all', 'fleet', or 'vendor'
+
+        try {
+            // 1. Total Service Requests from Main Jobs
+            const totalServiceRequests = await MainJobDbHandler.getByQuery({}).countDocuments();
+
+            // 2. Total Vendors from User table
+            const totalVendors = await UserDbHandler.getByQuery({ user_role: 'vendor' }).countDocuments();
+
+            // 3. Total Invoices from Vendor and Fleet Invoices
+            const totalVendorInvoices = await VendorInvoiceDbHandler.getByQuery({}).countDocuments();
+            const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
+            const totalInvoices = totalVendorInvoices + totalFleetInvoices;
+
+            // Prepare response data
+            responseData.data = {};
+            responseData.data.totalServiceRequests = totalServiceRequests;
+            responseData.data.totalVendors = totalVendors;
+            responseData.data.totalInvoices = totalInvoices;
+
+            // Graph data for invoices
+            const invoiceGraphData = await getInvoiceGraphData(yearInvoices, filterTypeInvoices);
+            responseData.data.invoiceGraphData = invoiceGraphData;
+
+            // Graph data for user count
+            const userCountGraphData = await getUserCountGraphData(yearUsers, filterTypeUsers);
+            responseData.data.userCountGraphData = userCountGraphData;
+
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to get dashboard data with error::', error);
+            responseData.msg = "Failed to get dashboard data";
+            return responseHelper.error(res, responseData);
+        }
+    }
 
 };

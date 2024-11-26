@@ -46,6 +46,10 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
+            if (getByQuery.is_company && reqObj.user_role === 'vendor') {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
             let checkEmail = await UserDbHandler.getByQuery({ email: reqObj.email.toLowerCase() });
             let checkPhoneNumber = await UserDbHandler.getByQuery({ phone_number: reqObj.phone_number });
             if (checkEmail.length) {
@@ -86,7 +90,8 @@ module.exports = {
                 net: reqObj.net,
                 service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
                 owner_name: reqObj.owner_name,
-                profile_completed: false
+                profile_completed: false,
+                company_id: reqObj.user_role === 'fleet' ? getByQuery._id : ""
             }
             if (w9_document || reqObj.w9) {
                 submitData.w9_verified = true
@@ -127,6 +132,10 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
+            if (getByQuery.is_company && reqObj.user_role === 'vendor') {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
 
             // Set base query for users
             let userQuery = { user_role: reqObj.user_role, is_delete: false };
@@ -164,6 +173,7 @@ module.exports = {
             }
             // For fleet role, run the original logic
             else if (reqObj.user_role === 'fleet') {
+                userQuery.company_id = getByQuery._id;
                 let aggregationPipeline = [
                     { $match: userQuery }, // Match fleet users
                     {
@@ -297,6 +307,12 @@ module.exports = {
                 responseData.msg = "User not found!";
                 return responseHelper.error(res, responseData);
             }
+            if (getByQuery.is_company) {
+                if (!user[0].company_id || user[0].user_role !== 'fleet' || user[0].company_id.toString() != getByQuery._id.toString()) {
+                    responseData.msg = "You are not authorized to access this resource!";
+                    return responseHelper.error(res, responseData);
+                }
+            }
 
             // If the user role is 'fleet', add extra information
             if (user[0].user_role === 'fleet') {
@@ -330,7 +346,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             // Verify user existence
-            let userData = await UserDbHandler.getByQuery({ _id: userId });
+            let userData = await UserDbHandler.getByQuery({ _id: userId, company_id: getByQuery._id });
             if (!userData.length) {
                 responseData.msg = 'Fleet Manager not found!';
                 return responseHelper.error(res, responseData);
@@ -546,6 +562,12 @@ module.exports = {
             if (!user.length) {
                 responseData.msg = "Invalid request!";
                 return responseHelper.error(res, responseData);
+            }
+            if (getByQuery.is_company) {
+                if (!user[0].company_id || user[0].user_role !== 'fleet' || user[0].company_id.toString() != getByQuery._id.toString()) {
+                    responseData.msg = "You are not authorized to access this resource!";
+                    return responseHelper.error(res, responseData);
+                }
             }
 
             // Check for 'fleet' user role

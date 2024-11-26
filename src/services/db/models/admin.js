@@ -41,8 +41,8 @@ const adminUserSchema = new Schema(
           tab: {
             type: String,
             enum: [
-              "Dashboard", "Users", "Vendor", "Work Flow", "Invoices",
-              "Fleet Manager", "Reports", "Service Request", "Feedback"
+              "Dashboard", "Vendor", "Work Flow", "Invoices",
+              "Fleet Manager", "Reports", "Service Request", "Feedback", "Company", "Roles"
             ],
             required: true
           },
@@ -57,6 +57,35 @@ const adminUserSchema = new Schema(
         }
       ],
       default: []
+    },
+    is_company: {
+      type: Boolean,
+      default: false
+    },
+    address: {
+      street: { type: String, default: "" },
+      address: { type: String, default: "" },
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      pin: { type: String, default: "" },
+      country: { type: String, default: "" },
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        required: true,
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+        default: [0.0000, 0.0000]
+      }
+    },
+    company_name: {
+      type: String,
+      default: ""
     },
     otp_verified: {
       type: Boolean,
@@ -104,5 +133,6 @@ adminUserSchema.pre("save", function (next) {
     });
   });
 });
+adminUserSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model("Admins", adminUserSchema);

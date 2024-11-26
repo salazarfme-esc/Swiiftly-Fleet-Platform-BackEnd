@@ -170,6 +170,11 @@ const userSchema = new Schema({
         type: String,
         default: '',
     },
+    company_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admins',
+        default: "",
+    },
 
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

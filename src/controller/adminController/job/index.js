@@ -16,6 +16,7 @@ const config = require('../../../config/environments');
 const { response } = require('express');
 const mongoose = require('mongoose');
 const moment = require('moment');
+const VehicleDbHandler = dbService.Vehicle;
 
 /*******************
  * PRIVATE FUNCTIONS
@@ -581,6 +582,86 @@ module.exports = {
         }
     },
 
+    /**
+     * Method to handle get Company Fleet Jobs
+     */
+    GetCompanyFleetJobs: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        log.info("Received request to get Company Fleet jobs");
+        const limit = parseInt(req.query.limit);
+        const skip = parseInt(req.query.skip);
+        const { service_category, date, vehicle_nickname, status } = req.query; // Extracting new query parameters
+        try {
+            // Validate admin
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            if (!getByQuery.is_company) {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
+            // Prepare filters
+            let filters = { status: status };
+            if (service_category) {
+                filters.service_category = { $in: service_category.split(',').map(id => id.trim()) }; // Convert to array
+            }
+            if (date) {
+                const startOfDay = new Date(date).setUTCHours(0, 0, 0, 0);
+                const endOfDay = new Date(date).setUTCHours(23, 59, 59, 999);
+                filters.created_at = { $gte: new Date(startOfDay), $lte: new Date(endOfDay) }; // Date filter
+            }
+            if (vehicle_nickname) {
+                // Find vehicle IDs by nickname
+                const vehicles = await VehicleDbHandler.getByQuery({ nickname: { $regex: vehicle_nickname, $options: 'i' } }); // Case insensitive substring search
+                const vehicleIds = vehicles.map(vehicle => vehicle._id);
+                filters.vehicle_id = { $in: vehicleIds }; // Filter by vehicle IDs
+            }
 
+            let getData = await MainJobDbHandler.getByQuery(filters).sort({ created_at: -1 })
+                .populate("service_category").populate("vehicle_id").populate("make").populate("model").skip(skip).limit(limit);
+
+            responseData.msg = "Company Fleet jobs fetched successfully!";
+            responseData.data = { count: await MainJobDbHandler.getByQuery(filters).countDocuments(), data: getData };
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch company fleet jobs with error::', error);
+            responseData.msg = "Failed to fetch company fleet jobs";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    /**
+     * Method to handle get Company Fleet Job by ID
+     */
+    GetCompanyFleetJobByID: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        let job_id = req.params.job_id;
+        log.info("Received request to get Company Fleet job by ID");
+        try {
+            // Validate admin
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            if (!getByQuery.is_company) {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
+            let getData = await MainJobDbHandler.getByQuery({ _id: job_id }).populate("service_category").populate("vehicle_id");
+
+            responseData.msg = "Company Fleet job fetched successfully!";
+            responseData.data = getData[0];
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch company fleet job with error::', error);
+            responseData.msg = "Failed to fetch company fleet job";
+            return responseHelper.error(res, responseData);
+        }
+    },
 
 };

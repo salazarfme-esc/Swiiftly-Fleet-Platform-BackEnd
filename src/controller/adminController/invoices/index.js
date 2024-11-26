@@ -9,6 +9,7 @@ const adminDbHandler = dbService.Admin;
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const SubJobDbHandler = dbService.SubJob;
 const FleetInvoiceDbHandler = dbService.FleetInvoice;
+const UserDbHandler = dbService.User;
 const config = require('../../../config/environments');
 const { response } = require('express');
 const mongoose = require("mongoose");
@@ -212,6 +213,11 @@ module.exports = {
 
             // Build the query object without day restrictions
             let query = {};
+            if (getByQuery.is_company) {
+                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id }).then(users => users.map(user => user._id))
+                query.fleet_id = { $in: fleetIDs };
+            }
+
 
             // Apply filters if present
             if (status) {
@@ -263,6 +269,10 @@ module.exports = {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            if (getByQuery.is_company) {
+                responseData.msg = "You are not authorized to access this resource!";
                 return responseHelper.error(res, responseData);
             }
             // Find the invoice by ID
@@ -324,9 +334,9 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-
+            let query = { _id: invoiceId };
             // Find the invoice by ID
-            const invoice = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })
+            const invoice = await FleetInvoiceDbHandler.getByQuery(query)
                 .populate("fleet_id") // Populate fleet details
                 .populate("root_ticket_id")
                 .populate({
@@ -337,7 +347,7 @@ module.exports = {
                     path: "sub_jobs.sub_job_id",
                     populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
                 });
-            if (!invoice.length) {
+            if (!invoice.length || (getByQuery.is_company && invoice[0].fleet_id.company_id.toString() != getByQuery._id.toString())) {
                 responseData.msg = "Invoice not found!";
                 return responseHelper.error(res, responseData);
             }

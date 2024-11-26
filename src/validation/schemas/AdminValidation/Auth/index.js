@@ -23,50 +23,17 @@ module.exports = {
 			.trim()
 			.required()
 			.label("Name"),
+		role: Joi
+			.string()
+			.trim()
+			.required()
+			.label('Role'),
 		email: Joi
 			.string()
 			.email()
 			.trim()
 			.required()
 			.label('Email'),
-		phone_number: Joi
-			.string()
-			.trim()
-			.pattern(/^[0-9]{6,16}$/)
-			.required()
-			.label('Phone Number')
-			.messages({
-				'string.pattern.base': 'Phone Number must be between 6 and 16 digits long and contain only numbers.',
-				'any.required': 'Phone Number is required.'
-			}),
-		role: Joi
-			.string()
-			.trim()
-			.label('Role')
-			.required(),
-		permissions: Joi.array()
-			.items(Joi.object({
-				tab: Joi.string()
-					.valid("Dashboard", "Users", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback")
-					.required(),
-				read: Joi.boolean().required(),
-				edit: Joi.boolean().required()
-			}))
-			.required()
-			.label('Permissions')
-	}),
-	update_Sub_Admin: 
-	Joi.object().keys({
-		name: Joi
-			.string()
-			.trim()
-			.required()
-			.label("Name"),
-		role: Joi
-			.string()
-			.trim()
-			.required()
-			.label('Role'),
 		phone_number: Joi
 			.string()
 			.trim()
@@ -77,17 +44,84 @@ module.exports = {
 				'string.pattern.base': 'Phone Number must be between 6 and 16 digits long and contain only numbers.',
 				'any.required': 'Phone Number is required.'
 			}),
+		is_company: Joi
+			.boolean()
+			.required()
+			.label('Is Company'),
+		company_name: Joi
+			.string()
+			.when('is_company', {
+				is: true,
+				then: Joi.required(),
+				otherwise: Joi.optional()
+			})
+			.label('Company Name'),
+		address: Joi
+			.object()
+			.when('is_company', {
+				is: true,
+				then: Joi.required(),
+				otherwise: Joi.optional()
+			})
+			.keys({
+				street: Joi.string().trim().required().label("Street"),
+				address: Joi.string().trim().required().label("address"),
+				city: Joi.string().trim().required().label("City"),
+				state: Joi.string().trim().required().label("State"),
+				pin: Joi.string().trim().required().label("PIN"),
+				country: Joi.string().trim().required().allow("").label("Country"),
+				coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
+			})
+			.label('Business Address'),
 		permissions: Joi.array()
 			.items(Joi.object({
 				tab: Joi.string()
-					.valid("Dashboard", "Users", "Vendor", "Work Flow", "Invoices", "Fleet Manager", "Reports", "Service Request", "Feedback")
+					.valid("Dashboard", "Vendor", "Work Flow", "Invoices",
+						"Fleet Manager", "Reports", "Service Request", "Feedback", "Company", "Roles")
 					.required(),
 				read: Joi.boolean().required(),
 				edit: Joi.boolean().required()
 			}))
-			.required() // Ensure permissions are provided
+			.when(Joi.object({ is_company: true }).unknown(), {
+				then: Joi.optional(),
+				otherwise: Joi.required()
+			})
 			.label('Permissions')
 	}),
+	update_Sub_Admin:
+		Joi.object().keys({
+			name: Joi
+				.string()
+				.trim()
+				.required()
+				.label("Name"),
+			role: Joi
+				.string()
+				.trim()
+				.required()
+				.label('Role'),
+			phone_number: Joi
+				.string()
+				.trim()
+				.pattern(/^[0-9]{6,16}$/) // Ensure phone number is between 6 and 16 digits
+				.required()
+				.label('Phone Number')
+				.messages({
+					'string.pattern.base': 'Phone Number must be between 6 and 16 digits long and contain only numbers.',
+					'any.required': 'Phone Number is required.'
+				}),
+			permissions: Joi.array()
+				.items(Joi.object({
+					tab: Joi.string()
+						.valid("Dashboard", "Vendor", "Work Flow", "Invoices",
+							"Fleet Manager", "Reports", "Service Request", "Feedback", "Company", "Roles")
+						.required(),
+					read: Joi.boolean().required(),
+					edit: Joi.boolean().required()
+				}))
+				.required() // Ensure permissions are provided
+				.label('Permissions')
+		}),
 	update_admin: Joi.object().keys({
 		name: Joi
 			.string()

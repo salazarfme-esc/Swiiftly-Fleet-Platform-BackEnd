@@ -369,6 +369,7 @@ module.exports = {
                     { email: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for email
                     { role: { $regex: searchQuery, $options: 'i' } } // Case-insensitive search for role
                 ],
+                is_company: false,
                 _id: { $ne: req.admin.sub }
             };
             if (role === "company") {

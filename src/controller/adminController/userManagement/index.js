@@ -91,7 +91,7 @@ module.exports = {
                 service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
                 owner_name: reqObj.owner_name,
                 profile_completed: false,
-                company_id: reqObj.user_role === 'fleet' ? getByQuery._id : ""
+                company_id: reqObj.user_role === 'fleet' ? getByQuery._id : null
             }
             if (w9_document || reqObj.w9) {
                 submitData.w9_verified = true

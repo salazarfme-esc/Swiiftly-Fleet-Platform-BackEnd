@@ -210,14 +210,56 @@ module.exports = {
                 if (reqObj.email === superAdminEmail) {
                     adminData[0].role = "super_admin";
                     adminData[0].permissions = [
-                        { tab: "Dashboard", read: true, edit: true },
-                        { tab: "Users", read: true, edit: true },
-                        { tab: "Vendor", read: true, edit: true },
-                        { tab: "Work Flow", read: true, edit: true },
-                        { tab: "Invoices", read: true, edit: true },
-                        { tab: "Fleet Manager", read: true, edit: true },
-                        { tab: "Reports", read: true, edit: true },
-                        { tab: "Work Flow", read: true, edit: true }
+                        {
+                            "tab": "Dashboard",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Vendor",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Work Flow",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Invoices",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Fleet Manager",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Reports",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Service Request",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Feedback",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Company",
+                            "read": true,
+                            "edit": true
+                        },
+                        {
+                            "tab": "Roles",
+                            "read": true,
+                            "edit": true
+                        }
                     ];
                 }
 

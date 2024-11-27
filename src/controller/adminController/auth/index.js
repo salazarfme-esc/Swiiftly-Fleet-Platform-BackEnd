@@ -276,14 +276,59 @@ module.exports = {
                 reqObj.last_login = new Date();
                 reqObj.role = "super_admin";
                 reqObj.permissions = [
-                    { tab: "Dashboard", read: true, edit: true },
-                    { tab: "Users", read: true, edit: true },
-                    { tab: "Vendor", read: true, edit: true },
-                    { tab: "Work Flow", read: true, edit: true },
-                    { tab: "Invoices", read: true, edit: true },
-                    { tab: "Fleet Manager", read: true, edit: true },
-                    { tab: "Reports", read: true, edit: true },
-                    { tab: "Work Flow", read: true, edit: true }
+                    {
+                        "tab": "Dashboard",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Vendor",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Work Flow",
+                        "read": true,
+                        "edit": true
+                    },
+
+
+
+                    {
+                        "tab": "Invoices",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Fleet Manager",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Reports",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Service Request",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Feedback",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Company",
+                        "read": true,
+                        "edit": true
+                    },
+                    {
+                        "tab": "Roles",
+                        "read": true,
+                        "edit": true
+                    }
                 ];
 
                 // Create new admin entry

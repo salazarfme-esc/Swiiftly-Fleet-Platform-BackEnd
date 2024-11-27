@@ -61,6 +61,7 @@ module.exports = () => {
     Router.put("/change-password", validationMiddleware(adminValidationSchema.changePassword, "body"), adminAuthController.changeAdminPassword);
     Router.put("/change-status-sub-admin/:id", validationMiddleware(adminValidationSchema.changeStatusSubAdmin, "query"), adminAuthController.changeStatusSubAdmin);
     Router.delete("/delete-sub-admin/:id", validationMiddleware(adminValidationSchema.deleteSubAdmin, "query"), adminAuthController.deleteSubAdmin);
+    Router.get("/dashboard", adminAuthController.getDashboardData);
 
 
     // Routes for Make
@@ -117,6 +118,8 @@ module.exports = () => {
     Router.put("/child-sequence-update/:root_ticket_id", validationMiddleware(adminJobValidationSchema.updateSubJobSequence, "body"), adminJobController.UpdateSubJobSequence);
     Router.put("/assign-vendor", validationMiddleware(adminJobValidationSchema.assignVendorToSubTicket, "body"), adminJobController.AssignVendorToSubTicket);
     Router.get("/vendor-child-tickets", adminJobController.getVendorChildTickets);
+    Router.get("/company-fleet-jobs", adminJobController.GetCompanyFleetJobs);
+    Router.get("/company-fleet-job/:job_id", adminJobController.GetCompanyFleetJobByID);
 
     // Invoices Routes
     Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);

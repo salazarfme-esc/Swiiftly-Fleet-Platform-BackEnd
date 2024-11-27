@@ -10,6 +10,7 @@ const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const VendorDbHandler = dbService.User;
 const FlowCategoryDbHandler = dbService.FlowCategory;
+const UserDbHandler = dbService.User;
 const MainJobAggregate = require("../../../services/db/models/mainJob");
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
@@ -603,8 +604,12 @@ module.exports = {
                 responseData.msg = "You are not authorized to access this resource!";
                 return responseHelper.error(res, responseData);
             }
-            // Prepare filters
             let filters = { status: status };
+            if (getByQuery.is_company) {
+                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id }).then(users => users.map(user => user._id))
+                filters.user_id = { $in: fleetIDs };
+            }
+            // Prepare filters
             if (service_category) {
                 filters.service_category = { $in: service_category.split(',').map(id => id.trim()) }; // Convert to array
             }
@@ -655,7 +660,7 @@ module.exports = {
             let getData = await MainJobDbHandler.getByQuery({ _id: job_id }).populate("service_category").populate("vehicle_id");
 
             responseData.msg = "Company Fleet job fetched successfully!";
-            responseData.data = getData[0];
+            responseData.data = getData[0] || {};
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch company fleet job with error::', error);

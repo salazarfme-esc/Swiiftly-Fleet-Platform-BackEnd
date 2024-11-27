@@ -273,10 +273,10 @@ module.exports = {
         const limit = parseInt(req.query.limit); // Default limit
         const skip = parseInt(req.query.skip); // Default skip
         const searchQuery = req.query.searchQuery || ''; // Get search query from request
-
+        const role = req.query.role || '';
         try {
             // Build the search criteria
-            const searchCriteria = {
+            let searchCriteria = {
                 $or: [
                     { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for name
                     { email: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for email
@@ -284,6 +284,34 @@ module.exports = {
                 ],
                 _id: { $ne: req.admin.sub }
             };
+            if (role === "company") {
+                searchCriteria = {
+                    is_company: true,
+                    $or: [
+                        { name: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for name
+                        { email: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive search for email
+                        { company_name: { $regex: searchQuery, $options: 'i' } } // Case-insensitive search for role
+                    ],
+                    _id: { $ne: req.admin.sub }
+                }
+                // Fetch admin list with pagination, sorting, and search
+                let getAdminList = await adminDbHandler.getByQuery(
+                    searchCriteria,
+                    { admin_password: 0 }
+                ).skip(skip).limit(limit).sort({ created_at: -1 });
+
+                getAdminList.map(async (item) => {
+                    item.fleet_size = await UserDbHandler.getByQuery({ company_id: item._id }).countDocuments();
+                })
+
+                let getAdminListCount = await adminDbHandler.getByQuery(
+                    searchCriteria,
+                    { admin_password: 0 }
+                ).countDocuments();
+                responseData.msg = "Data fetched successfully!";
+                responseData.data = { count: getAdminListCount, data: getAdminList };
+                return responseHelper.success(res, responseData);
+            }
 
             // Fetch admin list with pagination, sorting, and search
             let getAdminList = await adminDbHandler.getByQuery(

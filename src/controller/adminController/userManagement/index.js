@@ -91,10 +91,20 @@ module.exports = {
                 service_type: reqObj.service_type ? reqObj.service_type.split(",") : [],
                 owner_name: reqObj.owner_name,
                 profile_completed: false,
-                company_id: reqObj.user_role === 'fleet' ? getByQuery._id : null
+                // company_id: reqObj.user_role === 'fleet' ? getByQuery._id : null
+                company_id: null
             }
             if (w9_document || reqObj.w9) {
                 submitData.w9_verified = true
+            }
+            if (getByQuery.is_company) {
+                submitData.company_id = getByQuery._id;
+            }
+            else if (req.query.company_id) {
+                submitData.company_id = req.query.company_id;
+            }
+            else {
+                submitData.company_id = null;
             }
             let createData = await UserDbHandler.createUser(submitData);
             if (createData) {

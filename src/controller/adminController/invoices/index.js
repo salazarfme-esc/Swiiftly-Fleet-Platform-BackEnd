@@ -222,7 +222,10 @@ module.exports = {
             // Apply filters if present
             if (status) {
                 query.status = status; // Filter by status
+            } else {
+                query.status = { $ne: "draft" };
             }
+
             if (start_amount) {
                 query.total_amount = { ...query.total_amount, $gte: parseFloat(start_amount) }; // Filter by start amount
             }
@@ -316,9 +319,9 @@ module.exports = {
 
             responseData.msg = "Fleet invoice updated successfully!";
             responseData.data = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })
-            .populate("fleet_id") // Populate fleet details
-            .populate("root_ticket_id")
-            .populate("sub_jobs.sub_job_id");
+                .populate("fleet_id") // Populate fleet details
+                .populate("root_ticket_id")
+                .populate("sub_jobs.sub_job_id");
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to update fleet invoice with error::', error);

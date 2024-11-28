@@ -8,6 +8,7 @@ const adminUserManagementController = require("../../controller").adminUserManag
 const adminJobController = require("../../controller").adminJob;
 const adminMakeAndModel = require("../../controller").makeAndModel;
 const adminInvoicesController = require("../../controller").adminInvoices;
+const adminFeedbackController = require("../../controller").adminFeedback;
 
 /**
  * Middlewares
@@ -130,6 +131,8 @@ module.exports = () => {
     Router.get("/fleet-invoices/:invoiceId", adminInvoicesController.getFleetInvoiceById);
     Router.put("/update-fleet-invoice/:invoiceId", validationMiddleware(adminInvoicesValidationSchema.updateFleetInvoice, "body"), adminInvoicesController.updateFleetInvoice);
 
+    // Feedback Routes
+    Router.get("/feedback", adminFeedbackController.getAllFeedbacks);
 
 
 

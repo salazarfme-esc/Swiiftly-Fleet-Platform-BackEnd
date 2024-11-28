@@ -9,6 +9,7 @@ const userInfoController = require('./userController/users');
 const userVehicleController = require("./userController/vehicle");
 const userJobController = require("./userController/job");
 const userInvoicesController = require("./userController/invoices");
+const userFeedbackController = require("./userController/feedback");
 
 /**
  * All Admin Controller
@@ -19,6 +20,7 @@ const adminUserManagementController = require("./adminController/userManagement"
 const adminJobController = require("./adminController/job");
 const adminMakeAndModelController = require("./adminController/makeAndModel");
 const adminInvoicesController = require("./adminController/invoices");
+const adminFeedbackController = require("./adminController/feedback");
 
 module.exports = {
     /**
@@ -30,6 +32,7 @@ module.exports = {
     adminJob: adminJobController,
     makeAndModel: adminMakeAndModelController,
     adminInvoices: adminInvoicesController,
+    adminFeedback: adminFeedbackController,
     /**
      * All User Controllers
      */
@@ -38,4 +41,5 @@ module.exports = {
     userVehicle: userVehicleController,
     userJob: userJobController,
     userInvoices: userInvoicesController,
+    userFeedback: userFeedbackController,
 };

@@ -12,5 +12,6 @@ module.exports = {
 	adminJobSchema: require("./schemas/AdminValidation/Job"),
 	makeAndModel: require("./schemas/AdminValidation/MakeAndModel"),
 	adminInvoicesSchema: require("./schemas/AdminValidation/Invoices"),
-	userInvoicesSchema: require("./schemas/UserValidation/Invoices")
+	userInvoicesSchema: require("./schemas/UserValidation/Invoices"),
+	feedbackSchema: require("./schemas/UserValidation/feedback")
 };

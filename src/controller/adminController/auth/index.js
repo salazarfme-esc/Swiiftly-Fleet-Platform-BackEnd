@@ -16,6 +16,7 @@ const UserDbAggregate = require('../../../services/db/models/user.js');
 const AdminDbAggregate = require('../../../services/db/models/admin.js');
 const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
+const FeedbackDbHandler = dbService.Feedback;
 const config = require('../../../config/environments');
 const templates = require('../../../utils/templates/template');
 const emailService = require('../../../services/sendEmail');
@@ -944,6 +945,7 @@ module.exports = {
             const totalVendorInvoices = await VendorInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalInvoices = totalVendorInvoices + totalFleetInvoices;
+            const latest5Feedbacks = await FeedbackDbHandler.getByQuery({}).populate('user_id').sort({ createdAt: -1 }).limit(5);
 
             // 4. Get top 5 companies based on fleet count using aggregation
             const top5Companies = await UserDbAggregate.aggregate([
@@ -976,6 +978,7 @@ module.exports = {
             responseData.data.totalFleets = totalFleets;
             responseData.data.totalInvoices = totalInvoices;
             responseData.data.top5Companies = top5Companies; // Add top 5 companies to response
+            responseData.data.latest5Feedbacks = latest5Feedbacks;
 
             // Graph data for invoices
             const invoiceGraphData = await getInvoiceGraphData(yearInvoices, filterTypeInvoices);

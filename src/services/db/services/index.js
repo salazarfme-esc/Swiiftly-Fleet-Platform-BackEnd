@@ -18,5 +18,6 @@ module.exports = {
 	Make: require("./make.service"),
 	Model: require("./model.service"),
 	FleetInvoice: require("./fleetInvoice.service"),
+	Feedback: require("./feedback.service"),
 
 };

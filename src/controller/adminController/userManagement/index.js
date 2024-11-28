@@ -133,7 +133,6 @@ module.exports = {
         let reqObj = req.query;
         const limit = parseInt(req.query.limit); // Ensure limit is a number
         const skip = parseInt(req.query.skip); // Ensure skip is a number
-        const company_id = req.query.company_id;
         log.info("Received request for getting the vendor or fleet manager.", reqObj);
 
         try {
@@ -150,12 +149,16 @@ module.exports = {
 
             // Set base query for users
             let userQuery = { user_role: reqObj.user_role, is_delete: false };
-            if (company_id) {
-                userQuery.company_id = company_id;
+            if (reqObj.company_id) {
+                userQuery.company_id = mongoose.Types.ObjectId(reqObj.company_id);
+            }
+            else {
+                userQuery.company_id = getByQuery._id;
             }
             if (reqObj.search) {
                 userQuery['full_name'] = { $regex: reqObj.search, $options: 'i' };
             }
+            console.log("reqObj.user_role", userQuery);
 
             // If the user role is 'vendor', apply additional filters
             if (reqObj.user_role === 'vendor') {
@@ -185,9 +188,9 @@ module.exports = {
                     data: vendors
                 };
             }
+
             // For fleet role, run the original logic
             else if (reqObj.user_role === 'fleet') {
-                userQuery.company_id = getByQuery._id;
                 let aggregationPipeline = [
                     { $match: userQuery }, // Match fleet users
                     {

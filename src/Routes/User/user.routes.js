@@ -7,6 +7,7 @@ const userInfoController = require('../../controller').userInfo;
 const userVehicleController = require("../../controller").userVehicle;
 const userJobController = require("../../controller").userJob;
 const userInvoicesController = require("../../controller").userInvoices;
+const userFeedbackController = require("../../controller").userFeedback;
 /**
  * All Middlewares
  */
@@ -17,6 +18,7 @@ const userInfoValidationSchema = require('../../validation').userInfoSchema;
 const vehicleValidationSchema = require("../../validation").vehicleSchema;
 const jobValidationSchema = require("../../validation").jobSchema;
 const userInvoicesValidationSchema = require("../../validation").userInvoicesSchema;
+const feedbackValidationSchema = require("../../validation").feedbackSchema;
 const validationMiddleware = require('../../utils/validationMiddleware');
 const multerService = require('../../services/multer');
 module.exports = () => {
@@ -105,8 +107,8 @@ module.exports = () => {
     );
     Router.get('/profile', userInfoController.profile);
     Router.put('/update-profile', [multerService.uploadFile('file').single('avatar'), validationMiddleware(userInfoValidationSchema.updateProfile, 'body')], userInfoController.updateProfile);
-    Router.put('/update-vendor-profile', [multerService.uploadFile('file').fields([{ name: 'avatar', max: 1 },{name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userInfoValidationSchema.updateVendorProfileValidation, 'body')], userInfoController.updateVendorProfile);
-    Router.put('/update-vendor-profile-status',  userInfoController.updateVendorProfileStatus);
+    Router.put('/update-vendor-profile', [multerService.uploadFile('file').fields([{ name: 'avatar', max: 1 }, { name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userInfoValidationSchema.updateVendorProfileValidation, 'body')], userInfoController.updateVendorProfile);
+    Router.put('/update-vendor-profile-status', userInfoController.updateVendorProfileStatus);
 
     /**
      * Routes for handle change password
@@ -156,6 +158,12 @@ module.exports = () => {
     Router.put('/invoices/:invoiceId', validationMiddleware(userInvoicesValidationSchema.updateInvoice, 'body'), userInvoicesController.updateInvoice);
     Router.get('/fleet-invoices', userInvoicesController.getFleetInvoices);
     Router.get('/fleet-invoices/:invoiceId', userInvoicesController.getFleetInvoiceById);
+
+
+    /**
+     * Routes for handle feedback
+     */
+    Router.post('/feedback', validationMiddleware(feedbackValidationSchema.feedback, 'body'), userFeedbackController.giveFeedback);
 
 
 

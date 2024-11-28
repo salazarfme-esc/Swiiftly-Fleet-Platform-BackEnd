@@ -133,6 +133,7 @@ module.exports = {
         let reqObj = req.query;
         const limit = parseInt(req.query.limit); // Ensure limit is a number
         const skip = parseInt(req.query.skip); // Ensure skip is a number
+        const company_id = req.query.company_id;
         log.info("Received request for getting the vendor or fleet manager.", reqObj);
 
         try {
@@ -149,6 +150,9 @@ module.exports = {
 
             // Set base query for users
             let userQuery = { user_role: reqObj.user_role, is_delete: false };
+            if (company_id) {
+                userQuery.company_id = company_id;
+            }
             if (reqObj.search) {
                 userQuery['full_name'] = { $regex: reqObj.search, $options: 'i' };
             }

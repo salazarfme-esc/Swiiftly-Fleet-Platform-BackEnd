@@ -88,6 +88,10 @@ const MainJobSchema = new Schema({
         type: String,
         default: "",
     },
+    completed_at: {
+        type: Date,
+        default: null
+    },
     cost_estimation: {
         type: String,
         default: "",

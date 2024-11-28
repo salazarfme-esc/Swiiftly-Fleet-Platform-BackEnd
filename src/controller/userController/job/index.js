@@ -695,6 +695,7 @@ module.exports = {
                 updateData.active = false;
                 updateData.cost_estimation = cost_estimation;
                 updateData.vendor_note = vendor_note;
+                updateData.completed_at = new Date();
             }
 
             // Update the sub-ticket with the new status and additional data
@@ -733,7 +734,7 @@ module.exports = {
 
                     if (allCompleted) {
                         // Update the root ticket status to completed
-                        let updateRootTicket = await MainJobDbHandler.updateById(rootTicketId, { status: 'completed' });
+                        let updateRootTicket = await MainJobDbHandler.updateById(rootTicketId, { status: 'completed', completed_at: new Date() });
 
                         if (!updateRootTicket) {
                             responseData.msg = "Failed to update the root ticket status!";

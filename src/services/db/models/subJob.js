@@ -63,6 +63,10 @@ const SubJobSchema = new Schema({
         type: String,
         default: "",
     },
+    completed_at: {
+        type: Date,
+        default: null
+    },
     status_reason: {
         type: String,
         default: "",

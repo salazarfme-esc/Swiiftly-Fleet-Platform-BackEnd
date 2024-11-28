@@ -626,7 +626,7 @@ module.exports = {
             }
 
             let getData = await MainJobDbHandler.getByQuery(filters).sort({ created_at: -1 })
-                .populate("service_category").populate("vehicle_id").populate("make").populate("model").skip(skip).limit(limit);
+                .populate("service_category").populate("vehicle_id").populate("user_id").populate("make").populate("model").skip(skip).limit(limit);
 
             responseData.msg = "Company Fleet jobs fetched successfully!";
             responseData.data = { count: await MainJobDbHandler.getByQuery(filters).countDocuments(), data: getData };
@@ -657,7 +657,7 @@ module.exports = {
                 responseData.msg = "You are not authorized to access this resource!";
                 return responseHelper.error(res, responseData);
             }
-            let getData = await MainJobDbHandler.getByQuery({ _id: job_id }).populate("service_category").populate("vehicle_id");
+            let getData = await MainJobDbHandler.getByQuery({ _id: job_id }).populate("service_category").populate("vehicle_id").populate("user_id");
 
             responseData.msg = "Company Fleet job fetched successfully!";
             responseData.data = getData[0] || {};

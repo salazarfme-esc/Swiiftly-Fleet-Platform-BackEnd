@@ -44,13 +44,15 @@ module.exports = {
                 responseData.msg = "Invalid token or session expired!";
                 return responseHelper.error(res, responseData);
             }
-            let feedbacks = await feedbackDbHandler.getByQuery({}).skip(skip).limit(limit).populate('user_id');
+            let feedbacks = await feedbackDbHandler.getByQuery({ _id: feedbackId }).populate('user_id');
+            if (!feedbacks.length) {
+                responseData.msg = "Feedback not found!";
+                return responseHelper.error(res, responseData);
+            }
 
             responseData.msg = "Feedbacks fetched successfully!";
-            responseData.data = {
-                count: await feedbackDbHandler.getByQuery({}).countDocuments(),
-                feedbacks: feedbacks
-            };
+            responseData.data =
+                feedbacks[0];
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to fetch feedbacks with error::', error);

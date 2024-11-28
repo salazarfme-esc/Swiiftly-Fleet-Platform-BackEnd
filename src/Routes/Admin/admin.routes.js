@@ -133,6 +133,7 @@ module.exports = () => {
 
     // Feedback Routes
     Router.get("/feedback", adminFeedbackController.getAllFeedbacks);
+    Router.get("/feedback/:feedbackId", adminFeedbackController.getDetailedFeedback);
 
 
 

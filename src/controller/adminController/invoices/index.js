@@ -223,7 +223,9 @@ module.exports = {
             if (status) {
                 query.status = status; // Filter by status
             } else {
-                query.status = { $ne: "draft" };
+                if (getByQuery.is_company) {
+                    query.status = { $ne: "draft" };
+                }
             }
 
             if (start_amount) {

@@ -100,8 +100,8 @@ module.exports = {
             if (getByQuery.is_company) {
                 submitData.company_id = getByQuery._id;
             }
-            else if (req.query.company_id) {
-                submitData.company_id = req.query.company_id;
+            else if (reqObj.company_id) {
+                submitData.company_id = reqObj.company_id;
             }
             else {
                 submitData.company_id = null;

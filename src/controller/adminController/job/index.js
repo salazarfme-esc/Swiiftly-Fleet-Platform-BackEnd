@@ -592,7 +592,7 @@ module.exports = {
         log.info("Received request to get Company Fleet jobs");
         const limit = parseInt(req.query.limit);
         const skip = parseInt(req.query.skip);
-        const { service_category, date, vehicle_nickname, status } = req.query; // Extracting new query parameters
+        const { service_category, date, vehicle_nickname, status, fleet_id } = req.query; // Extracting new query parameters
         try {
             // Validate admin
             let getByQuery = await adminDbHandler.getById(admin);
@@ -605,9 +605,14 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let filters = { status: status };
-            if (getByQuery.is_company) {
-                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id }).then(users => users.map(user => user._id))
-                filters.user_id = { $in: fleetIDs };
+            if (fleet_id) {
+                let fleetID = await UserDbHandler.getByQuery({ _id: fleet_id })
+                if (fleetID.length) {
+                    filters.user_id = fleetID[0]._id
+                } else {
+                    responseData.msg = "Fleet not found!";
+                    return responseHelper.error(res, responseData);
+                }
             }
             // Prepare filters
             if (service_category) {

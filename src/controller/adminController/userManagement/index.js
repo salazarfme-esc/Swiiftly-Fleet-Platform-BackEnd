@@ -149,11 +149,15 @@ module.exports = {
 
             // Set base query for users
             let userQuery = { user_role: reqObj.user_role, is_delete: false };
-            if (reqObj.company_id) {
-                userQuery.company_id = mongoose.Types.ObjectId(reqObj.company_id);
-            }
-            else {
+            if (getByQuery.is_company) {
                 userQuery.company_id = getByQuery._id;
+            } else {
+                if (!reqObj.company_id && reqObj.user_role === 'fleet') {
+                    responseData.msg = "Company ID is required when not a company!";
+                    return responseHelper.error(res, responseData);
+                } else if (reqObj.company_id) {
+                    userQuery.company_id = mongoose.Types.ObjectId(reqObj.company_id);
+                }
             }
             if (reqObj.search) {
                 userQuery['full_name'] = { $regex: reqObj.search, $options: 'i' };

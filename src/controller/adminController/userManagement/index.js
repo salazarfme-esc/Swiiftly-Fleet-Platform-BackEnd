@@ -362,12 +362,15 @@ module.exports = {
                 responseData.msg = "Invalid login or token expired!";
                 return responseHelper.error(res, responseData);
             }
-            // Verify user existence
-            let userData = await UserDbHandler.getByQuery({ _id: userId, company_id: getByQuery._id });
-            if (!userData.length) {
-                responseData.msg = 'Fleet Manager not found!';
-                return responseHelper.error(res, responseData);
+            if (getByQuery.is_company) {
+                let userData = await UserDbHandler.getByQuery({ _id: userId, company_id: getByQuery._id });
+                if (!userData.length) {
+                    responseData.msg = 'Fleet Manager not found!';
+                    return responseHelper.error(res, responseData);
+                }
             }
+            // Verify user existence
+
             // Aggregate data for vehicles related to the user
             let vehicleData = await VehicleAggregate.aggregate([
                 {

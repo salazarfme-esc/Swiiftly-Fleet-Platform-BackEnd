@@ -613,6 +613,9 @@ module.exports = {
                     responseData.msg = "Fleet not found!";
                     return responseHelper.error(res, responseData);
                 }
+            } else {
+                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet' }).map(fleet => fleet._id)
+                filters.user_id = { $in: fleetIDs }
             }
             // Prepare filters
             if (service_category) {

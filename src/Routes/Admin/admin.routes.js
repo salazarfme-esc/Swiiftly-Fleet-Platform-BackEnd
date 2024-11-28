@@ -120,6 +120,7 @@ module.exports = () => {
     Router.get("/vendor-child-tickets", adminJobController.getVendorChildTickets);
     Router.get("/company-fleet-jobs", adminJobController.GetCompanyFleetJobs);
     Router.get("/company-fleet-job/:job_id", adminJobController.GetCompanyFleetJobByID);
+    Router.get("/company-fleet-child-ticket/:root_ticket_id", adminJobController.GetCompanyFleetChildTicket);
 
     // Invoices Routes
     Router.get("/vendor-invoices", adminInvoicesController.getVendorInvoices);

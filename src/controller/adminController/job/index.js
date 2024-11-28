@@ -668,5 +668,36 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    /**
+    * Method to handle get Child Tickets
+    */
+    GetCompanyFleetChildTicket: async (req, res) => {
+        let responseData = {};
+        let admin = req.admin.sub;
+        log.info("Received request to get Child tickets");
+        try {
+            // Validate admin
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            if (!getByQuery.is_company) {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
+
+            let getData = await SubJobDbHandler.getByQuery({ root_ticket_id: req.params.root_ticket_id })
+                .populate("service_category").populate("question_id").sort({ "sequence": 1 });
+
+            responseData.msg = "Tickets fetched successfully!";
+            responseData.data = getData;
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to fetch tickets with error::', error);
+            responseData.msg = "Failed to fetch tickets";
+            return responseHelper.error(res, responseData);
+        }
+    },
 
 };

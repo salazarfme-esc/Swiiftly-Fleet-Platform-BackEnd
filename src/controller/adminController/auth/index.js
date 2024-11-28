@@ -13,6 +13,7 @@ const FleetInvoiceDbHandler = dbService.FleetInvoice;
 const VendorInvoiceDbAggregate = require('../../../services/db/models/vendorInvoice.js');
 const FleetInvoiceDbAggregate = require('../../../services/db/models/fleetInvoice.js');
 const UserDbAggregate = require('../../../services/db/models/user.js');
+const AdminDbAggregate = require('../../../services/db/models/admin.js');
 const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
 const config = require('../../../config/environments');
@@ -139,7 +140,7 @@ const getUserCountGraphData = async (year, filterType) => {
     const endDate = moment(`${year}-12-31`).endOf('year');
 
     let matchCriteria = {
-        createdAt: { $gte: startDate.toDate(), $lte: endDate.toDate() }
+        created_at: { $gte: startDate.toDate(), $lte: endDate.toDate() }
     };
 
     if (filterType === 'vendor') {
@@ -147,17 +148,34 @@ const getUserCountGraphData = async (year, filterType) => {
     } else if (filterType === 'fleet') {
         matchCriteria.user_role = 'fleet';
     }
+    let userCountData = [];
 
-    const userCountData = await UserDbAggregate.aggregate([
-        { $match: matchCriteria },
-        {
-            $group: {
-                _id: { $month: "$createdAt" },
-                count: { $sum: 1 }
-            }
-        },
-        { $sort: { _id: 1 } } // Sort by month
-    ]);
+    if (filterType === 'company') {
+        matchCriteria.is_company = true;
+        userCountData = await AdminDbAggregate.aggregate([
+            { $match: matchCriteria },
+            {
+                $group: {
+                    _id: { $month: "$created_at" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } } // Sort by month
+        ])
+
+    } else {
+        userCountData = await UserDbAggregate.aggregate([
+            { $match: matchCriteria },
+            {
+                $group: {
+                    _id: { $month: "$created_at" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } } // Sort by month
+        ])
+    }
+
 
     // Prepare the final data structure
     const userCountGraphData = [];
@@ -919,17 +937,45 @@ module.exports = {
 
             // 2. Total Vendors from User table
             const totalVendors = await UserDbHandler.getByQuery({ user_role: 'vendor' }).countDocuments();
+            const totalCompanies = await adminDbHandler.getByQuery({ is_company: true }).countDocuments();
+            const totalFleets = await UserDbHandler.getByQuery({ user_role: 'fleet' }).countDocuments();
 
             // 3. Total Invoices from Vendor and Fleet Invoices
             const totalVendorInvoices = await VendorInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalInvoices = totalVendorInvoices + totalFleetInvoices;
 
+            // 4. Get top 5 companies based on fleet count using aggregation
+            const top5Companies = await UserDbAggregate.aggregate([
+                { $match: { user_role: 'fleet' } }, // Match only fleet managers
+                { $group: { _id: "$company_id", fleetCount: { $sum: 1 } } }, // Group by company_id and count fleets
+                { $lookup: { // Join with adminDbHandler to get company details
+                    from: 'admins', // Assuming the collection name for companies is 'admins'
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'companyDetails'
+                }},
+                { $unwind: "$companyDetails" }, // Unwind the company details array
+                { $match: { "companyDetails.is_company": true } }, // Filter to include only companies
+                { $sort: { fleetCount: -1 } }, // Sort by fleet count descending
+                { $limit: 5 }, // Limit to top 5 companies
+                { $project: { // Project the desired fields
+                    _id: 0,
+                    companyId: "$companyDetails._id",
+                    company_name: "$companyDetails.company_name",
+                    address: "$companyDetails.address",
+                    fleetCount: 1
+                }}
+            ]);
+
             // Prepare response data
             responseData.data = {};
             responseData.data.totalServiceRequests = totalServiceRequests;
             responseData.data.totalVendors = totalVendors;
+            responseData.data.totalCompanies = totalCompanies;
+            responseData.data.totalFleets = totalFleets;
             responseData.data.totalInvoices = totalInvoices;
+            responseData.data.top5Companies = top5Companies; // Add top 5 companies to response
 
             // Graph data for invoices
             const invoiceGraphData = await getInvoiceGraphData(yearInvoices, filterTypeInvoices);

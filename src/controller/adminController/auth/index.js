@@ -888,14 +888,20 @@ module.exports = {
                 responseData.msg = "Admin not found!";
                 return responseHelper.error(res, responseData);
             }
-
-            // Mark the admin as deleted
-            await adminDbHandler.updateById(adminId, { is_active: req.query.is_active });
-            responseData.msg = "Sub-admin status changed successfully!";
+            let updatedAdmin = await adminDbHandler.updateById(adminId, { is_active: req.query.is_active });
+            if (updatedAdmin) {
+                if (req.query.is_active === false) {
+                    await UserDbHandler.updateByQuery({ company_id: adminId }, { is_delete: true });
+                }
+                else {
+                    await UserDbHandler.updateByQuery({ company_id: adminId }, { is_delete: false });
+                }
+            }
+            responseData.msg = "Status changed successfully!";
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('Failed to change status for sub-admin with error::', error);
-            responseData.msg = "Status updated!";
+            responseData.msg = "Failed to change status!";
             return responseHelper.error(res, responseData);
         }
     },

@@ -614,9 +614,11 @@ module.exports = {
                     return responseHelper.error(res, responseData);
                 }
             } else {
-                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet' }).map(fleet => fleet._id)
-                filters.user_id = { $in: fleetIDs }
+                let fleet = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet' });
+                let fleetIds = fleet.map(fleet => fleet._id)
+                filters.user_id = { $in: fleetIds }
             }
+            console.log("🚀 ~ GetCompanyFleetJobs: ~ filters:", filters)
             // Prepare filters
             if (service_category) {
                 filters.service_category = { $in: service_category.split(',').map(id => id.trim()) }; // Convert to array

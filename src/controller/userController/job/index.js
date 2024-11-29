@@ -636,7 +636,7 @@ module.exports = {
             if (updateSubTicket) {
                 let notificationObj = {
                     title: "Ticket Status Update ",
-                    description: `${vendorData[0].full_name} has ${status ? "accepted" : "rejected"} the assigned task of " Service request root ticket ".`,
+                    description: `${vendorData[0].full_name} has ${status ? "accepted" : "rejected"} the assigned task of Service request root ticket ${subTicketData[0].root_ticket_id}.`,
                     is_redirect: true,
                     redirection_location: "admin_kanban",
                     user_id: vendor,
@@ -734,7 +734,7 @@ module.exports = {
             if (updateSubTicket) {
                 let notificationObj = {
                     title: "Ticket Status Update ",
-                    description: `${vendorData[0].full_name} Has Updated the ticket status as ${status} with ${vendor_note ? vendor_note : ""}`,
+                    description: `${vendorData[0].full_name} Has Updated the ticket status as ${status} ${vendor_note ? "with reason"+ vendor_note : ""}`,
                     is_redirect: true,
                     redirection_location: "admin_kanban",
                     user_id: vendor,

@@ -495,7 +495,7 @@ module.exports = {
             let tokenData = {
                 sub: getUser[0]._id,
                 email: getUser[0].email,
-                user_name: getUser[0].user_name
+                full_name: getUser[0].full_name
             };
             let token = _generateUserToken(tokenData);
 

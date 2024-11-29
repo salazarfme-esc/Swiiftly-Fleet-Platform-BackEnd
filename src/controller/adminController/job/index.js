@@ -11,6 +11,7 @@ const SubJobDbHandler = dbService.SubJob;
 const VendorDbHandler = dbService.User;
 const FlowCategoryDbHandler = dbService.FlowCategory;
 const UserDbHandler = dbService.User;
+const NotificationDbHandler = dbService.Notification;
 const MainJobAggregate = require("../../../services/db/models/mainJob");
 const Flow = require("../../../services/db/models/flow")
 const config = require('../../../config/environments');
@@ -317,7 +318,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            let TicketData = await MainJobDbHandler.getById(root_ticket_id)
+            let TicketData = await MainJobDbHandler.getById(root_ticket_id).populate("vehicle_id");
             if (!TicketData) {
                 responseData.msg = "Job request not found!";
                 return responseHelper.error(res, responseData);
@@ -330,10 +331,34 @@ module.exports = {
                 let UpdateRootStatus = await MainJobDbHandler.updateById(root_ticket_id, updatedStatus);
                 let UpdateChildStatus = await SubJobDbHandler.updateByQuery({ root_ticket_id: root_ticket_id }, updatedStatus);
                 responseData.msg = "Job request accepted!";
+                let notificationObj = {
+                    title: "Service Requests Update",
+                    description: `Swiiftly Admin has accepted the service request for ${TicketData.vehicle_id.vehicle_name}.`,
+                    is_redirect: true,
+                    redirection_location: "fleet_job_request",
+                    user_id: TicketData.user_id,
+                    notification_to_role: "fleet",
+                    notification_from_role: "admin",
+                    job_id: root_ticket_id,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
             } else {
                 let UpdateRootStatus = await MainJobDbHandler.updateById(root_ticket_id, updatedStatus);
                 let UpdateChildStatus = await SubJobDbHandler.updateByQuery({ root_ticket_id: root_ticket_id }, updatedStatus);
                 responseData.msg = "Job request rejected!";
+                let notificationObj = {
+                    title: "Service Requests Update",
+                    description: `Swiiftly Admin has rejected the service request for ${TicketData.vehicle_id.vehicle_name}.`,
+                    is_redirect: true,
+                    redirection_location: "fleet_job_request",
+                    user_id: TicketData.user_id,
+                    notification_to_role: "fleet",
+                    notification_from_role: "admin",
+                    job_id: root_ticket_id,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
             }
             return responseHelper.success(res, responseData);
         } catch (error) {
@@ -427,7 +452,7 @@ module.exports = {
             }
 
             // Check if the vendor exists in the database
-            let vendorData = await VendorDbHandler.getByQuery({ _id: vendorId, user_role: 'vendor' });
+            let vendorData = await VendorDbHandler.getByQuery({ _id: vendorId, user_role: 'vendor' }).populate("service_category");
             if (!vendorData.length) {
                 responseData.msg = "Vendor not found!";
                 return responseHelper.error(res, responseData);
@@ -479,6 +504,19 @@ module.exports = {
             if (!updateSubTicket) {
                 responseData.msg = "Failed to assign vendor to sub-ticket!";
                 return responseHelper.error(res, responseData);
+            } else {
+                let notificationObj = {
+                    title: "New Service Request From Swiiftly Admin",
+                    description: `Swiiftly Admin has assigned the ticket of ${subTicketData.service_category.name} Accept it or Reject it with reason.`,
+                    is_redirect: true,
+                    redirection_location: "vendor_kanban",
+                    user_id: vendorId,
+                    notification_to_role: "vendor",
+                    notification_from_role: "admin",
+                    job_id: rootTicketId,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
             }
 
             let subJobsNew = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId }).sort({ sequence: 1 });

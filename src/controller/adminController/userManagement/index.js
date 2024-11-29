@@ -13,6 +13,7 @@ const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const VehicleDbHandler = dbService.Vehicle;
+const NotificationDbHandler = dbService.Notification;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
 const MainJobAggregate = require("../../../services/db/models/mainJob")
 const Flow = require("../../../services/db/models/flow")
@@ -663,9 +664,70 @@ module.exports = {
                 w9_verified: reqObj.w9_verified
             }
 
-
             // Proceed to delete the user (soft delete)
             await UserDbHandler.updateById(id, updateData);
+
+            if (UserDbHandler) {
+                let notificationObj = {}
+                if (reqObj.bank_verified == true) {
+                    notificationObj = {
+                        title: "Bank Verification Approved",
+                        description: `Admin has Approved the Updates you have done to the bank details.`,
+                        is_redirect: false,
+                        redirection_location: "",
+                        user_id: id,
+                        notification_to_role: "vendor",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    }
+                    await NotificationDbHandler.create(notificationObj);
+                } else {
+                    notificationObj = {
+                        title: "Bank Verification Rejected",
+                        description: `Admin has Rejected the Updates you have done to the bank details.`,
+                        is_redirect: true,
+                        redirection_location: "vendor_profile",
+                        user_id: id,
+                        notification_to_role: "vendor",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    }
+                    await NotificationDbHandler.create(notificationObj);
+                }
+
+                if (reqObj.w9_verified == true) {
+                    notificationObj = {
+                        title: "W9 Verification Approved",
+                        description: `Admin has Approved the Updates you have done to the W9.`,
+                        is_redirect: false,
+                        redirection_location: "",
+                        user_id: id,
+                        notification_to_role: "vendor",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    }
+                    await NotificationDbHandler.create(notificationObj);
+
+                }
+                else {
+                    notificationObj = {
+                        title: "W9 Verification Rejected",
+                        description: `Admin has Rejected the Updates you have done to the W9.`,
+                        is_redirect: true,
+                        redirection_location: "vendor_profile",
+                        user_id: id,
+                        notification_to_role: "vendor",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    }
+                    await NotificationDbHandler.create(notificationObj);
+                }
+
+            }
             responseData.msg = "Vendor status updated successfully!";
             return responseHelper.success(res, responseData);
 
@@ -738,7 +800,25 @@ module.exports = {
 
 
             // Proceed to delete the user (soft delete)
-            await UserDbHandler.updateById(id, updateData);
+            let updateVendor = await UserDbHandler.updateById(id, updateData);
+            if (!updateVendor) {
+                responseData.msg = "Failed to update vendor information!";
+                return responseHelper.error(res, responseData);
+            } else {
+                let notificationObj = {
+                    title: "Profile Information Updated",
+                    description: `Swiiftly has updated the profile`,
+                    is_redirect: true,
+                    redirection_location: "vendor_profile",
+                    user_id: id,
+                    notification_to_role: "vendor",
+                    notification_from_role: "admin",
+                    job_id: null,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
+            }
+
             responseData.msg = "Vendor information updated successfully!";
             return responseHelper.success(res, responseData);
 

@@ -3,6 +3,7 @@ var cron = require('node-cron');
 const dbService = require("../db/services");
 const SubJobDbHandler = dbService.SubJob;
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
+const NotificationDbHandler = dbService.Notification;
 const moment = require('moment');
 const emailService = require('../sendEmail');
 const templates = require('../../utils/templates/template');
@@ -49,7 +50,7 @@ module.exports = {
                 });
 
                 // Create invoices for each vendor
-                for (const [vendorId, jobs] of Object.entries(vendorJobs)) {
+                for (const [vendorId, jobs, ] of Object.entries(vendorJobs)) {
                     const totalAmount = jobs.reduce((sum, job) => sum + parseFloat(job.cost_estimation), 0);
                     const invoiceNumber = generateInvoiceNumber(); // Generate a unique invoice number
 
@@ -67,10 +68,26 @@ module.exports = {
                         }))
                     };
 
-                    await VendorInvoiceDbHandler.create(invoiceData);
-                }
+                    let createInvoice = await VendorInvoiceDbHandler.create(invoiceData);
 
-                console.log('Invoices created successfully!');
+                    if (createInvoice) {
+                        let notificationObj = {
+                            title: "Weekly Invoice Generated",
+                            description: `Hey your weekly invoice has been generated please check and update if needed`,
+                            is_redirect: true,
+                            redirection_location: "vendor_invoice",
+                            user_id: vendorId,
+                            notification_to_role: "vendor",
+                            notification_from_role: "admin",
+                            job_id: null,
+                            admin_id: null
+                        }
+                        await NotificationDbHandler.create(notificationObj);
+
+                    }
+
+                    console.log('Invoices created successfully!');
+                }
             } catch (error) {
                 console.error('Error creating invoices:', error);
             }

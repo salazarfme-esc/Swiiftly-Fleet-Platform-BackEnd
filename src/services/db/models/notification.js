@@ -21,7 +21,7 @@ const NotificationSchema = new Schema({
     },
     redirection_location: {
         type: String,
-        enum: ['admin_job', 'admin_kanban', 'admin_vendor_profile', 'admin_invoice', 'vendor_kanban', 'vendor_profile', 'vendor_invoice', 'fleet_job_request', 'fleet_invoice', 'fleet_vehicle'],
+        enum: ['admin_job', 'admin_kanban', 'admin_vendor_profile', 'admin_invoice', 'vendor_kanban', 'vendor_profile', 'vendor_invoice', 'fleet_job_request', 'fleet_invoice', 'fleet_vehicle', ""],
         required: true
     },
     user_id: {

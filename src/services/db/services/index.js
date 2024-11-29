@@ -19,5 +19,5 @@ module.exports = {
 	Model: require("./model.service"),
 	FleetInvoice: require("./fleetInvoice.service"),
 	Feedback: require("./feedback.service"),
-
+	Notification: require("./notification.service"),
 };

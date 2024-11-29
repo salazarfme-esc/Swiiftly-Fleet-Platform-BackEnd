@@ -219,6 +219,10 @@ module.exports = {
                     populate: { path: "vehicle_id" } // Populate vehicle_id inside root_ticket_id
                 })
                 .populate({
+                    path: "root_ticket_id",
+                    populate: { path: "service_category" } // Populate service_category inside root_ticket_id
+                })
+                .populate({
                     path: "sub_jobs.sub_job_id",
                     populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
                 });

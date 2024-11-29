@@ -334,6 +334,20 @@ module.exports = {
             // Save status to database
             let UpdateDataParentTicket = await MainJobDbHandler.updateById(reqObj.root_ticket_id, submitData);
             let UpdateDataChildTicket = await SubJobDbHandler.updateByQuery({ root_ticket_id: reqObj.root_ticket_id }, submitData);
+
+            // if (UpdateDataParentTicket && UpdateDataChildTicket) {
+            //     let notificationObj = {
+            //         title: "New Service Request from Fleet Manager",
+            //         description: "The Fleet Manager Has requested a new Service Request: Accept or Reject It.",
+            //         is_redirect: true,
+            //         redirection_location: "admin_job",
+            //         user_id: user,
+            //         notification_to_role: "admin",
+            //         notification_from_role: "fleet",
+            //         job_id: reqObj.root_ticket_id
+            //     }
+            //     await NotificationDbHandler.create(notificationObj);
+            // }
             responseData.msg = "Request submitted successfully!";
             return responseHelper.success(res, responseData);
 

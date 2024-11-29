@@ -245,6 +245,10 @@ module.exports = {
                 .sort({ invoice_date: -1 })
                 .skip(parseInt(skip))
                 .limit(parseInt(limit))
+                .populate({
+                    path: "fleet_id",
+                    populate: { path: "company_id" } // Populate company_id inside fleet_id
+                })
                 .populate("fleet_id")
                 .populate({
                     path: "root_ticket_id",

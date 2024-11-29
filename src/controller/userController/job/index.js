@@ -786,6 +786,19 @@ module.exports = {
                             responseData.msg = "Failed to update the root ticket status!";
                             return responseHelper.error(res, responseData);
                         }
+                        let vehicleID = await VehicleDbHandler.getById(rootTicketData[0].vehicle_id);
+                        let notificationObj = {
+                            title: "Service Requests Update",
+                            description: `Swiiftly Admin has updated the service request status as completed for ${vehicleID.nickname}, Now the vehicle is available.`,
+                            is_redirect: true,
+                            redirection_location: "fleet_job_request",
+                            user_id: rootTicketData[0].user_id,
+                            notification_to_role: "fleet",
+                            notification_from_role: "admin",
+                            job_id: rootTicketData[0]._id,
+                            admin_id: null
+                        }
+                        await NotificationDbHandler.create(notificationObj);
                         let subJobs = await SubJobDbHandler.getByQuery({ root_ticket_id: rootTicketId });
                         // Prepare sub_jobs array with sub_job_id and amount
                         let subJobsArray = subJobs.map(job => ({

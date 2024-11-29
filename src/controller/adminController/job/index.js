@@ -333,7 +333,7 @@ module.exports = {
                 responseData.msg = "Job request accepted!";
                 let notificationObj = {
                     title: "Service Requests Update",
-                    description: `Swiiftly Admin has accepted the service request for ${TicketData.vehicle_id.vehicle_name}.`,
+                    description: `Swiiftly Admin has accepted the service request for ${TicketData.vehicle_id.nickname}.`,
                     is_redirect: true,
                     redirection_location: "fleet_job_request",
                     user_id: TicketData.user_id,
@@ -349,7 +349,7 @@ module.exports = {
                 responseData.msg = "Job request rejected!";
                 let notificationObj = {
                     title: "Service Requests Update",
-                    description: `Swiiftly Admin has rejected the service request for ${TicketData.vehicle_id.vehicle_name}.`,
+                    description: `Swiiftly Admin has rejected the service request for ${TicketData.vehicle_id.nickname}.`,
                     is_redirect: true,
                     redirection_location: "fleet_job_request",
                     user_id: TicketData.user_id,

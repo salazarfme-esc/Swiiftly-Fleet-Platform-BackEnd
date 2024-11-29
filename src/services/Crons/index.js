@@ -29,7 +29,7 @@ function generateInvoiceNumber() {
 module.exports = {
     Crons: () => {
         // Schedule job every Monday at midnight (00:00 UTC)
-        cron.schedule('0 * * * *', async () => {
+        cron.schedule('0 0 * * 1', async () => {
             try {
                 const { start, end } = getLastWeekRange();
 

@@ -8,6 +8,7 @@ const jwtService = require('../../../services/jwt');
 const responseHelper = require('../../../services/customResponse');
 const userDbHandler = dbService.User;
 const verificationDbHandler = dbService.Verification;
+const NotificationDbHandler = dbService.Notification;
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
@@ -201,6 +202,7 @@ module.exports = {
                 reqObj.bank_address !== userData.bank_address
             ) {
                 updatedObj.bank_verified = false;
+
             }
 
             if (reqObj.availability && Array.isArray(reqObj.availability)) {
@@ -215,6 +217,20 @@ module.exports = {
             }
             // Update the user data in the database
             let updateProfile = await userDbHandler.updateById(id, updatedObj);
+            if (updateProfile && (updatedObj.w9_verified == false || updatedObj.bank_verified == false)) {
+                let notificationObj = {
+                    title: "Vendor Profile Update",
+                    description: `Vendor Has updated the Bank Detail or W9 Number "Accept It" or "Reject It".`,
+                    is_redirect: true,
+                    redirection_location: "admin_vendor_profile",
+                    user_id: id,
+                    notification_to_role: "admin",
+                    notification_from_role: "vendor",
+                    job_id: null,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
+            }
             responseData.msg = `Data updated!`;
             responseData.data = await userDbHandler.getById(id).populate("service_type"); // Return updated user data
             return responseHelper.success(res, responseData);

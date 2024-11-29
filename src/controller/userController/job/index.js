@@ -14,6 +14,7 @@ const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const FlowDbHandler = dbService.Flow;
 const FleetInvoiceDbHandler = dbService.FleetInvoice;
+const NotificationDbHandler = dbService.Notification;
 const Flow = require("../../../services/db/models/flow");
 const crypto = require('crypto');
 const mainJob = require('../../../services/db/models/mainJob');
@@ -335,19 +336,20 @@ module.exports = {
             let UpdateDataParentTicket = await MainJobDbHandler.updateById(reqObj.root_ticket_id, submitData);
             let UpdateDataChildTicket = await SubJobDbHandler.updateByQuery({ root_ticket_id: reqObj.root_ticket_id }, submitData);
 
-            // if (UpdateDataParentTicket && UpdateDataChildTicket) {
-            //     let notificationObj = {
-            //         title: "New Service Request from Fleet Manager",
-            //         description: "The Fleet Manager Has requested a new Service Request: Accept or Reject It.",
-            //         is_redirect: true,
-            //         redirection_location: "admin_job",
-            //         user_id: user,
-            //         notification_to_role: "admin",
-            //         notification_from_role: "fleet",
-            //         job_id: reqObj.root_ticket_id
-            //     }
-            //     await NotificationDbHandler.create(notificationObj);
-            // }
+            if (UpdateDataParentTicket) {
+                let notificationObj = {
+                    title: "New Service Request from Fleet Manager",
+                    description: "The Fleet Manager Has requested a new Service Request: Accept or Reject It.",
+                    is_redirect: true,
+                    redirection_location: "admin_job",
+                    user_id: user,
+                    notification_to_role: "admin",
+                    notification_from_role: "fleet",
+                    job_id: reqObj.root_ticket_id,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
+            }
             responseData.msg = "Request submitted successfully!";
             return responseHelper.success(res, responseData);
 
@@ -631,6 +633,20 @@ module.exports = {
             }
 
             let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+            if (updateSubTicket) {
+                let notificationObj = {
+                    title: "Ticket Status Update ",
+                    description: `${vendorData[0].user_name} has ${status ? "accepted" : "rejected"} the assigned task of " Service request root ticket ".`,
+                    is_redirect: true,
+                    redirection_location: "admin_kanban",
+                    user_id: vendor,
+                    notification_to_role: "admin",
+                    notification_from_role: "vendor",
+                    job_id: subTicketData[0].root_ticket_id,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
+            }
 
             if (!updateSubTicket) {
                 responseData.msg = "Failed to update the sub-ticket status!";
@@ -714,6 +730,22 @@ module.exports = {
 
             // Update the sub-ticket with the new status and additional data
             let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
+
+            if (updateSubTicket) {
+                let notificationObj = {
+                    title: "Ticket Status Update ",
+                    description: `${vendorData[0].user_name} Has Updated the ticket status as ${status} with ${status_reason ? status_reason : ""}`,
+                    is_redirect: true,
+                    redirection_location: "admin_kanban",
+                    user_id: vendor,
+                    notification_to_role: "admin",
+                    notification_from_role: "vendor",
+                    job_id: subTicketData[0].root_ticket_id,
+                    admin_id: null
+                }
+                await NotificationDbHandler.create(notificationObj);
+            }
+
             let rootTicketData = await MainJobDbHandler.getByQuery({ _id: subTicketData[0].root_ticket_id });
             let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { meter_reading: meter_reading });
 

@@ -27,12 +27,12 @@ const NotificationSchema = new Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users',
-        required: true
+        required: false
     },
     admin_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admins',
-        required: true
+        required: false
     },
     job_id: {
         type: mongoose.Schema.Types.ObjectId,

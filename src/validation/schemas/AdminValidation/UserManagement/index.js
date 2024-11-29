@@ -36,6 +36,11 @@ module.exports = {
             then: Joi.string().required().label('Owner Name'),
             otherwise: Joi.string().required().allow('').label('Owner Name')
         }),
+        company_id: Joi.string().when('user_role', {
+            is: 'fleet',
+            then: Joi.string().allow('').label('Company ID'), // Allow empty string for fleet
+            otherwise: Joi.string().allow('').label('Company ID')
+        }),
     }),
     UpdateVendorStatus: Joi.object().keys({
         bank_verified: Joi.boolean().required().label('Bank Status'),

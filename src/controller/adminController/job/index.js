@@ -459,7 +459,7 @@ module.exports = {
             }
 
             // Check if the sub-ticket exists in the database
-            let subTicketData = await SubJobDbHandler.getById(subTicketId);
+            let subTicketData = await SubJobDbHandler.getById(subTicketId).populate("service_category");
             if (!subTicketData) {
                 responseData.msg = "Sub-ticket not found!";
                 return responseHelper.error(res, responseData);

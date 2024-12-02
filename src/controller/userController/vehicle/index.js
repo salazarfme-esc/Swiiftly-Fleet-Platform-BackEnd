@@ -327,7 +327,8 @@ module.exports = {
         const limit = parseInt(req.query.limit) || 10; // Default limit
         const skip = parseInt(req.query.skip) || 0; // Default skip
         const searchValue = req.body.search || '';
-        const { make, model, status } = req.body; // Extract make, model, and status from request body
+        const is_defleet = req.body.is_defleet || '';
+        const { make, model, status } = req.query; 
         let responseData = {};
 
         try {
@@ -364,28 +365,34 @@ module.exports = {
                 query.$or = [
                     { identification_number: { $regex: searchValue, $options: 'i' } },
                     { nickname: { $regex: searchValue, $options: 'i' } },
-                    // { year: { $regex: searchValue, $options: 'i' } },
-                    // { color: { $regex: searchValue, $options: 'i' } },
-                    // { registration_due_date: { $regex: searchValue, $options: 'i' } },
-                    // { last_oil_change: { $regex: searchValue, $options: 'i' } },
                     { license_plate: { $regex: searchValue, $options: 'i' } },
-                    // { 'address.street': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.address': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.city': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.district': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.state': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.pin': { $regex: searchValue, $options: 'i' } },
-                    // { 'address.country': { $regex: searchValue, $options: 'i' } }
                 ];
             }
 
-            // Step 2: Fetch vehicles based on the constructed query without pagination
+            // Step 2: Add is_defleet filter
+            if (is_defleet) {
+                const today = moment().utc().startOf('day').toISOString(); // Get today's date at 00:00:00
+                console.log("🚀 ~ GetVehicle: ~ today:", today)
+                if (is_defleet === 'true') {
+                    console.log("🚀 ~ GetVehicle: ~ is_defleet:", is_defleet)
+                    // Return records where de_fleet is not empty and older than or equal to today
+                    query.de_fleet = { $ne: '', $lte: today };
+                } else if (is_defleet === 'false') {
+                    // Return records where de_fleet is either not present or greater than today
+                    query.$or = [
+                        { de_fleet: { $exists: false } },
+                        { de_fleet: { $gt: today } }
+                    ];
+                }
+            }
+
+            // Step 3: Fetch vehicles based on the constructed query without pagination
             let vehicles = await VehicleDbHandler.getByQuery(query)
                 .populate('make')
                 .populate('model')
                 .lean();
 
-            // Step 3: Determine "in service" status for each vehicle
+            // Step 4: Determine "in service" status for each vehicle
             const vehicleIds = vehicles.map(vehicle => vehicle._id);
             const inServiceJobs = await MainJobDbHandler.getByQuery({
                 vehicle_id: { $in: vehicleIds },
@@ -399,19 +406,18 @@ module.exports = {
                 inService: inServiceVehicleIds.has(vehicle._id.toString())
             }));
 
-
-            // Step 4: Filter based on inService status if provided
+            // Step 5: Filter based on inService status if provided
             if (status === "inService") {
                 vehicles = vehicles.filter(vehicle => vehicle.inService === true);
             } else if (status === "available") {
                 vehicles = vehicles.filter(vehicle => vehicle.inService === false);
             }
 
-            // Step 5: Apply pagination after filtering
+            // Step 6: Apply pagination after filtering
             const totalRecords = vehicles.length; // Total records after filtering
             vehicles = vehicles.slice(skip, skip + limit);
 
-            // Step 6: Return paginated results with total count
+            // Step 7: Return paginated results with total count
             responseData.msg = "Data fetched!";
             responseData.data = {
                 vehicles,

@@ -60,6 +60,7 @@ module.exports = {
         make: Joi.string().trim().required().allow("").label("Make"),
         model: Joi.string().trim().required().allow("").label("Model"),
         status: Joi.string().required().allow("").label("Status"),
+        is_defleet: Joi.string().required().allow("").label("Is Defleet"),
     }),
     getCarsByBrandStatusValidation: Joi.object({
         brand: Joi.string().allow('').label('Brand'), // required brand name

@@ -50,7 +50,7 @@ module.exports = {
                 });
 
                 // Create invoices for each vendor
-                for (const [vendorId, jobs, ] of Object.entries(vendorJobs)) {
+                for (const [vendorId, jobs,] of Object.entries(vendorJobs)) {
                     const totalAmount = jobs.reduce((sum, job) => sum + parseFloat(job.cost_estimation), 0);
                     const invoiceNumber = generateInvoiceNumber(); // Generate a unique invoice number
 
@@ -90,6 +90,53 @@ module.exports = {
                 }
             } catch (error) {
                 console.error('Error creating invoices:', error);
+            }
+        });
+
+        // Schedule job every Tuesday at 12:15 AM (UTC) to notify admin and vendors
+        cron.schedule('15 0 * * 2', async () => {
+            try {
+                // Get the start and end of Monday
+                const startOfMonday = moment().subtract(1, 'days').startOf('day').toDate();
+                const endOfMonday = moment().subtract(1, 'days').endOf('day').toDate();
+
+                // Fetch all invoices generated on Monday
+                let invoices = await VendorInvoiceDbHandler.getByQuery({
+                    created_at: { $gte: startOfMonday, $lte: endOfMonday }
+                });
+
+                // Notify admin about new invoices
+                let adminNotificationObj = {
+                    title: "New Invoices Generated",
+                    description: "New invoices generated from Vendor's, for the last week. Please review!",
+                    is_redirect: true,
+                    redirection_location: "admin_invoice",
+                    user_id: null, // Assuming this is for admin, set accordingly
+                    notification_to_role: "admin",
+                    notification_from_role: "vendor",
+                    job_id: null,
+                    admin_id: null
+                };
+                await NotificationDbHandler.create(adminNotificationObj);
+                console.log('Admin notified about new invoices successfully!');
+
+                // Notify each vendor about their generated invoice
+                for (const invoice of invoices) {
+                    let vendorNotificationObj = {
+                        title: "Invoice Sent to Admin",
+                        description: `Your invoice (Number: ${invoice.invoice_number}) has been sent to the admin for review. Please contact admin if you have any concern.`,
+                        is_redirect: true,
+                        redirection_location: "vendor_invoice",
+                        user_id: invoice.vendor_id,
+                        notification_to_role: "vendor",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    };
+                    await NotificationDbHandler.create(vendorNotificationObj);
+                }
+            } catch (error) {
+                console.error('Error notifying admin and vendors:', error);
             }
         });
     },

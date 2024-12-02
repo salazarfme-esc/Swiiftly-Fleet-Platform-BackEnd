@@ -10,6 +10,9 @@ const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const SubJobDbHandler = dbService.SubJob;
 const FleetInvoiceDbHandler = dbService.FleetInvoice;
 const UserDbHandler = dbService.User;
+const MainJobDbHandler = dbService.MainJob;
+const NotificationDbHandler = dbService.Notification;
+
 const config = require('../../../config/environments');
 const { response } = require('express');
 const mongoose = require("mongoose");
@@ -315,13 +318,30 @@ module.exports = {
             if (tax) {
                 const taxAmount = (totalAmount * (parseFloat(tax) / 100)); // Calculate tax amount
                 totalAmount += taxAmount; // Add tax to total amount
-                invoice[0].tax = tax
+                invoice[0].tax = tax;
             }
 
             invoice[0].total_amount = totalAmount; // Update the total_amount field
 
             // Save the updated invoice
             await invoice[0].save();
+
+            let vehicleData = await MainJobDbHandler.getByQuery({ _id: invoice[0].root_ticket_id }).populate("vehicle_id");
+            // Send notification if status is "sent"
+            if (status === "sent") {
+                let notificationObj = {
+                    title: "Invoice Raised",
+                    description: `Swiiftly Admin has raised the Invoice for "${vehicleData[0].vehicle_id.nickname}".`,
+                    is_redirect: true,
+                    redirection_location: "fleet_invoice",
+                    user_id: invoice[0].fleet_id,
+                    notification_to_role: "fleet",
+                    notification_from_role: "admin",
+                    job_id: null,
+                    admin_id: null
+                };
+                await NotificationDbHandler.create(notificationObj);
+            }
 
             responseData.msg = "Fleet invoice updated successfully!";
             responseData.data = await FleetInvoiceDbHandler.getByQuery({ _id: invoiceId })

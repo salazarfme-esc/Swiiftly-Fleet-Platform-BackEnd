@@ -372,7 +372,6 @@ module.exports = {
             // Step 2: Add is_defleet filter
             if (is_defleet) {
                 const today = moment().utc().startOf('day').toISOString(); // Get today's date at 00:00:00
-                console.log("🚀 ~ GetVehicle: ~ today:", today)
                 if (is_defleet === 'true') {
                     console.log("🚀 ~ GetVehicle: ~ is_defleet:", is_defleet)
                     // Return records where de_fleet is not empty and older than or equal to today
@@ -403,7 +402,8 @@ module.exports = {
 
             vehicles = vehicles.map(vehicle => ({
                 ...vehicle,
-                inService: inServiceVehicleIds.has(vehicle._id.toString())
+                inService: inServiceVehicleIds.has(vehicle._id.toString()),
+                de_fleeted: vehicle.de_fleet && moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day'))
             }));
 
             // Step 5: Filter based on inService status if provided

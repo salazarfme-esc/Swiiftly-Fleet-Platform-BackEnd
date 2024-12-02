@@ -17,6 +17,7 @@ const AdminDbAggregate = require('../../../services/db/models/admin.js');
 const UserDbHandler = dbService.User;
 const MainJobDbHandler = dbService.MainJob;
 const FeedbackDbHandler = dbService.Feedback;
+const NotificationDbHandler = dbService.Notification;
 const config = require('../../../config/environments');
 const templates = require('../../../utils/templates/template');
 const emailService = require('../../../services/sendEmail');
@@ -946,28 +947,33 @@ module.exports = {
             const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalInvoices = totalVendorInvoices + totalFleetInvoices;
             const latest5Feedbacks = await FeedbackDbHandler.getByQuery({}).populate('user_id').sort({ createdAt: -1 }).limit(5);
+            const latest5Notifications = await NotificationDbHandler.getByQuery({ notification_from_role: "vendor", notification_to_role: "admin", redirection_location: "admin_vendor_profile" }).sort({ createdAt: -1 }).limit(5);
 
             // 4. Get top 5 companies based on fleet count using aggregation
             const top5Companies = await UserDbAggregate.aggregate([
                 { $match: { user_role: 'fleet' } }, // Match only fleet managers
                 { $group: { _id: "$company_id", fleetCount: { $sum: 1 } } }, // Group by company_id and count fleets
-                { $lookup: { // Join with adminDbHandler to get company details
-                    from: 'admins', // Assuming the collection name for companies is 'admins'
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'companyDetails'
-                }},
+                {
+                    $lookup: { // Join with adminDbHandler to get company details
+                        from: 'admins', // Assuming the collection name for companies is 'admins'
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'companyDetails'
+                    }
+                },
                 { $unwind: "$companyDetails" }, // Unwind the company details array
                 { $match: { "companyDetails.is_company": true } }, // Filter to include only companies
                 { $sort: { fleetCount: -1 } }, // Sort by fleet count descending
                 { $limit: 5 }, // Limit to top 5 companies
-                { $project: { // Project the desired fields
-                    _id: 0,
-                    companyId: "$companyDetails._id",
-                    company_name: "$companyDetails.company_name",
-                    address: "$companyDetails.address",
-                    fleetCount: 1
-                }}
+                {
+                    $project: { // Project the desired fields
+                        _id: 0,
+                        companyId: "$companyDetails._id",
+                        company_name: "$companyDetails.company_name",
+                        address: "$companyDetails.address",
+                        fleetCount: 1
+                    }
+                }
             ]);
 
             // Prepare response data
@@ -979,6 +985,7 @@ module.exports = {
             responseData.data.totalInvoices = totalInvoices;
             responseData.data.top5Companies = top5Companies; // Add top 5 companies to response
             responseData.data.latest5Feedbacks = latest5Feedbacks;
+            responseData.data.latest5Notifications = latest5Notifications;
 
             // Graph data for invoices
             const invoiceGraphData = await getInvoiceGraphData(yearInvoices, filterTypeInvoices);

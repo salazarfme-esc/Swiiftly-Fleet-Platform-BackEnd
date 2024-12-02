@@ -104,7 +104,7 @@ module.exports = {
                     populate: { path: "service_category" } // Populate service_category inside sub_jobs.sub_job_id
                 });
             responseData.msg = "Data fetched successfully!";
-            responseData.data = { count: getData.length, data: getData };
+            responseData.data = { count: await VendorInvoiceDbHandler.getByQuery(query).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to get data with error::', error);
@@ -260,7 +260,7 @@ module.exports = {
                 });
 
             responseData.msg = "Data fetched successfully!";
-            responseData.data = { count: getData.length, data: getData };
+            responseData.data = { count: await FleetInvoiceDbHandler.getByQuery(query).countDocuments(), data: getData };
             return responseHelper.success(res, responseData);
         } catch (error) {
             log.error('failed to get data with error::', error);

@@ -328,7 +328,7 @@ module.exports = {
         const skip = parseInt(req.query.skip) || 0; // Default skip
         const searchValue = req.body.search || '';
         const is_defleet = req.body.is_defleet || '';
-        const { make, model, status } = req.query; 
+        const { make, model, status } = req.query;
         let responseData = {};
 
         try {
@@ -403,7 +403,7 @@ module.exports = {
             vehicles = vehicles.map(vehicle => ({
                 ...vehicle,
                 inService: inServiceVehicleIds.has(vehicle._id.toString()),
-                de_fleeted: vehicle.de_fleet && moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day'))
+                de_fleeted: vehicle.de_fleet ? moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day')) : false
             }));
 
             // Step 5: Filter based on inService status if provided

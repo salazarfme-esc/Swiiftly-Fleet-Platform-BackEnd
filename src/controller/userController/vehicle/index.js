@@ -974,7 +974,7 @@ module.exports = {
                     }
 
                     // Soft delete the vehicle by setting de_fleet to currentDate
-                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().startOf('day').toDate() });
+                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().utc().startOf('day').toISOString() });
 
                     response.deletedCount++;
                 } catch (error) {

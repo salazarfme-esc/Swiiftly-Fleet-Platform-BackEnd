@@ -398,7 +398,7 @@ module.exports = {
                             <td>
                                 <h1>Invited to Swiiftly</h1>
                                 <p style="margin: 0;">Hello,</p>
-                                <p style="margin: 0;"><strong>${data.full_name}</strong> you have been invited to Swiiftly by your <strong>Swiiftly Admin</strong></p>
+                                <p style="margin: 0;"><strong>${data.full_name}</strong> you have been invited to Swiiftly by your <strong>${data.is_admin ? "Swiiftly Admin" : "Swiiftly Company"}</strong></p>
                                 <p style="margin: 0;">Please use the below account details to onboard and access the ${data.user_role === "vendor" ? "vendor" : "fleet"} dashboard.</p>
     
                                 <div style="margin: 30px 0;">
@@ -467,7 +467,7 @@ module.exports = {
         return templateBody;
     },
 
-    
+
 
     emailVerification: (data) => {
         let templateBody = `<h5>Hey ${data.name},</h5>
@@ -582,7 +582,7 @@ module.exports = {
                     <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;padding: 10px 25px;">
                         <tr>
                             <td>
-                                <h1>Invited to Join Swiiftly as Admin</h1>
+                                <h1>Invited to Join Swiiftly as ${data.is_admin ? "Admin" : "Company"}</h1>
                                 <p style="margin: 0;">Hello,</p>
                                 <p style="margin: 0;"><strong>${data.name}</strong>, you have been invited to join Swiiftly as an Admin by your <strong>Swiiftly Admin</strong>.</p>
                                 <p style="margin: 0;">Please use the below account details to onboard and access the admin dashboard.</p>

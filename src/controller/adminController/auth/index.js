@@ -630,6 +630,7 @@ module.exports = {
 
             // Create the new admin entry
             let Admin = await adminDbHandler.create(Data);
+            Data.is_admin = reqObj.is_company ? false : true;
             if (Admin) {
                 let emailBody = {
                     recipientsAddress: Admin.email,

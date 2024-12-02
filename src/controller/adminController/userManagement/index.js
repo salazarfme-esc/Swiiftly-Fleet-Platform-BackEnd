@@ -108,6 +108,8 @@ module.exports = {
                 submitData.company_id = null;
             }
             let createData = await UserDbHandler.createUser(submitData);
+
+            submitData.is_admin = getByQuery.is_company ? false : true;
             if (createData) {
                 let emailBody = {
                     recipientsAddress: createData.email,

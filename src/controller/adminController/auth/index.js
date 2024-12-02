@@ -518,6 +518,21 @@ module.exports = {
                 phone_number: reqObj.phone_number,
                 permissions: existingAdmin.is_company ? existingAdmin.permissions : reqObj.permissions
             };
+            if (existingAdmin.is_company) {
+                updatedData.company_name = reqObj.company_name;
+                updatedData.address = {
+                    street: reqObj.address.street,
+                    address: reqObj.address.address,
+                    city: reqObj.address.city,
+                    state: reqObj.address.state,
+                    pin: reqObj.address.pin,
+                    country: reqObj.address.country,
+                }
+                updatedData.location = {
+                    type: 'Point',
+                    coordinates: reqObj.address.coordinates,
+                }
+            }
 
             // Update the admin entry
             let updatedAdmin = await adminDbHandler.updateById(adminId, updatedData);

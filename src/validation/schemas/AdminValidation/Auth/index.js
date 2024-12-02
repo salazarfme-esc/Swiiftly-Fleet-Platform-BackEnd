@@ -120,7 +120,26 @@ module.exports = {
 					edit: Joi.boolean().required()
 				}))
 				.required() // Ensure permissions are provided
-				.label('Permissions')
+				.label('Permissions'),
+			company_name: Joi
+				.string()
+				.required()
+				.allow("")
+				.label('Company Name'),
+			address: Joi
+				.object()
+				.keys({
+					street: Joi.string().trim().required().allow("").label("Street"),
+					address: Joi.string().trim().required().allow("").label("Address"),
+					city: Joi.string().trim().required().allow("").label("City"),
+					state: Joi.string().trim().required().allow("").label("State"),
+					pin: Joi.string().trim().required().allow("").label("PIN"),
+					country: Joi.string().trim().required().allow("").label("Country"),
+					coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
+				})
+				.required()
+				.label('Business Address'),
+
 		}),
 	update_admin: Joi.object().keys({
 		name: Joi

@@ -668,7 +668,7 @@ module.exports = {
     VendorUpdateJobStatus: async (req, res) => {
         let responseData = {};
         let vendor = req.user.sub;
-        const { subTicketId, status, time_estimation, cost_estimation, vendor_note, meter_reading } = req.body;
+        const { subTicketId, status, time_estimation, cost_estimation, vendor_note, last_oil_change } = req.body;
         log.info("Received request from vendor to update job status");
 
         // Define allowed statuses
@@ -734,7 +734,7 @@ module.exports = {
             if (updateSubTicket) {
                 let notificationObj = {
                     title: "Ticket Status Update ",
-                    description: `${vendorData[0].full_name} Has Updated the ticket status as ${status} ${vendor_note ? "with reason"+ vendor_note : ""}`,
+                    description: `${vendorData[0].full_name} Has Updated the ticket status as ${status} ${vendor_note ? "with reason" + vendor_note : ""}`,
                     is_redirect: true,
                     redirection_location: "admin_kanban",
                     user_id: vendor,
@@ -747,7 +747,7 @@ module.exports = {
             }
 
             let rootTicketData = await MainJobDbHandler.getByQuery({ _id: subTicketData[0].root_ticket_id });
-            let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { meter_reading: meter_reading });
+            let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { last_oil_change: last_oil_change == 'true' ? moment().utc().startOf('day').toISOString() : '' });
 
             if (!updateSubTicket) {
                 responseData.msg = "Failed to update the sub-ticket status!";

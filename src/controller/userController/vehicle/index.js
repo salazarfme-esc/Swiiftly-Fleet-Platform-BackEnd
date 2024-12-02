@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../../../config/environments');
 const AWS = require('aws-sdk');
+const moment = require('moment')
 
 
 /*******************
@@ -705,15 +706,6 @@ module.exports = {
         }
     },
 
-
-
-
-
-
-
-
-
-
     GetCarsByBrandStatus: async (req, res) => {
         let user = req.user;
         let userId = user.sub;
@@ -814,10 +806,6 @@ module.exports = {
         }
     },
 
-
-
-
-
     UpdateVehicle: async (req, res) => {
         let reqObj = req.body;
         let user_id = req.user.sub;
@@ -902,32 +890,32 @@ module.exports = {
             }
 
             let updateData = {
-                identification_number: reqObj.identification_number ,
+                identification_number: reqObj.identification_number,
                 nickname: reqObj.nickname,
                 year: reqObj.year,
                 make: makeId, // Use the make ID
                 model: modelId, // Use the model ID
-                color: reqObj.color ,
-                registration_due_date: reqObj.registration_due_date ,
-                issue_date: reqObj.issue_date ,
-                registration_place: reqObj.registration_place ,
-                in_fleet: reqObj.in_fleet ,
+                color: reqObj.color,
+                registration_due_date: reqObj.registration_due_date,
+                issue_date: reqObj.issue_date,
+                registration_place: reqObj.registration_place,
+                in_fleet: reqObj.in_fleet,
                 de_fleet: reqObj.de_fleet,
                 last_oil_change: reqObj.last_oil_change,
                 license_plate: reqObj.license_plate,
                 gas_electric: reqObj.gas_electric,
                 address: {
-                    street: reqObj.street ,
-                    address: reqObj.address ,
+                    street: reqObj.street,
+                    address: reqObj.address,
                     city: reqObj.city,
-                    district: reqObj.district ,
-                    state: reqObj.state ,
-                    pin: reqObj.pin ,
-                    country: reqObj.country ,
+                    district: reqObj.district,
+                    state: reqObj.state,
+                    pin: reqObj.pin,
+                    country: reqObj.country,
                 },
                 location: {
                     type: 'Point',
-                    coordinates: reqObj.coordinates ,
+                    coordinates: reqObj.coordinates,
                 },
                 media: media,
                 document: document,
@@ -985,8 +973,8 @@ module.exports = {
                         continue;
                     }
 
-                    // Soft delete the vehicle by setting is_deleted to true
-                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { is_deleted: true });
+                    // Soft delete the vehicle by setting de_fleet to currentDate
+                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().startOf('day').toDate() });
 
                     response.deletedCount++;
                 } catch (error) {

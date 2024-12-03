@@ -4,6 +4,7 @@ const dbService = require("../db/services");
 const SubJobDbHandler = dbService.SubJob;
 const VendorInvoiceDbHandler = dbService.vendorInvoice;
 const NotificationDbHandler = dbService.Notification;
+const VehicleDbHandler = dbService.Vehicle;
 const moment = require('moment');
 const emailService = require('../sendEmail');
 const templates = require('../../utils/templates/template');
@@ -137,6 +138,39 @@ module.exports = {
                 }
             } catch (error) {
                 console.error('Error notifying admin and vendors:', error);
+            }
+        });
+
+        // Schedule job every day at 1 AM (UTC) to check for oil change notifications
+        cron.schedule('0 1 * * *', async () => {
+            try {
+                const threeMonthsAgo = moment().subtract(3, 'months').format('YYYY-MM-DD'); // Calculate the date 3 months ago in the correct format
+
+                // Fetch all vehicles where last_oil_change is older than 3 months
+                let vehiclesDueForOilChange = await VehicleDbHandler.getByQuery({
+                    last_oil_change: { $lt: threeMonthsAgo },
+                    is_deleted: false // Ensure we only check active vehicles
+                });
+
+                // Notify fleet managers for each vehicle due for oil change
+                for (const vehicle of vehiclesDueForOilChange) {
+                    let notificationObj = {
+                        title: "⏳🛢️🚗  Oil Change Reminder",
+                        description: `Your vehicle (ID: ${vehicle._id}, Nickname: ${vehicle.nickname}) is due for an oil change. Please schedule it at your earliest convenience.`,
+                        is_redirect: true,
+                        redirection_location: "fleet_vehicle", // Adjust as necessary
+                        user_id: vehicle.user_id, // Assuming user_id is the fleet manager's ID
+                        notification_to_role: "fleet",
+                        notification_from_role: "admin",
+                        job_id: null,
+                        admin_id: null
+                    };
+                    await NotificationDbHandler.create(notificationObj);
+                }
+
+                console.log('Oil change notifications sent successfully!');
+            } catch (error) {
+                console.error('Error sending oil change notifications:', error);
             }
         });
     },

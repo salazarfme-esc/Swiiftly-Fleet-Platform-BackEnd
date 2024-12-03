@@ -109,6 +109,7 @@ module.exports = () => {
     Router.get("/user-detail/:userId", adminUserManagementController.GetUserDetail);
     Router.put("/vendor-update-status/:userId", validationMiddleware(userManagementSchema.UpdateVendorStatus, "body"), adminUserManagementController.UpdateVendorStatus);
     Router.put("/vendor-update-info/:userId", multerService.uploadFile('file').fields([{ name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userManagementSchema.UpdateVendorInfo, "body"), adminUserManagementController.UpdateVendorInfo);
+    Router.get("/company-dashboard", adminUserManagementController.CompanyDashboard);
 
     /**
    * Middleware for Handling Job Requests

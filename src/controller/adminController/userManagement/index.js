@@ -15,12 +15,14 @@ const SubJobDbHandler = dbService.SubJob;
 const VehicleDbHandler = dbService.Vehicle;
 const NotificationDbHandler = dbService.Notification;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
-const MainJobAggregate = require("../../../services/db/models/mainJob")
+const MainJobAggregate = require("../../../services/db/models/mainJob");
+const FleetInvoiceDbAggregate = require("../../../services/db/models/fleetInvoice");
 const Flow = require("../../../services/db/models/flow")
 const User = require("../../../services/db/models/user")
 const config = require('../../../config/environments');
 const { response } = require('express');
 const crypto = require('crypto');
+const moment = require('moment');
 
 /*******************
  * PRIVATE FUNCTIONS
@@ -28,6 +30,44 @@ const crypto = require('crypto');
 function generateStrongPassword(length = 16) {
     return crypto.randomBytes(length).toString('base64').slice(0, length);
 }
+
+// Helper function to get invoice graph data
+const getInvoiceGraphData = async (year, fleetIds) => {
+    const startDate = moment(`${year}-01-01`).startOf('year');
+    const endDate = moment(`${year}-12-31`).endOf('year');
+
+    let matchCriteria = {
+        invoice_date: { $gte: startDate.toDate(), $lte: endDate.toDate() },
+        fleet_id: { $in: fleetIds }
+    };
+
+
+    const fleetInvoices = await FleetInvoiceDbAggregate.aggregate([
+        { $match: matchCriteria },
+        {
+            $group: {
+                _id: { $month: "$invoice_date" },
+                totalAmount: { $sum: "$total_amount" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ]);
+
+    // Combine results
+    const combinedData = [];
+    for (let month = 1; month <= 12; month++) {
+        const fleetData = fleetInvoices.find(f => f._id === month) || { totalAmount: 0, count: 0 };
+
+        combinedData.push({
+            month,
+            totalAmount: fleetData.totalAmount,
+            count: fleetData.count
+        });
+    }
+
+    return combinedData;
+};
 
 /**************************
  * END OF PRIVATE FUNCTIONS
@@ -830,5 +870,130 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    /**
+    * Method to handle Company Dashboard
+    */
+    CompanyDashboard: async (req, res) => {
+        let admin = req.admin.sub;
+        let yearInvoices = req.query.yearInvoices;
+        log.info('Received request for Company Dashboard');
+        let responseData = {};
+        try {
+            // Fetch admin details
+            let getByQuery = await adminDbHandler.getById(admin);
+            if (!getByQuery) {
+                responseData.msg = "Invalid login or token expired!";
+                return responseHelper.error(res, responseData);
+            }
+            if (!getByQuery.is_company) {
+                responseData.msg = "You are not authorized to access this resource!";
+                return responseHelper.error(res, responseData);
+            }
+
+            const FleetData = await UserDbHandler.getByQuery({ company_id: getByQuery._id });
+            const fleetIds = FleetData.map(fleet => fleet._id);
+
+            // 1. Count of vehicles not assigned to any active job
+            const unassignedVehicleIds = await MainJobDbHandler.getByQuery({
+                status: { $in: ['completed', 'draft'] },
+                user_id: { $in: fleetIds }
+            }).distinct('vehicle_id'); // Get vehicle IDs of completed or draft jobs
+
+            const unassignedVehiclesCount = await VehicleDbHandler.getByQuery({
+                user_id: { $in: fleetIds },
+                is_deleted: false,
+                _id: { $nin: unassignedVehicleIds } // Vehicles not in jobs with completed or draft status
+            }).countDocuments();
+
+            // 2. Total count of vehicles assigned to main jobs
+            const assignedVehiclesCount = await MainJobDbHandler.getByQuery({
+                user_id: { $in: fleetIds },
+                status: { $in: ['in-progress', 'created', 'accepted'] }
+            }).distinct('vehicle_id').count();
+
+            // 3. Total count of jobs in draft mode
+            const unassignedJobsCount = await MainJobDbHandler.getByQuery({
+                status: 'created',
+                user_id: { $in: fleetIds }
+            }).countDocuments();
+
+            // 4. Total count of jobs that are accepted and currently in progress
+            const assignedJobsCount = await MainJobDbHandler.getByQuery({
+                status: { $in: ['accepted', 'in_progress'] },
+                user_id: { $in: fleetIds }
+            }).countDocuments();
+
+            // 5. Top 5 most utilized categories for job creation with percentage
+            const totalJobsCount = await MainJobDbHandler.getByQuery({
+                user_id: { $in: fleetIds }
+            }).countDocuments();
+
+            let topCategoriesWithPercentage = [];
+            if (totalJobsCount > 0) { // Ensure totalJobsCount is greater than 0
+                const categoryAggregation = await MainJobAggregate.aggregate([
+                    { $match: { user_id: { $in: fleetIds } } }, // Match jobs for the user
+                    { $group: { _id: "$service_category", usageCount: { $sum: 1 } } }, // Group by category
+                    { $sort: { usageCount: -1 } }, // Sort by usage count descending
+                    { $limit: 5 } // Get top 5 categories
+                ]);
+
+                topCategoriesWithPercentage = categoryAggregation.map(category => ({
+                    category: category._id, // Category name or ID
+                    usageCount: category.usageCount,
+                    percentage: ((category.usageCount / totalJobsCount) * 100).toFixed(2) // Calculate percentage
+                }));
+            }
+
+            // 6. Latest 5 vehicles added
+            let latestVehicles = await VehicleDbHandler.getByQuery({
+                is_deleted: false,
+                user_id: { $in: fleetIds }
+            }).sort({ createdAt: -1 })
+                .populate('make') // Populate the 'make' field
+                .populate('model') // Populate the 'model' field
+                .lean()
+                .limit(5);
+            const vehicleIds = latestVehicles.map(vehicle => vehicle._id);
+            const inServiceJobs = await MainJobDbHandler.getByQuery({
+                vehicle_id: { $in: vehicleIds },
+                status: { $nin: ['completed', 'rejected', 'draft'] } // Exclude completed, rejected, and draft jobs
+            }).lean();
+
+            const inServiceVehicleIds = new Set(inServiceJobs.map(job => job.vehicle_id.toString()));
+
+            latestVehicles = latestVehicles.map(vehicle => ({
+                ...vehicle,
+                inService: inServiceVehicleIds.has(vehicle._id.toString()), // Check if the vehicle is in service
+                de_fleeted: vehicle.de_fleet ? moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day')) : false // Determine if the vehicle is de-fleeted
+            }));
+
+            const invoiceGraphData = await getInvoiceGraphData(yearInvoices, fleetIds);
+
+
+            // Prepare response data
+            responseData.data = {
+                fleetSize: FleetData.length,
+                totalVehicles: await VehicleDbHandler.getByQuery({
+                    is_deleted: false,
+                    user_id: { $in: fleetIds }
+                }).countDocuments(),
+                unassignedVehiclesCount,
+                assignedVehiclesCount,
+                unassignedJobsCount,
+                assignedJobsCount,
+                topCategories: topCategoriesWithPercentage,
+                latestVehicles,
+                invoiceGraphData
+            };
+            responseData.msg = `Data fetched!`;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('failed to fetch fleet dashboard with error::', error);
+            responseData.msg = 'Something went wrong. Please try again later!';
+            return responseHelper.error(res, responseData);
+        }
+    }
 
 };

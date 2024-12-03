@@ -330,8 +330,8 @@ module.exports = {
             // Send notification if status is "sent"
             if (status === "sent") {
                 let notificationObj = {
-                    title: "Invoice Raised",
-                    description: `Swiiftly Admin has raised the Invoice for "${vehicleData[0].vehicle_id.nickname}".`,
+                    title: "🧾📋 Invoice Raised",
+                    description: `Swiiftly Admin has raised the invoice 🧾 for "${vehicleData[0].vehicle_id.nickname}".`,
                     is_redirect: true,
                     redirection_location: "fleet_invoice",
                     user_id: invoice[0].fleet_id,

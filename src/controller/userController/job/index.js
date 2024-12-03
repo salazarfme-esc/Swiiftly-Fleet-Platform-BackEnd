@@ -338,8 +338,8 @@ module.exports = {
 
             if (UpdateDataParentTicket) {
                 let notificationObj = {
-                    title: "New Service Request from Fleet Manager",
-                    description: "The Fleet Manager Has requested a new Service Request: Accept or Reject It.",
+                    title: "🚗🔧 New Service Request Alert",
+                    description: "The Fleet Manager 🧑‍💼 has requested a new service 📝: Please Accept ✅ or Reject ❌ it.",
                     is_redirect: true,
                     redirection_location: "admin_job",
                     user_id: user,
@@ -635,8 +635,8 @@ module.exports = {
             let updateSubTicket = await SubJobDbHandler.updateById(subTicketId, updateData);
             if (updateSubTicket) {
                 let notificationObj = {
-                    title: "Ticket Status Update ",
-                    description: `${vendorData[0].full_name} has ${status ? "accepted" : "rejected"} the assigned task of Service request root ticket ${subTicketData[0].root_ticket_id}.`,
+                    title: `${status ? "🛠️🎉 Task Accepted" : "🚫 Task Rejected"}`,
+                    description: `${vendorData[0].full_name} has ${status ? "accepted ✅" : "rejected ❌"} the assigned task of Service request root ticket ${subTicketData[0].root_ticket_id}.`,
                     is_redirect: true,
                     redirection_location: "admin_kanban",
                     user_id: vendor,
@@ -733,8 +733,8 @@ module.exports = {
 
             if (updateSubTicket) {
                 let notificationObj = {
-                    title: "Ticket Status Update ",
-                    description: `${vendorData[0].full_name} Has Updated the ticket status as ${status} ${vendor_note ? "with reason" + vendor_note : ""}`,
+                    title: `${status === 'completed' ? "✅🏁 Task Completed" : status === 'delayed' ? "⏳⚠️ Status Update: Delayed" : "🚧🛠️ Task In-Progress"}`,
+                    description: `${vendorData[0].full_name} has updated the ticket status as ${status === 'completed' ? "completed 🎯" : status === 'delayed' ? "delayed 🕒" : "in progress 🚧🛠️"} ${vendor_note ? "with reason" + vendor_note : ""}`,
                     is_redirect: true,
                     redirection_location: "admin_kanban",
                     user_id: vendor,
@@ -788,8 +788,8 @@ module.exports = {
                         }
                         let vehicleID = await VehicleDbHandler.getById(rootTicketData[0].vehicle_id);
                         let notificationObj = {
-                            title: "Service Requests Update",
-                            description: `Swiiftly Admin has updated the service request status as completed for ${vehicleID.nickname}, Now the vehicle is available.`,
+                            title: "🏁🔧 Service Request Completed",
+                            description: `Swiiftly Admin has updated the service request status as completed ✅ for ${vehicleID.nickname}, Now the vehicle is available 🚘.`,
                             is_redirect: true,
                             redirection_location: "fleet_job_request",
                             user_id: rootTicketData[0].user_id,

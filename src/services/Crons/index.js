@@ -72,8 +72,8 @@ module.exports = {
 
                     if (createInvoice) {
                         let notificationObj = {
-                            title: "Weekly Invoice Generated",
-                            description: `Hey your weekly invoice has been generated please check and update if needed`,
+                            title: "🧾📆 Weekly Invoice Generated",
+                            description: `Hey (Vendor Name)! Your weekly invoice 🧾 has been generated. You have 24 hours to review and make any changes ✍️. If no updates are made, the invoice will be sent automatically to Swiftly Admin at midnight ✅.`,
                             is_redirect: true,
                             redirection_location: "vendor_invoice",
                             user_id: vendorId,
@@ -107,8 +107,8 @@ module.exports = {
 
                 // Notify admin about new invoices
                 let adminNotificationObj = {
-                    title: "New Invoices Generated",
-                    description: "New invoices generated from Vendor's, for the last week. Please review!",
+                    title: "🧾📆 Invoice Update",
+                    description: "🆕 New invoices 🧾 have been generated from vendors for the last week 📅. Please review them 👀!",
                     is_redirect: true,
                     redirection_location: "admin_invoice",
                     user_id: null, // Assuming this is for admin, set accordingly
@@ -123,7 +123,7 @@ module.exports = {
                 // Notify each vendor about their generated invoice
                 for (const invoice of invoices) {
                     let vendorNotificationObj = {
-                        title: "Invoice Sent to Admin",
+                        title: "✉️🧾 Invoice Sent to Admin",
                         description: `Your invoice (Number: ${invoice.invoice_number}) has been sent to the admin for review. Please contact admin if you have any concern.`,
                         is_redirect: true,
                         redirection_location: "vendor_invoice",

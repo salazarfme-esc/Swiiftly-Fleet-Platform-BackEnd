@@ -332,8 +332,8 @@ module.exports = {
                 let UpdateChildStatus = await SubJobDbHandler.updateByQuery({ root_ticket_id: root_ticket_id }, updatedStatus);
                 responseData.msg = "Job request accepted!";
                 let notificationObj = {
-                    title: "Service Requests Update",
-                    description: `Swiiftly Admin has accepted the service request for ${TicketData.vehicle_id.nickname}.`,
+                    title: "✅🚗 Service Request Accepted",
+                    description: `Swiiftly Admin has accepted ✅ the service request for ${TicketData.vehicle_id.nickname}.`,
                     is_redirect: true,
                     redirection_location: "fleet_job_request",
                     user_id: TicketData.user_id,
@@ -348,8 +348,8 @@ module.exports = {
                 let UpdateChildStatus = await SubJobDbHandler.updateByQuery({ root_ticket_id: root_ticket_id }, updatedStatus);
                 responseData.msg = "Job request rejected!";
                 let notificationObj = {
-                    title: "Service Requests Update",
-                    description: `Swiiftly Admin has rejected the service request for ${TicketData.vehicle_id.nickname}.`,
+                    title: "🚫🚗 Service Request Rejected",
+                    description: `Swiiftly Admin has rejected ❌ the service request for ${TicketData.vehicle_id.nickname}.`,
                     is_redirect: true,
                     redirection_location: "fleet_job_request",
                     user_id: TicketData.user_id,
@@ -506,8 +506,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             } else {
                 let notificationObj = {
-                    title: "New Service Request From Swiiftly Admin",
-                    description: `Swiiftly Admin has assigned the ticket of ${subTicketData.service_category.name} Accept it or Reject it with reason.`,
+                    title: "📋🛠️ Ticket Assignment",
+                    description: `Swiiftly Admin has assigned the ticket ${subTicketData.service_category.name}.Please Accept ✅ or Reject ❌ with a reason 📝.`,
                     is_redirect: true,
                     redirection_location: "vendor_kanban",
                     user_id: vendorId,

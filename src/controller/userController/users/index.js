@@ -219,8 +219,8 @@ module.exports = {
             let updateProfile = await userDbHandler.updateById(id, updatedObj);
             if (updateProfile && (updatedObj.w9_verified == false || updatedObj.bank_verified == false)) {
                 let notificationObj = {
-                    title: "Vendor Profile Update",
-                    description: `Vendor Has updated the Bank Detail or W9 Number "Accept It" or "Reject It".`,
+                    title: "💳🔒 Bank/W9 Details Updated",
+                    description: `The vendor has updated their bank details 💼 or W9 number 📄. Please Accept ✅ or Reject ❌ it.`,
                     is_redirect: true,
                     redirection_location: "admin_vendor_profile",
                     user_id: id,

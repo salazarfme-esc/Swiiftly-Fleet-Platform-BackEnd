@@ -713,8 +713,8 @@ module.exports = {
                 let notificationObj = {}
                 if (reqObj.bank_verified == true) {
                     notificationObj = {
-                        title: "Bank Verification Approved",
-                        description: `Admin has Approved the Updates you have done to the bank details.`,
+                        title: "✅💳 Bank Details Approved",
+                        description: `The Admin has approved ✅ the updates you made to your bank details 💼.`,
                         is_redirect: false,
                         redirection_location: "",
                         user_id: id,
@@ -726,8 +726,8 @@ module.exports = {
                     await NotificationDbHandler.create(notificationObj);
                 } else {
                     notificationObj = {
-                        title: "Bank Verification Rejected",
-                        description: `Admin has Rejected the Updates you have done to the bank details.`,
+                        title: "🚫💳 Bank Details Rejected",
+                        description: `The Admin has rejected ❌ the updates you made to your bank details 💼.`,
                         is_redirect: true,
                         redirection_location: "vendor_profile",
                         user_id: id,
@@ -741,8 +741,8 @@ module.exports = {
 
                 if (reqObj.w9_verified == true) {
                     notificationObj = {
-                        title: "W9 Verification Approved",
-                        description: `Admin has Approved the Updates you have done to the W9.`,
+                        title: "✅📄 W9 Approved",
+                        description: `The Admin has approved ✅ the updates you made to your W9 📑.`,
                         is_redirect: false,
                         redirection_location: "",
                         user_id: id,
@@ -756,8 +756,8 @@ module.exports = {
                 }
                 else {
                     notificationObj = {
-                        title: "W9 Verification Rejected",
-                        description: `Admin has Rejected the Updates you have done to the W9.`,
+                        title: "🚫📄 W9 Rejected",
+                        description: `The Admin has rejected ❌ the updates you made to your W9 📑.`,
                         is_redirect: true,
                         redirection_location: "vendor_profile",
                         user_id: id,
@@ -848,8 +848,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             } else {
                 let notificationObj = {
-                    title: "Profile Information Updated",
-                    description: `Swiiftly has updated the profile`,
+                    title: "🔄👤 Profile Updated",
+                    description: `Swiiftly has updated your profile ✏️.`,
                     is_redirect: true,
                     redirection_location: "vendor_profile",
                     user_id: id,

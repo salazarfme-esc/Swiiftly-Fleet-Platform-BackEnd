@@ -82,19 +82,13 @@ function generateStrongPassword(length = 16) {
 
 
 // Helper function to get invoice graph data
-const getInvoiceGraphData = async (year, filterType) => {
+const getInvoiceGraphData = async (year) => {
     const startDate = moment(`${year}-01-01`).startOf('year');
     const endDate = moment(`${year}-12-31`).endOf('year');
 
     let matchCriteria = {
         invoice_date: { $gte: startDate.toDate(), $lte: endDate.toDate() }
     };
-
-    if (filterType === 'vendor') {
-        matchCriteria.vendor_id = { $exists: true };
-    } else if (filterType === 'fleet') {
-        matchCriteria.fleet_id = { $exists: true };
-    }
 
     const vendorInvoices = await VendorInvoiceDbAggregate.aggregate([
         { $match: matchCriteria },
@@ -121,75 +115,94 @@ const getInvoiceGraphData = async (year, filterType) => {
     ]);
 
     // Combine results
-    const combinedData = [];
+    let vendorInvoicesData = [];
+    let fleetInvoicesData = [];
     for (let month = 1; month <= 12; month++) {
         const vendorData = vendorInvoices.find(v => v._id === month) || { totalAmount: 0, count: 0 };
         const fleetData = fleetInvoices.find(f => f._id === month) || { totalAmount: 0, count: 0 };
-
-        combinedData.push({
+        vendorInvoicesData.push({
             month,
-            totalAmount: vendorData.totalAmount + fleetData.totalAmount,
-            count: vendorData.count + fleetData.count
+            totalAmount: vendorData.totalAmount,
+            count: vendorData.count
+        });
+        fleetInvoicesData.push({
+            month,
+            totalAmount: fleetData.totalAmount,
+            count: fleetData.count
         });
     }
 
-    return combinedData;
+    return { vendorInvoices: vendorInvoicesData, fleetInvoices: fleetInvoicesData };
 };
 
 // Helper function to get user count graph data
-const getUserCountGraphData = async (year, filterType) => {
+const getUserCountGraphData = async (year) => {
     const startDate = moment(`${year}-01-01`).startOf('year');
     const endDate = moment(`${year}-12-31`).endOf('year');
 
-    let matchCriteria = {
-        created_at: { $gte: startDate.toDate(), $lte: endDate.toDate() }
-    };
 
-    if (filterType === 'vendor') {
-        matchCriteria.user_role = 'vendor';
-    } else if (filterType === 'fleet') {
-        matchCriteria.user_role = 'fleet';
-    }
-    let userCountData = [];
 
-    if (filterType === 'company') {
-        matchCriteria.is_company = true;
-        userCountData = await AdminDbAggregate.aggregate([
-            { $match: matchCriteria },
-            {
-                $group: {
-                    _id: { $month: "$created_at" },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } } // Sort by month
-        ])
+    let adminData = await AdminDbAggregate.aggregate([
+        { $match: { created_at: { $gte: startDate.toDate(), $lte: endDate.toDate() }, is_company: true } },
+        {
+            $group: {
+                _id: { $month: "$created_at" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ])
 
-    } else {
-        userCountData = await UserDbAggregate.aggregate([
-            { $match: matchCriteria },
-            {
-                $group: {
-                    _id: { $month: "$created_at" },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } } // Sort by month
-        ])
-    }
+    let fleetData = await UserDbAggregate.aggregate([
+        { $match: { created_at: { $gte: startDate.toDate(), $lte: endDate.toDate() }, user_role: 'fleet' } },
+        {
+            $group: {
+                _id: { $month: "$created_at" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ])
+    let vendorData = await UserDbAggregate.aggregate([
+        { $match: { created_at: { $gte: startDate.toDate(), $lte: endDate.toDate() }, user_role: 'vendor' } },
+        {
+            $group: {
+                _id: { $month: "$created_at" },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by month
+    ])
 
 
     // Prepare the final data structure
-    const userCountGraphData = [];
+    let adminCountGraphData = [];
+    let fleetCountGraphData = [];
+    let vendorCountGraphData = [];
     for (let month = 1; month <= 12; month++) {
-        const userData = userCountData.find(u => u._id === month) || { count: 0 };
-        userCountGraphData.push({
+        let admin = adminData.find(u => u._id === month) || { count: 0 };
+        let fleet = fleetData.find(u => u._id === month) || { count: 0 };
+        let vendor = vendorData.find(u => u._id === month) || { count: 0 };
+
+
+        adminCountGraphData.push({
             month,
-            count: userData.count
+            count: admin.count
         });
+
+        fleetCountGraphData.push({
+            month,
+            count: fleet.count
+        });
+
+        vendorCountGraphData.push({
+            month,
+            count: vendor.count
+        });
+
     }
 
-    return userCountGraphData;
+    return { adminCountGraphData, fleetCountGraphData, vendorCountGraphData };
 };
 /**************************
  * END OF PRIVATE FUNCTIONS
@@ -947,7 +960,7 @@ module.exports = {
      */
     getDashboardData: async (req, res) => {
         let responseData = {};
-        const { yearInvoices, filterTypeInvoices, yearUsers, filterTypeUsers } = req.query; // filterType can be 'all', 'fleet', or 'vendor'
+        const { yearInvoices, yearUsers } = req.query; // filterType can be 'all', 'fleet', or 'vendor'
 
         try {
             // 1. Total Service Requests from Main Jobs
@@ -1004,11 +1017,11 @@ module.exports = {
             responseData.data.latest5Notifications = latest5Notifications;
 
             // Graph data for invoices
-            const invoiceGraphData = await getInvoiceGraphData(yearInvoices, filterTypeInvoices);
+            const invoiceGraphData = await getInvoiceGraphData(yearInvoices);
             responseData.data.invoiceGraphData = invoiceGraphData;
 
             // Graph data for user count
-            const userCountGraphData = await getUserCountGraphData(yearUsers, filterTypeUsers);
+            const userCountGraphData = await getUserCountGraphData(yearUsers);
             responseData.data.userCountGraphData = userCountGraphData;
 
             return responseHelper.success(res, responseData);

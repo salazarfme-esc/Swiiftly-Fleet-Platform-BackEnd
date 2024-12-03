@@ -1019,6 +1019,79 @@ module.exports = {
         }
     },
 
+    GetNotification: async (req, res) => {
+        let responseData = {};
+        let adminId = req.admin.sub;
+        const Skip = parseInt(req.query.skip);
+        const Limit = parseInt(req.query.limit);
+        log.info('Received request for Admin notification:', adminId);
+        try {
+            // Fetch the existing admin data
+            let existingAdmin = await adminDbHandler.getById(adminId);
+            console.log("🚀 ~ GetNotification: ~ existingAdmin:", existingAdmin)
+            if (!existingAdmin) {
+                responseData.msg = "Admin not found!";
+                return responseHelper.error(res, responseData);
+            }
+            // Create match query based on permissions
+            let matchQuery = [];
+            const allowedTabs = existingAdmin.permissions
+                .filter(permission => permission.edit) // Filter permissions for edit access
+                .map(permission => permission.tab); // Get the tab names
+
+            if (allowedTabs.includes("Service Request")) {
+                matchQuery.push("admin_job");
+                matchQuery.push("admin_kanban");
+            }
+            if (allowedTabs.includes("Vendor")) {
+                matchQuery.push("admin_vendor_profile");
+            }
+            if (allowedTabs.includes("Invoice")) {
+                matchQuery.push("admin_invoice");
+            }
+            let notifications = await NotificationDbHandler.getByQuery({
+                redirection_location: { $in: matchQuery },
+                notification_to_role: "admin"
+            }).populate("user_id").sort({ createdAt: -1 }).populate("job_id").skip(Skip).limit(Limit);
 
 
+
+
+            responseData.msg = "Notification fetched successfully!";
+            responseData.data = {
+                count: await NotificationDbHandler.getByQuery({
+                    redirection_location: { $in: matchQuery },
+                    notification_to_role: "admin"
+                }).countDocuments(),
+                data: notifications
+            };
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to get notification with error::', error);
+            responseData.msg = "Failed to get notification";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    MarkNotificationAsRead: async (req, res) => {
+        let responseData = {};
+        let adminId = req.admin.sub;
+        log.info('Received request for Admin notification:', adminId);
+        try {
+            // Fetch the existing admin data
+            let existingAdmin = await adminDbHandler.getById(adminId);
+            if (!existingAdmin) {
+                responseData.msg = "Admin not found!";
+                return responseHelper.error(res, responseData);
+            }
+            let notificationIds = req.body.notification_ids.split(",");
+            let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
+            responseData.msg = "Notification marked as read successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to mark notification as read with error::', error);
+            responseData.msg = "Failed to mark notification as read";
+            return responseHelper.error(res, responseData);
+        }
+    },
 };

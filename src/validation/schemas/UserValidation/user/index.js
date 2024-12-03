@@ -146,6 +146,9 @@ module.exports = {
         })
       })
     ).optional().label("Availability")
+  }),
+  MarkNotificationAsRead: Joi.object().keys({
+    notification_ids: Joi.string().required().label('Notification Ids')
   })
 
 

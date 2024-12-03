@@ -63,6 +63,8 @@ module.exports = () => {
     Router.put("/change-status-sub-admin/:id", validationMiddleware(adminValidationSchema.changeStatusSubAdmin, "query"), adminAuthController.changeStatusSubAdmin);
     Router.delete("/delete-sub-admin/:id", validationMiddleware(adminValidationSchema.deleteSubAdmin, "query"), adminAuthController.deleteSubAdmin);
     Router.get("/dashboard", adminAuthController.getDashboardData);
+    Router.get("/notification", adminAuthController.GetNotification);
+    Router.put("/mark-notification-as-read", validationMiddleware(adminValidationSchema.MarkNotificationAsRead, "body"), adminAuthController.MarkNotificationAsRead);
 
 
     // Routes for Make

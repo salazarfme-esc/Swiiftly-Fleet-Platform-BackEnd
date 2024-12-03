@@ -464,12 +464,6 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
-
-
-
-
-
-
     GetBrandStatistics: async (req, res) => {
         let user = req.user;
         let userId = user.sub;

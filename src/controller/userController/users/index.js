@@ -317,6 +317,68 @@ module.exports = {
             responseData.msg = 'failed to change password!';
             return responseHelper.error(res, responseData);
         }
-    }
+    },
+
+
+
+
+    GetNotification: async (req, res) => {
+        let responseData = {};
+        let userId = req.user.sub;
+        const Skip = parseInt(req.query.skip);
+        const Limit = parseInt(req.query.limit);
+        log.info('Received request for User notification:', userId);
+        try {
+            // Fetch the existing admin data
+            let existingUser = await userDbHandler.getById(userId);
+            if (!existingUser) {
+                responseData.msg = "User not found!";
+                return responseHelper.error(res, responseData);
+            }
+            let notifications = await NotificationDbHandler.getByQuery({
+                user_id: userId,
+                notification_to_role: existingUser.user_role
+            }).populate("user_id").sort({ createdAt: -1 }).populate("job_id").skip(Skip).limit(Limit);
+
+
+
+
+            responseData.msg = "Notification fetched successfully!";
+            responseData.data = {
+                count: await NotificationDbHandler.getByQuery({
+                    user_id: userId,
+                    notification_to_role: existingUser.user_role
+                }).countDocuments(),
+                data: notifications
+            };
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to get notification with error::', error);
+            responseData.msg = "Failed to get notification";
+            return responseHelper.error(res, responseData);
+        }
+    },
+
+    MarkNotificationAsRead: async (req, res) => {
+        let responseData = {};
+        let userId = req.user.sub;
+        log.info('Received request for User notification:', userId);
+        try {
+            // Fetch the existing admin data
+            let existingUser = await userDbHandler.getById(userId);
+            if (!existingUser) {
+                responseData.msg = "User not found!";
+                return responseHelper.error(res, responseData);
+            }
+            let notificationIds = req.body.notification_ids.split(",");
+            let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
+            responseData.msg = "Notification marked as read successfully!";
+            return responseHelper.success(res, responseData);
+        } catch (error) {
+            log.error('Failed to mark notification as read with error::', error);
+            responseData.msg = "Failed to mark notification as read";
+            return responseHelper.error(res, responseData);
+        }
+    },
 
 };

@@ -110,6 +110,8 @@ module.exports = () => {
     Router.put('/update-vendor-profile', [multerService.uploadFile('file').fields([{ name: 'avatar', max: 1 }, { name: 'blank_check_or_bank_letter', max: 1 }, { name: 'w9_document', max: 1 }]), validationMiddleware(userInfoValidationSchema.updateVendorProfileValidation, 'body')], userInfoController.updateVendorProfile);
     Router.put('/update-vendor-profile-status', userInfoController.updateVendorProfileStatus);
     Router.get('/dashboard', userAuthController.FleetDashboard);
+    Router.get('/notification', userInfoController.GetNotification);
+    Router.put('/mark-notification-as-read', validationMiddleware(userInfoValidationSchema.MarkNotificationAsRead, "body"), userInfoController.MarkNotificationAsRead);
 
     /**
      * Routes for handle change password

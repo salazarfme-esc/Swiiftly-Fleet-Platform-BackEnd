@@ -193,4 +193,7 @@ module.exports = {
 	deleteSubAdmin: Joi.object().keys({
 		is_deleted: Joi.boolean().required().label('Is Delete?')
 	}),
+	MarkNotificationAsRead: Joi.object().keys({
+		notification_ids: Joi.string().required().label('Notification Ids')
+	}),
 };

@@ -48,6 +48,10 @@ const NotificationSchema = new Schema({
         type: String,
         required: true,
         enum: ['admin', 'fleet', 'vendor'] // Adjust roles as necessary
+    },
+    is_read: {
+        type: Boolean,
+        default: false,
     }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

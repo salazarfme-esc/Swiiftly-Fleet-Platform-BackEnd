@@ -98,10 +98,8 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Update the invoice status
-            if (status) {
-                invoice[0].status = status; // Update to the provided status
-            }
+
+            invoice[0].status = "vendor-updated"; // Update to the provided status
 
             // Update sub_jobs amounts and calculate total_amount
             let totalAmount = 0; // Initialize total amount

@@ -32,7 +32,7 @@ module.exports = {
     getVendorInvoices: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const { status, skip, limit, latest, start_amount, end_amount, issue_date } = req.query;
+        const { status, skip, limit, latest, start_amount, end_amount, issue_date, search } = req.query;
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
@@ -49,6 +49,14 @@ module.exports = {
             const startOfNextWeek = startOfCurrentWeek.clone().add(1, 'week'); // Start of next week (next Monday)
 
             let queryDate;
+
+            if (search) {
+                let user = await UserDbHandler.getByQuery({ user_role: "vendor", full_name: { $regex: search, $options: 'i' } });
+                let userIds = user.map(user => user._id);
+                if (userIds.length) {
+                    query.vendor_id = { $in: userIds };
+                }
+            }
 
             if (latest === 'true') {
                 // If today is Monday
@@ -206,7 +214,7 @@ module.exports = {
     getFleetInvoices: async (req, res) => {
         let responseData = {};
         let admin = req.admin.sub;
-        const { status, skip, limit, start_amount, end_amount, issue_date } = req.query;
+        const { status, skip, limit, start_amount, end_amount, issue_date, search } = req.query;
         try {
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
@@ -217,9 +225,14 @@ module.exports = {
             // Build the query object without day restrictions
             let query = {};
             if (getByQuery.is_company) {
-                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id }).then(users => users.map(user => user._id))
+                let fleetIDs = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: "fleet", full_name: { $regex: search, $options: 'i' } }).then(users => users.map(user => user._id))
                 query.fleet_id = { $in: fleetIDs };
             }
+            else {
+                let fleetIDs = await UserDbHandler.getByQuery({ user_role: "fleet", full_name: { $regex: search, $options: 'i' } }).then(users => users.map(user => user._id))
+                query.fleet_id = { $in: fleetIDs };
+            }
+
 
 
             // Apply filters if present

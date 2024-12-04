@@ -403,12 +403,12 @@ module.exports = {
             vehicles = vehicles.map(vehicle => ({
                 ...vehicle,
                 inService: inServiceVehicleIds.has(vehicle._id.toString()),
-                de_fleeted: vehicle.de_fleet ? moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day')) : false
+                de_fleeted: vehicle.de_fleet ? moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day').format('YYYY-MM-DD')) : false
             }));
 
             // Step 5: Filter based on inService status if provided
             if (status === "inService") {
-                vehicles = vehicles.filter(vehicle => vehicle.inService === true && vehicle.de_fleeted === false); 
+                vehicles = vehicles.filter(vehicle => vehicle.inService === true && vehicle.de_fleeted === false);
             } else if (status === "available") {
                 vehicles = vehicles.filter(vehicle => vehicle.inService === false && vehicle.de_fleeted === false);
             }

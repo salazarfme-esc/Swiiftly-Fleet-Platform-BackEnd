@@ -123,21 +123,28 @@ module.exports = {
 				.label('Permissions'),
 			company_name: Joi
 				.string()
-				.required()
-				.allow("")
+				.when('is_company', {
+					is: true,
+					then: Joi.required(),
+					otherwise: Joi.optional()
+				})
 				.label('Company Name'),
 			address: Joi
 				.object()
+				.when('is_company', {
+					is: true,
+					then: Joi.required(),
+					otherwise: Joi.optional()
+				})
 				.keys({
-					street: Joi.string().trim().required().allow("").label("Street"),
-					address: Joi.string().trim().required().allow("").label("Address"),
-					city: Joi.string().trim().required().allow("").label("City"),
-					state: Joi.string().trim().required().allow("").label("State"),
-					pin: Joi.string().trim().required().allow("").label("PIN"),
+					street: Joi.string().trim().required().label("Street"),
+					address: Joi.string().trim().required().label("address"),
+					city: Joi.string().trim().required().label("City"),
+					state: Joi.string().trim().required().label("State"),
+					pin: Joi.string().trim().required().label("PIN"),
 					country: Joi.string().trim().required().allow("").label("Country"),
 					coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
 				})
-				.required()
 				.label('Business Address'),
 
 		}),

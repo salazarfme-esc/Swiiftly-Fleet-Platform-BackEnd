@@ -50,8 +50,8 @@ module.exports = {
         vendor_note: Joi.string().required().allow("").label('Vendor Note'), // Must be a valid string and is required
         last_oil_change: Joi.when('status', {
             is: 'completed',
-            then: Joi.string().required().allow("").label('Last oil change'), // Required if status is 'delayed'
-            otherwise: Joi.allow("") // Not allowed for other statuses
+            then: Joi.boolean().required().label('Last oil change'), // Required if status is 'delayed'
+            otherwise: Joi.boolean().optional().label('Last oil change') // Not allowed for other statuses
         }),
 
     })

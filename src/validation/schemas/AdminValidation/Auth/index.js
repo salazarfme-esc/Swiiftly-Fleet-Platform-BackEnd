@@ -100,6 +100,10 @@ module.exports = {
 				.trim()
 				.required()
 				.label('Role'),
+			is_company: Joi
+				.boolean()
+				.required()
+				.label('Is Company'),
 			phone_number: Joi
 				.string()
 				.trim()

@@ -18,6 +18,7 @@ const NotificationDbHandler = dbService.Notification;
 const Flow = require("../../../services/db/models/flow");
 const crypto = require('crypto');
 const mainJob = require('../../../services/db/models/mainJob');
+const moment = require('moment');
 
 /*******************
  * PRIVATE FUNCTIONS
@@ -747,6 +748,7 @@ module.exports = {
             }
 
             let rootTicketData = await MainJobDbHandler.getByQuery({ _id: subTicketData[0].root_ticket_id });
+            console.log("🚀 ~ VendorUpdateJobStatus: ~ last_oil_change:", last_oil_change, typeof last_oil_changes)
             let lastOilChange = last_oil_change ? moment().utc().startOf('day').toISOString() : '';
             let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { last_oil_change: lastOilChange });
 

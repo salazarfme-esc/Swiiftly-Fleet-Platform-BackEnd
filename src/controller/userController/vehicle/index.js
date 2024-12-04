@@ -408,9 +408,9 @@ module.exports = {
 
             // Step 5: Filter based on inService status if provided
             if (status === "inService") {
-                vehicles = vehicles.filter(vehicle => vehicle.inService === true);
+                vehicles = vehicles.filter(vehicle => vehicle.inService === true && vehicle.de_fleeted === false); 
             } else if (status === "available") {
-                vehicles = vehicles.filter(vehicle => vehicle.inService === false);
+                vehicles = vehicles.filter(vehicle => vehicle.inService === false && vehicle.de_fleeted === false);
             }
 
             // Step 6: Apply pagination after filtering

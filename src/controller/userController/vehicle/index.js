@@ -328,7 +328,7 @@ module.exports = {
         const skip = parseInt(req.query.skip) || 0; // Default skip
         const searchValue = req.body.search || '';
         const is_defleet = req.body.is_defleet || '';
-        const { make, model, status } = req.query;
+        const { make, model, status } = req.body;
         let responseData = {};
 
         try {

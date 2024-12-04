@@ -747,7 +747,8 @@ module.exports = {
             }
 
             let rootTicketData = await MainJobDbHandler.getByQuery({ _id: subTicketData[0].root_ticket_id });
-            let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { last_oil_change: last_oil_change == true ? moment().utc().startOf('day').toISOString() : '' });
+            let lastOilChange = last_oil_change ? moment().utc().startOf('day').toISOString() : '';
+            let vehicleUpdate = await VehicleDbHandler.updateById(rootTicketData[0].vehicle_id, { last_oil_change: lastOilChange });
 
             if (!updateSubTicket) {
                 responseData.msg = "Failed to update the sub-ticket status!";

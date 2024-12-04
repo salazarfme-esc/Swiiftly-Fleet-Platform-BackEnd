@@ -48,9 +48,9 @@ module.exports = {
             otherwise: Joi.allow("") // Not allowed for other statuses
         }),
         vendor_note: Joi.string().required().allow("").label('Vendor Note'), // Must be a valid string and is required
-        meter_reading: Joi.when('status', {
+        last_oil_change: Joi.when('status', {
             is: 'completed',
-            then: Joi.string().required().allow("").label('Meter Reading'), // Required if status is 'delayed'
+            then: Joi.string().required().allow("").label('Last oil change'), // Required if status is 'delayed'
             otherwise: Joi.allow("") // Not allowed for other statuses
         }),
 

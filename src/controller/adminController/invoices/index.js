@@ -46,35 +46,34 @@ module.exports = {
 
             // Calculate the start of the current week (Monday) in UTC
             const startOfCurrentWeek = today.clone().startOf('isoWeek'); // Start of the current week (Monday)
-            const startOfNextWeek = startOfCurrentWeek.clone().add(1, 'week'); // Start of next week (next Monday)
+            const endOfCurrentWeek = startOfCurrentWeek.clone().add(1, 'week'); // End of the current week (next Monday)
 
             let queryDate;
+            let queryEndDate;
 
-            if (search) {
-                let user = await UserDbHandler.getByQuery({ user_role: "vendor", full_name: { $regex: search, $options: 'i' } });
-                let userIds = user.map(user => user._id);
-                if (userIds.length) {
-                    query.vendor_id = { $in: userIds };
-                }
-            }
+            
 
             if (latest === 'true') {
                 // If today is Monday
                 if (currentDay === 1) {
                     // Set queryDate to the previous Monday at 12:00 AM UTC
                     queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
+                    queryEndDate = endOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
                 } else {
                     // If today is not Monday, use the current week's Monday
                     queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
+                    queryEndDate = endOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
                 }
             } else {
                 // If today is Monday
                 if (currentDay === 1) {
                     // Set queryDate to the previous Monday at 12:00 AM UTC
                     queryDate = startOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
+                    queryEndDate = endOfCurrentWeek.clone().subtract(1, 'week').startOf('day'); // Previous Monday
                 } else {
                     // If today is not Monday, return data before the current week's Monday
                     queryDate = startOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
+                    queryEndDate = endOfCurrentWeek.startOf('day'); // Current week's Monday at 12:00 AM
                 }
             }
 
@@ -82,11 +81,18 @@ module.exports = {
             let query = {
                 invoice_date: latest === 'true' ? {
                     $gte: queryDate.toDate(),
-                    $lt: startOfNextWeek.startOf('day').toDate()
+                    $lt: queryEndDate.toDate()
                 } : {
                     $lt: queryDate.toDate()
                 }
             };
+            if (search) {
+                let user = await UserDbHandler.getByQuery({ user_role: "vendor", full_name: { $regex: search, $options: 'i' } });
+                let userIds = user.map(user => user._id);
+                if (userIds.length) {
+                    query.vendor_id = { $in: userIds };
+                }
+            }
 
             // Apply filters if present
             if (status) {
@@ -103,6 +109,7 @@ module.exports = {
                 const endOfIssueDate = moment(issue_date).endOf('day').toDate(); // End of the issue date
                 query.invoice_date = { $gte: startOfIssueDate, $lte: endOfIssueDate }; // Filter by issue date range
             }
+            console.log("🚀 ~ getVendorInvoices: ~ query:", query)
 
             // Fetch invoices based on the constructed query
             let getData = await VendorInvoiceDbHandler.getByQuery(query)

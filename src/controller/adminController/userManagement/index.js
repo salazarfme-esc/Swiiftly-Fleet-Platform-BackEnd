@@ -904,6 +904,10 @@ module.exports = {
             const unassignedVehiclesCount = await VehicleDbHandler.getByQuery({
                 user_id: { $in: fleetIds },
                 is_deleted: false,
+                $or: [
+                    { de_fleet: { $exists: false } }, // Include vehicles without a de-fleet date
+                    { de_fleet: { $gt: moment().utc().startOf('day').toDate() } } // Include vehicles with a future de-fleet date
+                ],
                 _id: { $nin: unassignedVehicleIds } // Vehicles not in jobs with completed or draft status
             }).countDocuments();
 

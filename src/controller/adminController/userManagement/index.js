@@ -950,7 +950,7 @@ module.exports = {
             let latestVehicles = await VehicleDbHandler.getByQuery({
                 is_deleted: false,
                 user_id: { $in: fleetIds }
-            }).sort({ createdAt: -1 })
+            }).sort({ created_at: -1 })
                 .populate('make') // Populate the 'make' field
                 .populate('model') // Populate the 'model' field
                 .populate('user_id') // Populate the 'user_id' field

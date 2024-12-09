@@ -975,8 +975,8 @@ module.exports = {
             const totalVendorInvoices = await VendorInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalInvoices = totalVendorInvoices + totalFleetInvoices;
-            const latest5Feedbacks = await FeedbackDbHandler.getByQuery({}).populate('user_id').sort({ createdAt: -1 }).limit(5);
-            const latest5Notifications = await NotificationDbHandler.getByQuery({ notification_from_role: "vendor", notification_to_role: "admin", redirection_location: "admin_vendor_profile" }).populate("user_id").sort({ createdAt: -1 }).limit(5);
+            const latest5Feedbacks = await FeedbackDbHandler.getByQuery({}).populate('user_id').sort({ created_at: -1 }).limit(5);
+            const latest5Notifications = await NotificationDbHandler.getByQuery({ notification_from_role: "vendor", notification_to_role: "admin", redirection_location: "admin_vendor_profile" }).populate("user_id").sort({ created_at: -1 }).limit(5);
 
             // 4. Get top 5 companies based on fleet count using aggregation
             const top5Companies = await UserDbAggregate.aggregate([
@@ -1065,7 +1065,7 @@ module.exports = {
             let notifications = await NotificationDbHandler.getByQuery({
                 redirection_location: { $in: matchQuery },
                 notification_to_role: "admin"
-            }).populate("user_id").sort({ createdAt: -1 }).populate("job_id").skip(Skip).limit(Limit);
+            }).populate("user_id").sort({ created_at: -1 }).populate("job_id").skip(Skip).limit(Limit);
 
 
 

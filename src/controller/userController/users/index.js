@@ -338,7 +338,7 @@ module.exports = {
             let notifications = await NotificationDbHandler.getByQuery({
                 user_id: userId,
                 notification_to_role: existingUser.user_role
-            }).populate("user_id").sort({ createdAt: -1 }).populate("job_id").skip(Skip).limit(Limit);
+            }).populate("user_id").sort({ created_at: -1 }).populate("job_id").skip(Skip).limit(Limit);
 
 
 

@@ -967,9 +967,9 @@ module.exports = {
             const totalServiceRequests = await MainJobDbHandler.getByQuery({}).countDocuments();
 
             // 2. Total Vendors from User table
-            const totalVendors = await UserDbHandler.getByQuery({ user_role: 'vendor' }).countDocuments();
+            const totalVendors = await UserDbHandler.getByQuery({ user_role: 'vendor', is_delete: false }).countDocuments();
             const totalCompanies = await adminDbHandler.getByQuery({ is_company: true }).countDocuments();
-            const totalFleets = await UserDbHandler.getByQuery({ user_role: 'fleet' }).countDocuments();
+            const totalFleets = await UserDbHandler.getByQuery({ user_role: 'fleet', is_delete: false }).countDocuments();
 
             // 3. Total Invoices from Vendor and Fleet Invoices
             const totalVendorInvoices = await VendorInvoiceDbHandler.getByQuery({}).countDocuments();
@@ -980,7 +980,7 @@ module.exports = {
 
             // 4. Get top 5 companies based on fleet count using aggregation
             const top5Companies = await UserDbAggregate.aggregate([
-                { $match: { user_role: 'fleet' } }, // Match only fleet managers
+                { $match: { user_role: 'fleet', is_delete: false } }, // Match only fleet managers
                 { $group: { _id: "$company_id", fleetCount: { $sum: 1 } } }, // Group by company_id and count fleets
                 {
                     $lookup: { // Join with adminDbHandler to get company details

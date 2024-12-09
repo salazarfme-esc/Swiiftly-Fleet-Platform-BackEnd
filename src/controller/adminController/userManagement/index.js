@@ -892,7 +892,7 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            const FleetData = await UserDbHandler.getByQuery({ company_id: getByQuery._id });
+            const FleetData = await UserDbHandler.getByQuery({ company_id: getByQuery._id, is_delete: false });
             const fleetIds = FleetData.map(fleet => fleet._id);
 
             // 1. Count of vehicles not assigned to any active job
@@ -976,7 +976,7 @@ module.exports = {
 
             const invoiceGraphData = await getInvoiceGraphData(yearInvoices, fleetIds);
 
-            const latestFleet = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet' }).sort({ created_at: -1 }).limit(5);
+            const latestFleet = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet', is_delete: false }).sort({ created_at: -1 }).limit(5);
 
             // Prepare response data
             responseData.data = {

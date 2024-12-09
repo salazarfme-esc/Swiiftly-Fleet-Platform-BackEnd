@@ -579,7 +579,7 @@ module.exports = {
 
             const fleetId = userDetails[0]._id; // Assuming `fleet_id` is actually `_id`
 
-            // 1. Count of vehicles not assigned to any active job
+            // 1. Count of vehicles not assigned to any active job excluding de-fleeted vehicles
             const unassignedVehicleIds = await MainJobDbHandler.getByQuery({
                 status: { $in: ['completed', 'draft'] },
                 user_id: fleetId
@@ -588,6 +588,10 @@ module.exports = {
             const unassignedVehiclesCount = await VehicleDbHandler.getByQuery({
                 user_id: fleetId,
                 is_deleted: false,
+                $or: [
+                    { de_fleet: { $exists: false } }, // Include vehicles without a de-fleet date
+                    { de_fleet: { $gt: moment().utc().startOf('day').toDate() } } // Include vehicles with a future de-fleet date
+                ],
                 _id: { $nin: unassignedVehicleIds } // Vehicles not in jobs with completed or draft status
             }).countDocuments();
 

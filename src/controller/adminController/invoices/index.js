@@ -91,6 +91,7 @@ module.exports = {
                 if (!user.length) {
                     responseData.msg = "Data fetched successfully!";
                     responseData.data = { count: 0, data: [] };
+                    return responseHelper.success(res, responseData);
                 }
                 let userIds = user.map(user => user._id);
                 if (userIds.length) {

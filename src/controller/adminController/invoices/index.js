@@ -109,7 +109,6 @@ module.exports = {
                 const endOfIssueDate = moment(issue_date).endOf('day').toDate(); // End of the issue date
                 query.invoice_date = { $gte: startOfIssueDate, $lte: endOfIssueDate }; // Filter by issue date range
             }
-            console.log("🚀 ~ getVendorInvoices: ~ query:", query)
 
             // Fetch invoices based on the constructed query
             let getData = await VendorInvoiceDbHandler.getByQuery(query)

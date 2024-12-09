@@ -422,7 +422,7 @@ module.exports = {
                 ).skip(skip).limit(limit).sort({ created_at: -1 }).lean();
 
                 getAdminList.map(async (item) => {
-                    item.fleet_size = await UserDbHandler.getByQuery({ company_id: item._id }).countDocuments();
+                    item.fleet_size = await UserDbHandler.getByQuery({ company_id: item._id, is_delete: false }).countDocuments();
                 })
 
                 let getAdminListCount = await adminDbHandler.getByQuery(

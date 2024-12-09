@@ -156,7 +156,7 @@ module.exports = {
                 for (const vehicle of vehiclesDueForOilChange) {
                     let notificationObj = {
                         title: "⏳🛢️🚗  Oil Change Reminder",
-                        description: `Your vehicle (ID: ${vehicle._id}, Nickname: ${vehicle.nickname}) is due for an oil change. Please schedule it at your earliest convenience.`,
+                        description: `Your vehicle ${vehicle.nickname} is due for an oil change. Please schedule it at your earliest convenience.`,
                         is_redirect: true,
                         redirection_location: "fleet_vehicle", // Adjust as necessary
                         user_id: vehicle.user_id, // Assuming user_id is the fleet manager's ID

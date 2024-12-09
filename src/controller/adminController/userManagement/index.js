@@ -14,6 +14,7 @@ const MainJobDbHandler = dbService.MainJob;
 const SubJobDbHandler = dbService.SubJob;
 const VehicleDbHandler = dbService.Vehicle;
 const NotificationDbHandler = dbService.Notification;
+const ServiceCategoryDbHandler = dbService.FlowCategory;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
 const MainJobAggregate = require("../../../services/db/models/mainJob");
 const FleetInvoiceDbAggregate = require("../../../services/db/models/fleetInvoice");
@@ -938,11 +939,11 @@ module.exports = {
                     { $limit: 5 } // Get top 5 categories
                 ]);
 
-                topCategoriesWithPercentage = categoryAggregation.map(category => ({
-                    category: category._id, // Category name or ID
+                topCategoriesWithPercentage = await Promise.all(categoryAggregation.map(async (category) => ({
+                    category: await ServiceCategoryDbHandler.getById(category._id), // Category name or ID
                     usageCount: category.usageCount,
                     percentage: ((category.usageCount / totalJobsCount) * 100).toFixed(2) // Calculate percentage
-                }));
+                })));
             }
 
             // 6. Latest 5 vehicles added
@@ -952,6 +953,7 @@ module.exports = {
             }).sort({ createdAt: -1 })
                 .populate('make') // Populate the 'make' field
                 .populate('model') // Populate the 'model' field
+                .populate('user_id') // Populate the 'user_id' field
                 .lean()
                 .limit(5);
             const vehicleIds = latestVehicles.map(vehicle => vehicle._id);

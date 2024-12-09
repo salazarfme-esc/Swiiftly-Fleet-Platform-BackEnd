@@ -976,7 +976,7 @@ module.exports = {
             const totalFleetInvoices = await FleetInvoiceDbHandler.getByQuery({}).countDocuments();
             const totalInvoices = totalVendorInvoices + totalFleetInvoices;
             const latest5Feedbacks = await FeedbackDbHandler.getByQuery({}).populate('user_id').sort({ createdAt: -1 }).limit(5);
-            const latest5Notifications = await NotificationDbHandler.getByQuery({ notification_from_role: "vendor", notification_to_role: "admin", redirection_location: "admin_vendor_profile" }).sort({ createdAt: -1 }).limit(5);
+            const latest5Notifications = await NotificationDbHandler.getByQuery({ notification_from_role: "vendor", notification_to_role: "admin", redirection_location: "admin_vendor_profile" }).populate("user_id").sort({ createdAt: -1 }).limit(5);
 
             // 4. Get top 5 companies based on fleet count using aggregation
             const top5Companies = await UserDbAggregate.aggregate([

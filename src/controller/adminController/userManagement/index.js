@@ -972,6 +972,7 @@ module.exports = {
 
             const invoiceGraphData = await getInvoiceGraphData(yearInvoices, fleetIds);
 
+            const latestFleet = await UserDbHandler.getByQuery({ company_id: getByQuery._id, user_role: 'fleet' }).sort({ created_at: -1 }).limit(5);
 
             // Prepare response data
             responseData.data = {
@@ -986,6 +987,7 @@ module.exports = {
                 assignedJobsCount,
                 topCategories: topCategoriesWithPercentage,
                 latestVehicles,
+                latestFleet,
                 invoiceGraphData
             };
             responseData.msg = `Data fetched!`;

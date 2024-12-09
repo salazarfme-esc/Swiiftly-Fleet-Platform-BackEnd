@@ -77,19 +77,7 @@ Leverage the extensive features of Swiftly Backend to build your Node.js applica
 - **File Uploads**: Implement file uploads using Multer.
 - **Push Notifications**: Utilize Firebase for efficient push notifications.
 - **Email Sending**: Configure SMTP for secure email sending.
-- **SMS Messaging**: Set up Twilio for streamlined SMS messaging.
-- **OTP Generation**: Implement AWS SNS for robust OTP generation and delivery.
-- **Social Login**: Enable social login with Google and Facebook for user authentication.
 - **Logging and Monitoring**: Take advantage of integrated logging for better monitoring and debugging.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue for any enhancements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
 ---
 
 For any questions or support, please reach out to the project maintainers.

@@ -51,7 +51,7 @@ module.exports = {
             let queryDate;
             let queryEndDate;
 
-            
+
 
             if (latest === 'true') {
                 // If today is Monday
@@ -88,6 +88,10 @@ module.exports = {
             };
             if (search) {
                 let user = await UserDbHandler.getByQuery({ user_role: "vendor", full_name: { $regex: search, $options: 'i' } });
+                if (!user.length) {
+                    responseData.msg = "Data fetched successfully!";
+                    responseData.data = { count: 0, data: [] };
+                }
                 let userIds = user.map(user => user._id);
                 if (userIds.length) {
                     query.vendor_id = { $in: userIds };

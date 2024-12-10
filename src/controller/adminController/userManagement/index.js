@@ -897,7 +897,7 @@ module.exports = {
 
             // 1. Count of vehicles not assigned to any active job
             const unassignedVehicleIds = await MainJobDbHandler.getByQuery({
-                status: { $in: ['completed', 'draft'] },
+                status: { $in: ['completed', 'rejected', 'draft'] },
                 user_id: { $in: fleetIds }
             }).distinct('vehicle_id'); // Get vehicle IDs of completed or draft jobs
 

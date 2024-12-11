@@ -373,7 +373,6 @@ module.exports = {
             if (is_defleet) {
                 const today = moment().utc().startOf('day').toISOString(); // Get today's date at 00:00:00
                 if (is_defleet === 'true') {
-                    console.log("🚀 ~ GetVehicle: ~ is_defleet:", is_defleet)
                     // Return records where de_fleet is not empty and older than or equal to today
                     query.de_fleet = { $ne: '', $lte: today };
                 } else if (is_defleet === 'false') {
@@ -974,7 +973,7 @@ module.exports = {
                     }
 
                     // Soft delete the vehicle by setting de_fleet to currentDate
-                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().utc().startOf('day').toISOString() });
+                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().utc().startOf('day').format("YYYY-MM-DD") });
 
                     response.deletedCount++;
                 } catch (error) {

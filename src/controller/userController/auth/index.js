@@ -579,20 +579,27 @@ module.exports = {
 
             const fleetId = userDetails[0]._id; // Assuming `fleet_id` is actually `_id`
 
-            // 1. Count of vehicles not assigned to any active job excluding de-fleeted vehicles
-            const unassignedVehicleIds = await MainJobDbHandler.getByQuery({
-                status: { $in: ['completed', 'rejected', 'draft'] },
-                user_id: fleetId
-            }).distinct('vehicle_id'); // Get vehicle IDs of completed or draft jobs
 
+            // Get de-fleeted vehicle IDs
+            const deFleetedVehicleIds = await VehicleDbHandler.getByQuery({
+                user_id: fleetId,
+                de_fleet: {
+                    $exists: true,
+                    $ne: '', // Ensure de_fleet date is not an empty string
+                    $lte: moment().utc().startOf('day').toISOString() // Ensure de_fleet date is less than or equal to today
+                },
+            }).distinct('_id'); // Get IDs of de-fleeted vehicles
+
+            // Get vehicle IDs currently in service
+            const inServiceVehicleId = await MainJobDbHandler.getByQuery({
+                status: { $nin: ['completed', 'rejected', 'draft'] }, // Exclude jobs with these statuses
+                user_id: fleetId
+            }).distinct('vehicle_id'); // Get vehicle IDs currently in service
+
+            // Count of vehicles not assigned to any active job excluding de-fleeted and in-service vehicles
             const unassignedVehiclesCount = await VehicleDbHandler.getByQuery({
                 user_id: fleetId,
-                is_deleted: false,
-                $or: [
-                    { de_fleet: { $exists: false } }, // Include vehicles without a de-fleet date
-                    { de_fleet: { $gt: moment().utc().startOf('day').toDate() } } // Include vehicles with a future de-fleet date
-                ],
-                _id: { $nin: unassignedVehicleIds } // Vehicles not in jobs with completed or draft status
+                _id: { $nin: [...deFleetedVehicleIds, ...inServiceVehicleId] } // Exclude de-fleeted and in-service vehicles
             }).countDocuments();
 
             // 2. Total count of vehicles assigned to main jobs

@@ -339,10 +339,12 @@ module.exports = {
             totalAmount = invoice[0].sub_jobs.reduce((sum, job) => sum + job.amount, 0);
 
             // Add tax if provided
-            if (tax) {
+            if (tax && parseFloat(tax) > 0) {
                 const taxAmount = (totalAmount * (parseFloat(tax) / 100)); // Calculate tax amount
                 totalAmount += taxAmount; // Add tax to total amount
                 invoice[0].tax = tax;
+            } else {
+                invoice[0].tax = 0;
             }
 
             invoice[0].total_amount = totalAmount; // Update the total_amount field

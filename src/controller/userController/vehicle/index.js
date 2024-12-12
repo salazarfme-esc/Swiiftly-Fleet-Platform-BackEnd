@@ -446,15 +446,24 @@ module.exports = {
             }
 
 
-            let VehicleData = await VehicleDbHandler.getById(vehicleId).populate('make')
-                .populate('model');
+            let VehicleData = await VehicleDbHandler.getByQuery({ _id: vehicleId, user_id: id, is_deleted: false }).populate('make')
+                .populate('model').lean();
             if (!VehicleData) {
                 responseData.msg = 'Vehicle not found!';
                 return responseHelper.error(res, responseData);
             }
+            const inServiceJobs = await MainJobDbHandler.getByQuery({
+                vehicle_id: vehicleId,
+                status: { $nin: ['completed', 'rejected', 'draft'] }
+            }).lean();
+
+            const inServiceVehicleIds = new Set(inServiceJobs.map(job => job.vehicle_id.toString()));
+            VehicleData[0].inService = inServiceVehicleIds.has(VehicleData[0]._id.toString());
+            VehicleData[0].de_fleeted = VehicleData[0].de_fleet ? moment(VehicleData[0].de_fleet).isSameOrBefore(moment().utc().startOf('day').format('YYYY-MM-DD')) : false;
+            VehicleData[0].de_fleeted_date = VehicleData[0].de_fleet ? moment(VehicleData[0].de_fleet).format('YYYY-MM-DD') : null;
 
             responseData.msg = 'Data fetched!';
-            responseData.data = VehicleData;
+            responseData.data = VehicleData[0];
             return responseHelper.success(res, responseData);
 
         } catch (error) {

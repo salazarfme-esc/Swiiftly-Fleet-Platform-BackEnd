@@ -349,6 +349,11 @@ module.exports = {
                     user_id: userId,
                     notification_to_role: existingUser.user_role
                 }).countDocuments(),
+                unReadCount: await NotificationDbHandler.getByQuery({
+                    user_id: userId,
+                    notification_to_role: existingUser.user_role,
+                    is_read: false
+                }).countDocuments(),
                 data: notifications
             };
             return responseHelper.success(res, responseData);

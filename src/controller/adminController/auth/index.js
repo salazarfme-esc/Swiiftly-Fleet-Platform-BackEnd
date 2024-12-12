@@ -1076,6 +1076,11 @@ module.exports = {
                     redirection_location: { $in: matchQuery },
                     notification_to_role: "admin"
                 }).countDocuments(),
+                unReadCount: await NotificationDbHandler.getByQuery({
+                    redirection_location: { $in: matchQuery },
+                    notification_to_role: "admin",
+                    is_read: false
+                }).countDocuments(),
                 data: notifications
             };
             return responseHelper.success(res, responseData);

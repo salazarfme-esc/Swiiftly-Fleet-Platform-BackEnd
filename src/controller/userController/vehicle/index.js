@@ -219,7 +219,13 @@ module.exports = {
                     P: 'country',
                     Q: 'coordinates',
                     R: 'media',
-                    S: 'document'
+                    S: 'document',
+                    T: 'gas_electric',
+                    U: 'in_fleet',
+                    V: 'issue_date',
+                    W: 'registration_place',
+
+
                 }
             });
 
@@ -295,7 +301,11 @@ module.exports = {
                         },
                         media: media,
                         document: document,
-                        user_id: id
+                        user_id: id,
+                        gas_electric: record.gas_electric || '',
+                        in_fleet: record.in_fleet || '',
+                        issue_date: record.issue_date || '',
+                        registration_place: record.registration_place || '',
                     };
 
                     await VehicleDbHandler.create(submitData);

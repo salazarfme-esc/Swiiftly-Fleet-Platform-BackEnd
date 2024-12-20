@@ -376,9 +376,17 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
             let notificationIds = req.body.notification_ids.split(",");
-            let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
-            responseData.msg = "Notification marked as read successfully!";
+            if (notificationIds.length) {
+                let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
+
+            }
+            if (req.body.read_all) {
+                let updatedNotifications = await NotificationDbHandler.updateByQuery({ user_id: userId, notification_to_role: existingUser.user_role }, { is_read: true });
+
+            }
+            responseData.msg = "All notification marked as read successfully!";
             return responseHelper.success(res, responseData);
+
         } catch (error) {
             log.error('Failed to mark notification as read with error::', error);
             responseData.msg = "Failed to mark notification as read";

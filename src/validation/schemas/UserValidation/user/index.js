@@ -148,7 +148,7 @@ module.exports = {
     ).optional().label("Availability")
   }),
   MarkNotificationAsRead: Joi.object().keys({
-    notification_ids: Joi.string().required().label('Notification Ids'),
+    notification_ids: Joi.string().required().allow("").label('Notification Ids'),
     read_all: Joi.boolean().required().label('Read All')
   })
 

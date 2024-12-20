@@ -1102,9 +1102,11 @@ module.exports = {
                 responseData.msg = "Admin not found!";
                 return responseHelper.error(res, responseData);
             }
-            let notificationIds = req.body.notification_ids.split(",");
-            if (notificationIds.length) {
-                let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
+            if (req.body.notification_ids) {
+                let notificationIds = req.body.notification_ids.split(",");
+                if (notificationIds.length) {
+                    let updatedNotifications = await NotificationDbHandler.updateByQuery({ _id: { $in: notificationIds } }, { is_read: true });
+                }
             }
             if (req.body.read_all) {
                 let updatedNotifications = await NotificationDbHandler.updateByQuery({ admin_id: adminId, notification_to_role: "admin" }, { is_read: true });

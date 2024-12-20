@@ -1109,7 +1109,7 @@ module.exports = {
                 }
             }
             if (req.body.read_all) {
-                let updatedNotifications = await NotificationDbHandler.updateByQuery({ admin_id: adminId, notification_to_role: "admin" }, { is_read: true });
+                let updatedNotifications = await NotificationDbHandler.updateByQuery({notification_to_role: "admin" }, { is_read: true });
 
             } responseData.msg = "Notification marked as read successfully!";
             return responseHelper.success(res, responseData);

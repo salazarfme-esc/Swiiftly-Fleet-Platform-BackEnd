@@ -302,7 +302,7 @@ module.exports = {
                         media: media,
                         document: document,
                         user_id: id,
-                        gas_electric: record.gas_electric || '',
+                        gas_electric: record.gas_electric.toLowerCase() || '',
                         in_fleet: record.in_fleet || '',
                         issue_date: record.issue_date || '',
                         registration_place: record.registration_place || '',

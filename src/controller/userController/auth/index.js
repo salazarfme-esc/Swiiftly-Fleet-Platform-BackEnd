@@ -616,7 +616,7 @@ module.exports = {
 
             // 4. Total count of jobs that are accepted and currently in progress
             const assignedJobsCount = await MainJobDbHandler.getByQuery({
-                status: { $in: ['accepted', 'in_progress'] },
+                status: { $in: ['accepted', 'in-progress'] },
                 user_id: fleetId
             }).countDocuments();
 

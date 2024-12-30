@@ -64,7 +64,7 @@ module.exports = {
 				otherwise: Joi.optional()
 			})
 			.keys({
-				street: Joi.string().trim().required().label("Street"),
+				street: Joi.string().trim().required().allow("").label("Street"),
 				address: Joi.string().trim().required().label("address"),
 				city: Joi.string().trim().required().label("City"),
 				state: Joi.string().trim().required().label("State"),
@@ -141,7 +141,7 @@ module.exports = {
 					otherwise: Joi.optional()
 				})
 				.keys({
-					street: Joi.string().trim().required().label("Street"),
+					street: Joi.string().trim().required().allow("").label("Street"),
 					address: Joi.string().trim().required().label("address"),
 					city: Joi.string().trim().required().label("City"),
 					state: Joi.string().trim().required().label("State"),

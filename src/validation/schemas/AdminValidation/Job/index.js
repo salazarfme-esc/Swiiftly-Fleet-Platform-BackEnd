@@ -18,7 +18,7 @@ module.exports = {
         time_estimation: Joi.string().required().label('Time Estimation'),
         coordinates: Joi.array().items(Joi.number().required()).length(2).default([0.0000, 0.0000]).label("Coordinates"),
         is_dropoff: Joi.boolean().required().label('Is Dropoff'),
-        street: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Street"), otherwise: Joi.string().trim().required().allow("").label("Street") }),
+        street: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().allow("").label("Street"), otherwise: Joi.string().trim().required().allow("").label("Street") }),
         address: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("Address"), otherwise: Joi.string().trim().required().allow("").label("Address") }),
         city: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("City"), otherwise: Joi.string().trim().required().allow("").label("City") }),
         // district: Joi.string().trim().when('is_dropoff', { is: true, then: Joi.string().trim().required().label("District"), otherwise: Joi.string().trim().required().allow("").label("District") }),

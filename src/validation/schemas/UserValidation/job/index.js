@@ -10,7 +10,7 @@ module.exports = {
         service_category: Joi.string().required().label('Service Category ID'), // Should be ObjectId as a string
         vehicle_id: Joi.string().required().label('Vehicle ID'), // Should be ObjectId as a string
         description: Joi.string().required().label('Description'),
-        street: Joi.string().trim().required().label("Street"),
+        street: Joi.string().trim().required().allow("").label("Street"),
         address: Joi.string().trim().required().label("address"),
         city: Joi.string().trim().required().label("City"),
         district: Joi.string().trim().required().allow("").label("District"),

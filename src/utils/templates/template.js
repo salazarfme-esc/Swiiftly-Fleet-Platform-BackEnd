@@ -115,12 +115,12 @@ module.exports = {
                        <td width="50%" align="right">
                         <ul style="padding: 0;margin: 0;">
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.instagram.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
                                 </a>
                             </li>
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.facebook.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
                                 </a>
                             </li>
@@ -270,12 +270,12 @@ module.exports = {
                        <td width="50%" align="right">
                         <ul style="padding: 0;margin: 0;">
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.instagram.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
                                 </a>
                             </li>
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.facebook.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
                                 </a>
                             </li>
@@ -406,7 +406,7 @@ module.exports = {
                                     <p style="margin: 0;">One Time Password: <strong>${data.password}</strong></p>
                                 </div>
                                 <p style="margin: 0 0 30px;">
-                                    <a href=${data.user_role === "vendor" ? `https://staging-web.swiiftly.com/vendor` : `https://staging-web.swiiftly.com`} style="text-decoration: none;">
+                                    <a href=${data.user_role === "vendor" ? `https://swiiftly.com/vendor` : `https://swiiftly.com`} style="text-decoration: none;">
 
                                     <button class="default-btn" style="border: 0; width: 155px; height: 48px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 88.57px; background-color: #FDB702; color:#000;">Continue</button>
                                 </a>
@@ -429,16 +429,16 @@ module.exports = {
                        <td width="50%" align="right">
                         <ul style="padding: 0;margin: 0;">
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.instagram.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
                                 </a>
                             </li>
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.facebook.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
                                 </a>
                             </li>
-                        </ul>
+                            </ul>
 </td>
 
                     </tr>
@@ -595,7 +595,7 @@ module.exports = {
                                     <p style="margin: 0;">One Time Password: <strong>${data.password}</strong></p>
                                 </div>
                                 <p style="margin: 0 0 30px;">
-                                    <a href="https://staging-web.swiiftly.com/admin" style="text-decoration: none;">
+                                    <a href="https://swiiftly.com/admin" style="text-decoration: none;">
 
                                     <button class="default-btn" style="border: 0; width: 155px; height: 48px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 88.57px; background-color: #FDB702; color:#000;">Continue</button>
                                 </a>
@@ -618,12 +618,12 @@ module.exports = {
                        <td width="50%" align="right">
                         <ul style="padding: 0;margin: 0;">
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.instagram.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/insta.png"  width="35" height="35" alt="instagram"/>
                                 </a>
                             </li>
                             <li style="list-style: none;display: inline-block;">
-                                <a href="#" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
+                                <a href="https://www.facebook.com/" style="width: 40px;height: 40px;text-decoration: none;margin-right: 10px;">
                                     <img src="https://swiftly-dev-bucket.s3.us-east-2.amazonaws.com/static/facebook.png" width="35" height="35" alt="facebook" />
                                 </a>
                             </li>

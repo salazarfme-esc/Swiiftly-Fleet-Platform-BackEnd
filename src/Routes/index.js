@@ -64,6 +64,14 @@ module.exports = (app) => {
 			.status(200)
 			.sendFile(path.join(__dirname, '../../public', 'fetcht', 'index.html'));
 	});
+
+	/**
+	 * Health Check Route
+	 */
+	app.get('/health', (req, res) => {
+		res.status(200).json({ status: 'OK' });
+	});
+
 	/**
  * Handling Undefined Routes {Put this route handler at the bottom}
  */

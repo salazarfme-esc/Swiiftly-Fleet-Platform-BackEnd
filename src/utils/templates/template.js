@@ -406,7 +406,7 @@ module.exports = {
                                     <p style="margin: 0;">One Time Password: <strong>${data.password}</strong></p>
                                 </div>
                                 <p style="margin: 0 0 30px;">
-                                    <a href=${data.user_role === "vendor" ? `https://swiiftly.com/vendor` : `https://swiiftly.com`} style="text-decoration: none;">
+                                    <a href=${data.user_role === "vendor" ? `https://prod-web.swiiftly.com/vendor` : `https://prod-web.swiiftly.com`} style="text-decoration: none;">
 
                                     <button class="default-btn" style="border: 0; width: 155px; height: 48px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 88.57px; background-color: #FDB702; color:#000;">Continue</button>
                                 </a>
@@ -595,7 +595,7 @@ module.exports = {
                                     <p style="margin: 0;">One Time Password: <strong>${data.password}</strong></p>
                                 </div>
                                 <p style="margin: 0 0 30px;">
-                                    <a href="https://swiiftly.com/admin" style="text-decoration: none;">
+                                    <a href=" https://prod-web.swiiftly.com/admin" style="text-decoration: none;">
 
                                     <button class="default-btn" style="border: 0; width: 155px; height: 48px; font-weight: bold; text-align: center; cursor: pointer; border-radius: 88.57px; background-color: #FDB702; color:#000;">Continue</button>
                                 </a>

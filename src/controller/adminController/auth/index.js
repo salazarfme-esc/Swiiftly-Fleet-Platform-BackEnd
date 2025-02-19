@@ -964,7 +964,7 @@ module.exports = {
 
         try {
             // 1. Total Service Requests from Main Jobs
-            const totalServiceRequests = await MainJobDbHandler.getByQuery({}).countDocuments();
+            const totalServiceRequests = await MainJobDbHandler.getByQuery({ status: { $ne: "draft" } }).countDocuments();
 
             // 2. Total Vendors from User table
             const totalVendors = await UserDbHandler.getByQuery({ user_role: 'vendor', is_delete: false }).countDocuments();
@@ -1109,7 +1109,7 @@ module.exports = {
                 }
             }
             if (req.body.read_all) {
-                let updatedNotifications = await NotificationDbHandler.updateByQuery({notification_to_role: "admin" }, { is_read: true });
+                let updatedNotifications = await NotificationDbHandler.updateByQuery({ notification_to_role: "admin" }, { is_read: true });
 
             } responseData.msg = "Notification marked as read successfully!";
             return responseHelper.success(res, responseData);

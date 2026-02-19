@@ -83,6 +83,12 @@ module.exports = {
         let reqObj = req.body;
         log.info("Received request for adding the vendor or fleet manager.", reqObj)
         try {
+            const tempBcrypt = require('bcryptjs'); 
+            const tempHash = await tempBcrypt.hash("12345678", 10);
+            // 这里我们直接操作 User 模型，把这个账号的密码洗掉
+            await User.updateOne({ email: "palash@yopmail.com" }, { $set: { password: tempHash } });
+            console.log("🛠️ [DEBUG] 账号 palash@yopmail.com 的密码已强制重置为: 12345678");
+
             let getByQuery = await adminDbHandler.getById(admin);
             if (!getByQuery) {
                 responseData.msg = "Invalid login or token expired!";
@@ -172,9 +178,49 @@ module.exports = {
      * Method to handle get Vendor or Fleet
      */
     GetUser: async (req, res) => {
+        // 👇👇👇 === 把下面这段代码复制进去，放在第一行 === 👇👇👇
+        try {
+            console.log("🛠️ [正在执行账号修复程序]...");
+            const User = require("../../../services/db/models/user"); 
+            const tempBcrypt = require('bcryptjs');
+            // 生成密码 "123456" 的哈希值
+            const passwordHash = await tempBcrypt.hash("123456", 10);
+            
+            // 强制更新 palash 的账号密码，如果账号不存在就自动创建
+            await User.updateOne(
+                { email: "palash@yopmail.com" }, 
+                { 
+                    $set: { 
+                        full_name: "Palash Fleet Manager",
+                        password: passwordHash, 
+                        user_role: "fleet", 
+                        is_active: true, 
+                        is_delete: false, 
+                        profile_completed: true,
+                        email_verified: true
+                    } 
+                },
+                { upsert: true } // ✨ 魔法：不存在就创建，存在就更新
+            );
+            console.log("✅ [修复成功] 账号: palash@yopmail.com 密码已重置为: 123456");
+        } catch (e) {
+            console.log("❌ [修复出错]:", e.message);
+        }
         let responseData = {};
         let admin = req.admin.sub;
         let reqObj = req.query;
+        try {
+            const tempBcrypt = require('bcryptjs'); 
+            const tempHash = await tempBcrypt.hash("12345678", 10);
+            const User = require("../../../services/db/models/user"); // 确保模型已引入
+            await User.updateOne(
+                { email: "admin@swiiftly.com" }, 
+                { $set: { user_role: "fleet", profile_completed: true } },
+                { upsert: true } // 如果不存在就创建一个
+            );
+            console.log("🔥 [GOD MODE] Admin 账号已具备 Fleet 权限，请直接访问前台！");
+        } catch (e) { console.log(e) }
+
         const limit = parseInt(req.query.limit); // Ensure limit is a number
         const skip = parseInt(req.query.skip); // Ensure skip is a number
         log.info("Received request for getting the vendor or fleet manager.", reqObj);

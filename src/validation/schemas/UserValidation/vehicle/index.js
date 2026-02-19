@@ -2,9 +2,7 @@ const JoiBase = require("@hapi/joi");
 const JoiDate = require("@hapi/joi-date");
 
 const Joi = JoiBase.extend(JoiDate);
-/**
- * JOI Validation Schema for Vehicle Route
- */
+
 module.exports = {
     addVehicle: Joi.object().keys({
         identification_number: Joi.string().trim().required().label("Identification Number"),
@@ -61,21 +59,28 @@ module.exports = {
         model: Joi.string().trim().required().allow("").label("Model"),
         status: Joi.string().required().allow("").label("Status"),
         is_defleet: Joi.string().optional().allow("").label("Is Defleet"),
+        // 🚀 【止血关键】允许前端传过来的新筛选字段
+        year: Joi.string().allow("").label("Year"),
+        color: Joi.string().allow("").label("Color"),
+        fuel_type: Joi.string().allow("").label("Fuel Type"), 
     }),
     getCarsByBrandStatusValidation: Joi.object({
-        brand: Joi.string().allow('').label('Brand'), // required brand name
-        model: Joi.string().required().allow('').label('Model')  // required model name
+        brand: Joi.string().allow('').label('Brand'),
+        model: Joi.string().required().allow('').label('Model')
     }),
     getBrandStatisticsValidation: Joi.object({
+        // 🚀 新增：允许侧边栏传过来的 brand 和 year 字段
+        brand: Joi.string().allow("").optional().label("Brand ID"),
+        year: Joi.string().allow("").optional().label("Year"),
+        
         yearFilters: Joi.array().items(
             Joi.object({
-                brand: Joi.string().required().label('Brand ID'), // Brand ID is required
-                year: Joi.string().required().allow("").label('Year') // Year is required
+                brand: Joi.string().optional().label('Brand ID'), 
+                year: Joi.string().required().allow("").label('Year') 
             })
         ).optional().label('Year Filters'),
-        make: Joi.string().trim().required().allow("").label("Make"),
-
-    }), // The yearFilters array is optional    }),
+        make: Joi.string().trim().allow("").optional().label("Make"),
+    }),
     deleteVehicles: Joi.object({
         vehicleIds: Joi.string().required().trim().label("Vehicle ID's")
     }),
@@ -83,8 +88,5 @@ module.exports = {
         media: Joi.string().required().allow("").trim().label("Media"),
         documents: Joi.string().required().allow("").trim().label("Documents"),
         vehicleId: Joi.string().required().trim().label("Vehicle ID's")
-
     }),
-
-
 };

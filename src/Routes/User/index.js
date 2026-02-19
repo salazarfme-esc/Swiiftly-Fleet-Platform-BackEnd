@@ -1,10 +1,11 @@
 const Router = require('express').Router();
+// const https = require('https'); // ❌ 不需要了，我们在 Service 里处理
 /**
  * All Controllers
  */
 const userAuthController = require('../../controller').userAuth;
 const userInfoController = require('../../controller').userInfo;
-const userVehicleController = require("../../controller").userVehicle;
+const userVehicleController = require("../../controller").userVehicle; // ✅ 确保这里引用了 Controller
 const userJobController = require("../../controller").userJob;
 const userInvoicesController = require("../../controller").userInvoices;
 const userFeedbackController = require("../../controller").userFeedback;
@@ -21,21 +22,27 @@ const userInvoicesValidationSchema = require("../../validation").userInvoicesSch
 const feedbackValidationSchema = require("../../validation").feedbackSchema;
 const validationMiddleware = require('../../utils/validationMiddleware');
 const multerService = require('../../services/multer');
+
 module.exports = () => {
 
     /***************************
      * UPLOAD FILE ROUTES 
      ***************************/
-
     Router.post('upload', multerService.uploadFile('file').single('file'), (req, res) => {
         return res.send(req.file.location);
     });
 
-
-
     /***************************
-     * START UNAUTHORIZED ROUTES
+     * START UNAUTHORIZED ROUTES (不需要登录的接口)
      ***************************/
+    
+    // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+    // ✅ 核心修复：把路由放在这里！安检门之前！
+    // ✅ 并且使用正规的 Controller 方法
+    // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+    Router.get('/vehicle/decode/:vin', userVehicleController.getVehicleDetailsByVin);
+
+    
     /*
     **Login and Signup Route
     */
@@ -78,24 +85,20 @@ module.exports = () => {
         userAuthController.forgotPassword
     );
 
-
-    /**
-        * Make And Model Route
+   /**
+     * Make And Model Route
      */
     Router.get("/get-models/:id", userVehicleController.getModels);
     Router.get("/get-makes", userVehicleController.getMakes);
-
+    
     /****************************
      * END OF UNAUTHORIZED ROUTES
      ****************************/
 
     /**********************
-     * AUTHORIZED ROUTES
+     * AUTHORIZED ROUTES (这里是安检门，Token 错误会被拦住)
      **********************/
-    /**
-     * Middlerware for Handling Request Authorization
-     */
-    Router.use('/', userAuthenticated);
+    Router.use('/', userAuthenticated); // ⛔️ 这里的关卡再也拦不住上面的 decode 路由了！
 
     /**
      * Routes for handling user profile
@@ -122,6 +125,7 @@ module.exports = () => {
     /**
      * Routes for handle vehicle
      */
+    Router.get('/services', userVehicleController.GetServiceCategories);
     Router.post('/vehicle', [multerService.uploadFile('file').fields([{ name: 'media', max: 5 }, { name: 'document', max: 5 }]), validationMiddleware(vehicleValidationSchema.addVehicle, 'body')], userVehicleController.AddVehicle);
     Router.post('/bulk-vehicle', multerService.uploadFile('file').single('vehicle'), userVehicleController.BulkUploadVehicles);
     Router.post('/vehicle/search', validationMiddleware(vehicleValidationSchema.searchVehicle, 'body'), userVehicleController.GetVehicle);
@@ -131,9 +135,6 @@ module.exports = () => {
     Router.post('/brand-vehicle-list', validationMiddleware(vehicleValidationSchema.getCarsByBrandStatusValidation, 'body'), userVehicleController.GetCarsByBrandStatus);
     Router.get('/get-vehicle/:vehicleId', userVehicleController.GetVehicleDetail);
     Router.post('/delete-vehicle-media', validationMiddleware(vehicleValidationSchema.deleteVehiclesMedias, 'body'), userVehicleController.DeleteVehicleMedia);
-
-
-
 
     /**
     * Routes for handle Jobs
@@ -167,8 +168,6 @@ module.exports = () => {
      * Routes for handle feedback
      */
     Router.post('/feedback', validationMiddleware(feedbackValidationSchema.feedback, 'body'), userFeedbackController.giveFeedback);
-
-
 
     /**************************
      * END OF AUTHORIZED ROUTES

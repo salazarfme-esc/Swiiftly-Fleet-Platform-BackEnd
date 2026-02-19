@@ -1,4 +1,6 @@
 'use strict';
+// ✅ 1. 确保引入了 decodeVin
+const { decodeVin } = require('../../../services/vinService');
 const logger = require('../../../services/logger');
 const mongoose = require('mongoose');
 const log = new logger('UserVehicleController').getChildLogger();
@@ -6,6 +8,7 @@ const dbService = require('../../../services/db/services');
 const responseHelper = require('../../../services/customResponse');
 const userDbHandler = dbService.User;
 const VehicleDbHandler = dbService.Vehicle;
+const ServiceCategoryDbHandler = dbService.ServiceCategory;
 const VehicleAggregate = require("../../../services/db/models/vehicles");
 const makeDbHandler = dbService.Make;
 const modelDbHandler = dbService.Model;
@@ -15,13 +18,12 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../../../config/environments');
 const AWS = require('aws-sdk');
-const moment = require('moment')
-
+const moment = require('moment');
+const axios = require('axios');
 
 /*******************
  * PRIVATE FUNCTIONS
  ********************/
-
 
 AWS.config.update({
     accessKeyId: config.aws.accessKeyId,
@@ -30,27 +32,30 @@ AWS.config.update({
 });
 const s3 = new AWS.S3();
 
-
 const downloadFile = async (bucketName, filePath) => {
     return new Promise((resolve, reject) => {
         try {
             const params = { Bucket: bucketName, Key: filePath };
 
             const downloadStream = s3.getObject(params).createReadStream();
+            // 确保目录存在
+            if (!fs.existsSync('./excel')) {
+                fs.mkdirSync('./excel');
+            }
             const writeStream = fs.createWriteStream(`./excel/${filePath}`);
 
             downloadStream.pipe(writeStream)
                 .on('error', (err) => {
                     console.error('Error downloading file:', err);
-                    reject(err); // Reject the promise if there's an error
+                    reject(err); 
                 })
                 .on('finish', () => {
                     console.log('File downloaded successfully!');
-                    resolve(); // Resolve the promise when download is finished
+                    resolve(); 
                 });
         } catch (err) {
             console.error('Error:', err);
-            reject(err); // Reject the promise if there's an error
+            reject(err); 
         }
     });
 };
@@ -58,9 +63,10 @@ const downloadFile = async (bucketName, filePath) => {
 /**************************
  * END OF PRIVATE FUNCTIONS
  **************************/
+
 module.exports = {
     /**
-     *  Method to add Vehicle
+     * Method to add Vehicle
      */
     AddVehicle: async (req, res) => {
         let reqObj = req.body;
@@ -87,16 +93,15 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-
             // Check if the make exists, if not create it
             let make = await makeDbHandler.getByQuery({ title: reqObj.make });
             let makeId;
 
             if (make.length) {
-                makeId = make[0]._id; // Use the existing make ID
+                makeId = make[0]._id; 
             } else {
                 let newMake = await makeDbHandler.create({ title: reqObj.make });
-                makeId = newMake._id; // Use the newly created make ID
+                makeId = newMake._id; 
             }
 
             // Check if the model exists for the given make, if not create it
@@ -104,10 +109,10 @@ module.exports = {
             let modelId;
 
             if (model.length) {
-                modelId = model[0]._id; // Use the existing model ID
+                modelId = model[0]._id; 
             } else {
                 let newModel = await modelDbHandler.create({ title: reqObj.model, make_id: makeId });
-                modelId = newModel._id; // Use the newly created model ID
+                modelId = newModel._id; 
             }
 
             let media = [];
@@ -128,8 +133,8 @@ module.exports = {
                 identification_number: reqObj.identification_number || '',
                 nickname: reqObj.nickname || '',
                 year: reqObj.year || '',
-                make: makeId, // Store the make ID
-                model: modelId, // Store the model ID
+                make: makeId, 
+                model: modelId, 
                 color: reqObj.color || '',
                 registration_due_date: reqObj.registration_due_date || '',
                 issue_date: reqObj.issue_date || "",
@@ -166,6 +171,8 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+
+    // 🚀 这里是我们更新过的 SMART Bulk Upload
     BulkUploadVehicles: async (req, res) => {
         let responseData = {};
         let response = {
@@ -175,7 +182,7 @@ module.exports = {
         };
         let user = req.user;
         let id = user.sub;
-        log.info('Received bulk upload request.');
+        log.info('Received SMART bulk upload request.');
 
         try {
             let userData = await userDbHandler.getByQuery({ _id: id, user_role: 'fleet' });
@@ -187,19 +194,16 @@ module.exports = {
                 responseData.msg = 'Please upload a file!';
                 return responseHelper.error(res, responseData);
             }
-            const filePath = req.file.key; // S3 key of the uploaded file
+            const filePath = req.file.key; 
             const bucketName = config.aws.s3Bucket;
-            const fileExtension = path.extname(filePath).toLowerCase();
 
             // Download the file from S3
-            const fileData = await downloadFile(bucketName, filePath);
+            await downloadFile(bucketName, filePath);
 
             // Convert Excel to JSON
             const excelData = excelToJson({
-                sourceFile: `./excel/${filePath}`, // Corrected path variable
-                header: {
-                    rows: 1
-                },
+                sourceFile: `./excel/${filePath}`,
+                header: { rows: 1 },
                 columnToKey: {
                     A: 'identification_number',
                     B: 'nickname',
@@ -224,105 +228,143 @@ module.exports = {
                     U: 'coordinates',
                     V: 'media',
                     W: 'document',
-
-
                 }
             });
 
-            for (let record of excelData.Sheet1) { // Assuming the sheet name is 'Sheet1'
-                try {
-                    // Validate uniqueness of VIN and License Plate
-                    let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: record.identification_number });
-                    let checkVehicle1 = await VehicleDbHandler.getByQuery({ license_plate: record.license_plate });
+           // Loop through each record
+            const sheetName = Object.keys(excelData)[0];
+            const records = excelData[sheetName] || [];
 
+            // 👇👇👇 这里的逻辑是：智能解码 + 自动修复 + 格式转换 (ID Lookup) 👇👇👇
+            for (let record of records) { 
+                try {
+                    const vin = record.identification_number;
+
+                    // 1. 必填项检查
+                    if (!vin) {
+                        response.failureCount++;
+                        response.failedRecords.push({ record, reason: 'Missing VIN' });
+                        continue;
+                    }
+
+                    // 2. 查重 (Check Duplicate)
+                    let checkVehicle = await VehicleDbHandler.getByQuery({ identification_number: vin }); // ✅ 改成了大写 V
                     if (checkVehicle.length) {
                         response.failureCount++;
-                        response.failedRecords.push({
-                            record,
-                            reason: 'Vehicle with this identification number already exists!'
-                        });
-                        continue;
-                    }
-                    if (checkVehicle1.length) {
-                        response.failureCount++;
-                        response.failedRecords.push({
-                            record,
-                            reason: 'Vehicle with this license plate already exists!'
-                        });
+                        response.failedRecords.push({ record, reason: 'VIN already exists!' });
                         continue;
                     }
 
-                    // Check or Create Make and Model
-                    let make = await makeDbHandler.getByQuery({ title: record.make });
+                    // ==========================================
+                    // 🚀 核心升级：VIN 智能解码 (Smart Decode)
+                    // ==========================================
+                    let decodedData = {};
+                    try {
+                        // 调用 API
+                        const apiRes = await axios.get(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin}?format=json`);
+                        const results = apiRes.data.Results;
+                        const getVal = (id) => results.find(r => r.VariableId === id)?.Value;
+                        
+                        decodedData = {
+                            year: getVal(29),
+                            make: getVal(26),
+                            model: getVal(28),
+                            fuel: getVal(9),
+                            body_class: getVal(5)
+                        };
+                        console.log(`✅ Smart Decoded: ${vin} -> ${decodedData.make} ${decodedData.model}`);
+                    } catch (vinErr) {
+                        console.log("⚠️ API Decode failed, using Excel data.");
+                    }
+
+                    // ==========================================
+                    // 🛠️ 关键修复：数据清洗 (Data Cleaning)
+                    // ==========================================
+
+                    // A. 修复燃油类型 (Gasoline -> gas)
+                    let rawFuel = decodedData.fuel || record.gas_electric || 'gas';
+                    let fixedFuel = 'gas';
+                    if (rawFuel && (rawFuel.toLowerCase().includes('electric') || rawFuel.toLowerCase().includes('bev'))) {
+                        fixedFuel = 'electric';
+                    }
+
+                    // B. 修复日期 (Registration Due Date)
+                    let fixedRegDate = record.registration_due_date ? new Date(record.registration_due_date) : new Date();
+
+                    // C. 确定最终字段
+                    let finalMakeStr = decodedData.make || record.make || 'Unknown';
+                    let finalModelStr = decodedData.model || record.model || 'Unknown';
+                    let finalYear = decodedData.year || record.year || '2022';
+                    let finalNickname = record.nickname || decodedData.body_class || finalModelStr;
+
+                    // ==========================================
+                    // 🏗️ 数据库 ID 映射 (Make/Model ID Lookup)
+                    // ==========================================
+                    // (保留你原来的逻辑，防止数据库因为找不到 ID 而报错)
+
+                    // 处理 Make ID
+                    let makeDoc = await makeDbHandler.getByQuery({ title: { $regex: new RegExp(`^${finalMakeStr}$`, "i") } });
                     let makeId;
-
-                    if (make.length) {
-                        makeId = make[0]._id;
+                    if (makeDoc.length) {
+                        makeId = makeDoc[0]._id;
                     } else {
-                        let newMake = await makeDbHandler.create({ title: record.make });
+                        let newMake = await makeDbHandler.create({ title: finalMakeStr });
                         makeId = newMake._id;
                     }
 
-                    let model = await modelDbHandler.getByQuery({ title: record.model, make_id: makeId });
+                    // 处理 Model ID
+                    let modelDoc = await modelDbHandler.getByQuery({ title: { $regex: new RegExp(`^${finalModelStr}$`, "i") }, make_id: makeId });
                     let modelId;
-
-                    if (model.length) {
-                        modelId = model[0]._id;
+                    if (modelDoc.length) {
+                        modelId = modelDoc[0]._id;
                     } else {
-                        let newModel = await modelDbHandler.create({ title: record.model, make_id: makeId });
+                        let newModel = await modelDbHandler.create({ title: finalModelStr, make_id: makeId });
                         modelId = newModel._id;
                     }
 
-                    let media = record.media ? record.media.split(',') : [];
-                    let document = record.document ? record.document.split(',') : [];
-
+                    // ==========================================
+                    // 💾 保存数据 (Save)
+                    // ==========================================
                     let submitData = {
-                        identification_number: record.identification_number || '',
-                        nickname: record.nickname || '',
-                        year: record.year || '',
-                        make: makeId,
-                        model: modelId,
-                        color: record.color || '',
-                        registration_due_date: record.registration_due_date || '',
-                        last_oil_change: record.last_oil_change || '',
-                        license_plate: record.license_plate || '',
-                        address: {
-                            street: record.street || '',
-                            address: record.address || '',
-                            city: record.city || '',
-                            district: record.district || '',
-                            state: record.state || '',
-                            pin: record.pin || '',
-                            country: record.country || '',
-                        },
-                        location: {
-                            type: 'Point',
-                            coordinates: record.coordinates ? record.coordinates.split(',').map(Number) : [0.0000, 0.0000],
-                        },
-                        media: media,
-                        document: document,
                         user_id: id,
-                        gas_electric: record.gas_electric.toLowerCase() || '',
-                        in_fleet: record.in_fleet || '',
-                        issue_date: record.issue_date || '',
-                        registration_place: record.registration_place || '',
+                        company: req.body.company || userData[0].company_id, // 确保有公司ID
+
+                        identification_number: vin,
+                        nickname: finalNickname,
+                        license_plate: record.license_plate || '',
+                        
+                        year: finalYear,
+                        make: makeId,   // ✅ 存的是 ID
+                        model: modelId, // ✅ 存的是 ID
+                        
+                        color: record.color || 'White',
+                        gas_electric: fixedFuel,             // ✅ 修复后的值 (gas/electric)
+                        registration_due_date: fixedRegDate, // ✅ 修复后的值 (Date)
+                        
+                        status: 'active',
+                        media: [],
+                        document: []
                     };
 
-                    await VehicleDbHandler.create(submitData);
+                    await VehicleDbHandler.create(submitData); // ✅ 改成了大写 V
                     response.successCount++;
+
                 } catch (error) {
-                    log.error('Failed to save record:', record, 'Error:', error);
+                    console.error('❌ Failed to save record:', error.message);
                     response.failureCount++;
-                    response.failedRecords.push({
-                        record,
-                        reason: 'Failed to save record due to an error.'
-                    });
+                    response.failedRecords.push({ record: record.identification_number, reason: error.message });
                 }
             }
-            fs.unlinkSync(`./excel/${filePath}`); // Corrected unlinking
-            responseData.msg = 'Bulk upload completed!';
+            
+            // 清理文件 (Correctly placed INSIDE the try block, but AFTER the loop)
+            if (fs.existsSync(`./excel/${filePath}`)) {
+                fs.unlinkSync(`./excel/${filePath}`);
+            }
+
+            responseData.msg = `Upload complete! Success: ${response.successCount}, Failed: ${response.failureCount}`;
             responseData.data = response;
             return responseHelper.success(res, responseData);
+
         } catch (error) {
             log.error('Failed to process bulk upload:', error);
             responseData.msg = 'Failed to process bulk upload!';
@@ -334,11 +376,12 @@ module.exports = {
         let user = req.user;
         let id = user.sub;
         log.info('Received request for get vehicle with id:', id);
-        const limit = parseInt(req.query.limit) || 10; // Default limit
-        const skip = parseInt(req.query.skip) || 0; // Default skip
+        const limit = parseInt(req.query.limit) || 10; 
+        const skip = parseInt(req.query.skip) || 0; 
         const searchValue = req.body.search || '';
         const is_defleet = req.body.is_defleet || '';
-        const { make, model, status } = req.body;
+        // 🚀 修改点 1：在这里加入了 year, gas_electric, color
+        const { make, model, status, year, fuel_type, color } = req.body;
         let responseData = {};
 
         try {
@@ -348,8 +391,19 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Step 1: Construct MongoDB query for vehicle search
             let query = { user_id: mongoose.Types.ObjectId(id), is_deleted: false };
+
+            // 🚀 修改点 2：在这里加上了三个新的筛选条件
+            if (year) {
+                query.year = year;
+            }
+            if (fuel_type) { // 🚀 确保这里用的是 fuel_type
+                query.gas_electric = fuel_type;
+            }
+
+            if (color) {
+                query.color = { $regex: color, $options: 'i' }; // 使用正则，忽略大小写，防止前端传进来大小写不一致
+            }
 
             if (make) {
                 const makeMatches = await makeDbHandler.getByQuery({
@@ -379,14 +433,11 @@ module.exports = {
                 ];
             }
 
-            // Step 2: Add is_defleet filter
             if (is_defleet) {
-                const today = moment().utc().startOf('day').toISOString(); // Get today's date at 00:00:00
+                const today = moment().utc().startOf('day').toISOString(); 
                 if (is_defleet === 'true') {
-                    // Return records where de_fleet is not empty and older than or equal to today
                     query.de_fleet = { $ne: '', $lte: today };
                 } else if (is_defleet === 'false') {
-                    // Return records where de_fleet is either not present or greater than today
                     query.$or = [
                         { de_fleet: { $exists: false } },
                         { de_fleet: { $gt: today } }
@@ -394,13 +445,11 @@ module.exports = {
                 }
             }
 
-            // Step 3: Fetch vehicles based on the constructed query without pagination
             let vehicles = await VehicleDbHandler.getByQuery(query)
                 .populate('make')
                 .populate('model')
                 .lean();
 
-            // Step 4: Determine "in service" status for each vehicle
             const vehicleIds = vehicles.map(vehicle => vehicle._id);
             const inServiceJobs = await MainJobDbHandler.getByQuery({
                 vehicle_id: { $in: vehicleIds },
@@ -415,18 +464,15 @@ module.exports = {
                 de_fleeted: vehicle.de_fleet ? moment(vehicle.de_fleet).isSameOrBefore(moment().utc().startOf('day').format('YYYY-MM-DD')) : false
             }));
 
-            // Step 5: Filter based on inService status if provided
             if (status === "inService") {
                 vehicles = vehicles.filter(vehicle => vehicle.inService === true && vehicle.de_fleeted === false);
             } else if (status === "available") {
                 vehicles = vehicles.filter(vehicle => vehicle.inService === false && vehicle.de_fleeted === false);
             }
 
-            // Step 6: Apply pagination after filtering
-            const totalRecords = vehicles.length; // Total records after filtering
+            const totalRecords = vehicles.length; 
             vehicles = vehicles.slice(skip, skip + limit);
 
-            // Step 7: Return paginated results with total count
             responseData.msg = "Data fetched!";
             responseData.data = {
                 vehicles,
@@ -455,7 +501,6 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-
             let VehicleData = await VehicleDbHandler.getByQuery({ _id: vehicleId, user_id: id, is_deleted: false }).populate('make')
                 .populate('model').lean();
             if (!VehicleData) {
@@ -482,245 +527,90 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    
     GetBrandStatistics: async (req, res) => {
-        let user = req.user;
-        let userId = user.sub;
-        let yearFilters = req.body.yearFilters || []; // An array of objects with { brand: <brand_id>, year: <year> }
-        log.info('Received request for brand statistics with user id:', userId, 'and year filters:', yearFilters);
+        let userId = req.user.sub;
+        // 🚀 获取前端传来的所有可能字段
+        const { year, brand: brandId, make, yearFilters } = req.body;
+        
+        let selectedYear = year || (yearFilters && yearFilters[0]?.year) || "";
+        if (selectedYear === "All") selectedYear = "";
+
         let responseData = {};
 
         try {
-            let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
-            if (!userData.length) {
-                responseData.msg = 'Invalid login or token expired!';
-                return responseHelper.error(res, responseData);
+            // 1. 分母永远是全车队的总数
+            const allVehicles = await VehicleDbHandler.getByQuery({ 
+                user_id: mongoose.Types.ObjectId(userId), 
+                is_deleted: false 
+            });
+            const totalFleetCount = allVehicles.length;
+
+            // 2. 构造查询条件
+            let matchStage = { user_id: mongoose.Types.ObjectId(userId), is_deleted: false };
+            
+            // 🚀 如果是侧边栏请求，精准过滤该品牌
+            if (brandId) {
+                matchStage.make = mongoose.Types.ObjectId(brandId);
             }
-
-
-            // Aggregate data by brand (make)
-            let matchStage = {
-                user_id: mongoose.Types.ObjectId(userId),
-                is_deleted: false // Exclude deleted vehicles
-            };
-            if (req.body.make) {
-                const makeMatches = await makeDbHandler.getByQuery({
-                    title: { $regex: req.body.make, $options: 'i' }
-                }).lean();
-                const makeIds = makeMatches.map(make => make._id);
-                matchStage.make = { $in: makeIds };
+            // 🚀 如果是主页搜索
+            if (make) {
+                const makeMatches = await makeDbHandler.getByQuery({ title: { $regex: make, $options: 'i' } }).lean();
+                matchStage.make = { $in: makeMatches.map(m => m._id) };
             }
-
 
             let brandStatistics = await VehicleAggregate.aggregate([
-                {
-                    $match: matchStage
-                },
+                { $match: matchStage },
                 {
                     $group: {
-                        _id: {
-                            make: "$make",
-                            model: "$model"
-                        },
-                        totalCars: { $sum: 1 },
-                        carsByYear: {
-                            $push: {
-                                year: "$year",
-                                count: 1
-                            }
-                        }
+                        _id: { make: "$make", model: "$model", year: "$year" },
+                        count: { $sum: 1 }
                     }
                 },
                 {
                     $group: {
                         _id: "$_id.make",
-                        totalCars: { $sum: "$totalCars" },
-                        models: {
-                            $push: {
-                                model: "$_id.model",
-                                count: "$totalCars",
-                                carsByYear: "$carsByYear"
-                            }
-                        }
+                        totalBrandCars: { $sum: "$count" },
+                        details: { $push: { modelId: "$_id.model", year: "$_id.year", count: "$count" } }
                     }
                 },
-                {
-                    $lookup: {
-                        from: 'makes', // The collection name for brands/makes
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'brand'
-                    }
-                },
-                {
-                    $unwind: "$brand"
-                },
-                {
-                    $lookup: {
-                        from: 'models', // The collection name for models
-                        localField: "models.model",
-                        foreignField: "_id",
-                        as: "modelDetails"
-                    }
-                },
-                {
-                    $addFields: {
-                        models: {
-                            $map: {
-                                input: "$modelDetails",
-                                as: "modelDetail",
-                                in: {
-                                    model: {
-                                        _id: "$$modelDetail._id",
-                                        title: "$$modelDetail.title"
-                                    },
-                                    count: {
-                                        $let: {
-                                            vars: {
-                                                idx: { $indexOfArray: ["$models.model", "$$modelDetail._id"] }
-                                            },
-                                            in: { $arrayElemAt: ["$models.count", "$$idx"] }
-                                        }
-                                    },
-                                    carsByYear: {
-                                        $let: {
-                                            vars: {
-                                                idx: { $indexOfArray: ["$models.model", "$$modelDetail._id"] }
-                                            },
-                                            in: { $arrayElemAt: ["$models.carsByYear", "$$idx"] }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    $addFields: {
-                        yearCarsSum: {
-                            $sum: {
-                                $reduce: {
-                                    input: "$models.carsByYear",
-                                    initialValue: [],
-                                    in: { $concatArrays: ["$$value", "$$this"] }
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    $addFields: {
-                        yearCarsSum: {
-                            $sum: "$yearCarsSum.count"
-                        },
-                        yearPercentage: {
-                            $cond: {
-                                if: { $eq: ["$totalCars", 0] },
-                                then: 0,
-                                else: { $multiply: [{ $divide: ["$yearCarsSum", "$totalCars"] }, 100] }
-                            }
-                        }
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        brand: 1, // Include the full brand object
-                        totalCars: 1,
-                        models: 1,
-                        yearCarsSum: 1,
-                        yearPercentage: 1
-                    }
-                }
+                { $lookup: { from: 'makes', localField: '_id', foreignField: '_id', as: 'brand' } },
+                { $unwind: "$brand" },
+                { $lookup: { from: 'models', localField: 'details.modelId', foreignField: '_id', as: 'modelDetails' } }
             ]);
 
-            // Apply year and brand filtering separately based on conditions
+            brandStatistics = brandStatistics.map(brand => {
+                brand.yearPercentage = totalFleetCount > 0 ? ((brand.totalBrandCars / totalFleetCount) * 100).toFixed(2) : 0;
 
-            // If yearFilters is not provided, use the current year for filtering
-            if (yearFilters.length === 0) {
-                const currentYear = new Date().getFullYear().toString();
-                brandStatistics = brandStatistics.map(brand => {
-                    brand.models = brand.models.map(model => {
-                        // Filter by current year, if no cars for the current year, set count to 0
-                        let filteredCars = model.carsByYear.filter(car => car.year === currentYear);
-                        if (filteredCars.length === 0) {
-                            model.count = 0;
-                            model.carsByYear = [];
-                        } else {
-                            model.count = filteredCars.reduce((acc, car) => acc + car.count, 0);
+                let modelMap = {};
+                let currentFilterSum = 0;
+
+                brand.details.forEach(item => {
+                    const modelDetail = brand.modelDetails.find(d => d._id.toString() === item.modelId.toString());
+                    const modelName = modelDetail ? modelDetail.title : 'Unknown';
+                    
+                    // 🚀 根据年份过滤侧边栏数据
+                    if (!selectedYear || item.year === selectedYear.toString()) {
+                        if (!modelMap[modelName]) {
+                            modelMap[modelName] = { model: { title: modelName }, count: 0 };
                         }
-                        model.carsByYear = model.carsByYear.filter(car => car.year === currentYear);
-                        return model;
-                    });
-
-                    brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
-                    brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
-                    return brand;
-                });
-            }
-            // If yearFilters is provided, apply both brand and year filters
-            else {
-                brandStatistics = brandStatistics.filter(brand => {
-                    let yearFilter = yearFilters.find(filter => filter.brand.toString() === brand.brand._id.toString());
-                    if (yearFilter) {
-                        // If year is not provided in the filter, return all cars for that brand
-                        if (!yearFilter.year) {
-                            brand.models = brand.models.map(model => {
-                                // Sum up all cars regardless of the year
-                                model.count = model.carsByYear.reduce((acc, car) => acc + car.count, 0);
-                                return model;
-                            });
-                        } else {
-                            brand.models = brand.models.map(model => {
-                                let filteredCars = model.carsByYear.filter(car => car.year === yearFilter.year);
-                                if (filteredCars.length === 0) {
-                                    model.count = 0;
-                                    model.carsByYear = []; // No matching cars for the specified year
-                                } else {
-                                    model.count = filteredCars.reduce((acc, car) => acc + car.count, 0); // Recalculate the model count based on the filtered year
-                                }
-                                model.carsByYear = model.carsByYear.filter(car => car.year === yearFilter.year)
-                                return model;
-                            });
-                        }
-
-                        // Calculate the yearCarsSum and yearPercentage for the brand
-                        brand.yearCarsSum = brand.models.reduce((sum, model) => sum + model.count, 0);
-                        brand.yearPercentage = (brand.yearCarsSum / brand.totalCars) * 100;
-
-                        return true; // Keep this brand in the output
+                        modelMap[modelName].count += item.count;
+                        currentFilterSum += item.count;
                     }
-                    return false; // Exclude this brand if it doesn't match the year filter
                 });
 
-                // If no matching brand was found, return the brand with models having count 0 and carsByYear as []
-                if (brandStatistics.length === 0) {
-                    let filteredBrand = await makeDbHandler.getById(yearFilters[0].brand); // Fetch the brand details from the database
-                    let models = await modelDbHandler.getByQuery({ make: filteredBrand._id }); // Fetch all models for the brand
-                    brandStatistics = [{
-                        brand: filteredBrand,
-                        totalCars: 0,
-                        models: models.map(model => ({
-                            model: model,
-                            count: 0,
-                            carsByYear: []
-                        })),
-                        yearCarsSum: 0,
-                        yearPercentage: 0
-                    }];
-                }
-            }
+                brand.models = Object.values(modelMap); 
+                brand.yearCarsSum = currentFilterSum;   // 🚀 侧边栏的 Units 数量
+                brand.totalCars = brand.totalBrandCars; // 🚀 主卡片的 Total Units
 
+                return brand;
+            }).filter(item => item.brand && item.brand.title);
 
-
-
-            responseData.msg = "Brand statistics fetched successfully!";
             responseData.data = brandStatistics;
             return responseHelper.success(res, responseData);
 
         } catch (error) {
-            log.error('Failed to get brand statistics with error::', error);
-            responseData.msg = 'Failed to get brand statistics!';
-            return responseHelper.error(res, responseData);
+            return responseHelper.error(res, { msg: 'Stats failed' });
         }
     },
 
@@ -728,7 +618,7 @@ module.exports = {
         let user = req.user;
         let userId = user.sub;
         let brandName = req.body.brand;
-        let modelSearch = req.body.model || ''; // Get the model search substring from the request body
+        let modelSearch = req.body.model || ''; 
         log.info('Received request for cars by brand with user id:', userId, 'and brand:', brandName, 'and model search:', modelSearch);
         let responseData = {};
         try {
@@ -738,7 +628,6 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Find the brand (make) by name
             let make = await makeDbHandler.getByQuery({ title: brandName });
             if (!make.length) {
                 responseData.msg = 'Brand not found!';
@@ -746,7 +635,6 @@ module.exports = {
             }
             let makeId = make[0]._id;
 
-            // Find all vehicles under this brand owned by the user
             let vehicles = await VehicleDbHandler.getByQuery({ make: makeId, user_id: userId }).populate('model');
 
             if (!vehicles.length) {
@@ -758,14 +646,12 @@ module.exports = {
                 return responseHelper.success(res, responseData);
             }
 
-            // Find all service jobs for these vehicles
             let vehicleIds = vehicles.map(vehicle => vehicle._id);
             let serviceJobs = await MainJobDbHandler.getByQuery({
                 vehicle_id: { $in: vehicleIds },
                 status: { $ne: "completed" }
             });
 
-            // Segregate vehicles into in service and not in service
             let vehiclesInService = [];
             let vehiclesNotInService = [];
 
@@ -778,7 +664,6 @@ module.exports = {
                 }
             });
 
-            // Filter by model search within inService and notInService arrays
             const filterByModel = (vehicles) => {
                 return vehicles.filter(vehicle => vehicle.model.title.toLowerCase().includes(modelSearch.toLowerCase()));
             };
@@ -786,7 +671,6 @@ module.exports = {
             vehiclesInService = filterByModel(vehiclesInService);
             vehiclesNotInService = filterByModel(vehiclesNotInService);
 
-            // Function to segregate vehicles by model
             const segregateByModel = (vehicles) => {
                 return vehicles.reduce((result, vehicle) => {
                     const modelName = vehicle.model.title;
@@ -798,11 +682,9 @@ module.exports = {
                 }, {});
             };
 
-            // Segregate each group by model
             const inServiceByModel = segregateByModel(vehiclesInService);
             const notInServiceByModel = segregateByModel(vehiclesNotInService);
 
-            // Convert the segregated objects into an array format
             const formatResponse = (segregatedData) => {
                 return Object.keys(segregatedData).map(modelName => ({
                     model: modelName,
@@ -853,44 +735,36 @@ module.exports = {
                 responseData.msg = 'Vehicle with this identification number or license plate already exists!';
                 return responseHelper.error(res, responseData);
             }
-            // Check if the make exists, if not create it
+            
             let make = await makeDbHandler.getByQuery({ title: reqObj.make });
             let makeId;
 
             if (make.length) {
-                makeId = make[0]._id; // Use the existing make ID
+                makeId = make[0]._id; 
             } else {
                 let newMake = await makeDbHandler.create({ title: reqObj.make, image: reqObj.make_image || '' });
-                makeId = newMake._id; // Use the newly created make ID
+                makeId = newMake._id; 
             }
 
-            // Check if the model exists for the given make, if not create it
             let model = await modelDbHandler.getByQuery({ title: reqObj.model, make_id: makeId });
             let modelId;
 
             if (model.length) {
-                modelId = model[0]._id; // Use the existing model ID
+                modelId = model[0]._id; 
             } else {
                 let newModel = await modelDbHandler.create({ title: reqObj.model, make_id: makeId });
-                modelId = newModel._id; // Use the newly created model ID
+                modelId = newModel._id; 
             }
-
-
 
             let media = vehicleData[0].media || [];
             let document = vehicleData[0].document || [];
 
-
-            // Convert comma-separated strings to arrays
             let mediaToDelete = reqObj.delete_media ? reqObj.delete_media.split(',').map(item => item.trim()) : [];
             let documentsToDelete = reqObj.delete_documents ? reqObj.delete_documents.split(',').map(item => item.trim()) : [];
 
-            // Delete images from media
             if (mediaToDelete.length > 0) {
                 media = media.filter(image => !mediaToDelete.includes(image));
             }
-
-            // Delete images from documents
             if (documentsToDelete.length > 0) {
                 document = document.filter(doc => !documentsToDelete.includes(doc));
             }
@@ -900,7 +774,6 @@ module.exports = {
                     media.push(req.files.media[i].location);
                 }
             }
-
             if (req.files && req.files.document) {
                 for (let i = 0; i < req.files.document.length; i++) {
                     document.push(req.files.document[i].location);
@@ -911,8 +784,8 @@ module.exports = {
                 identification_number: reqObj.identification_number,
                 nickname: reqObj.nickname,
                 year: reqObj.year,
-                make: makeId, // Use the make ID
-                model: modelId, // Use the model ID
+                make: makeId, 
+                model: modelId, 
                 color: reqObj.color,
                 registration_due_date: reqObj.registration_due_date,
                 issue_date: reqObj.issue_date,
@@ -968,12 +841,10 @@ module.exports = {
                 return responseHelper.error(res, responseData);
             }
 
-            // Get vehicle IDs from the request and split into an array
             let vehicleIds = req.body.vehicleIds.split(',');
 
             for (let vehicleId of vehicleIds) {
                 try {
-                    // Check if the vehicle belongs to the user
                     let vehicle = await VehicleDbHandler.getByQuery({ _id: vehicleId, user_id: userId });
 
                     if (!vehicle.length) {
@@ -982,7 +853,6 @@ module.exports = {
                         continue;
                     }
 
-                    // Check if the vehicle has any services in progress
                     let inProgressService = await MainJobDbHandler.getByQuery({ vehicle_id: vehicleId, status: 'in-progress' });
 
                     if (inProgressService.length) {
@@ -991,8 +861,13 @@ module.exports = {
                         continue;
                     }
 
-                    // Soft delete the vehicle by setting de_fleet to currentDate
-                    await VehicleDbHandler.updateByQuery({ _id: vehicleId }, { de_fleet: moment().utc().startOf('day').format("YYYY-MM-DD") });
+                    await VehicleDbHandler.updateByQuery(
+                        { _id: vehicleId }, 
+                        { 
+                            is_deleted: true, 
+                            de_fleet: moment().utc().startOf('day').format("YYYY-MM-DD") 
+                        }
+                    );
 
                     response.deletedCount++;
                 } catch (error) {
@@ -1012,9 +887,6 @@ module.exports = {
         }
     },
 
-    /**
-     * Method to handle get makes
-     */
     getMakes: async (req, res) => {
         let responseData = {};
         try {
@@ -1029,9 +901,6 @@ module.exports = {
         }
     },
 
-    /**
-    * Method to handle get models
-    */
     getModels: async (req, res) => {
         let responseData = {};
         let id = req.params.id;
@@ -1046,51 +915,104 @@ module.exports = {
             return responseHelper.error(res, responseData);
         }
     },
+    
     DeleteVehicleMedia: async (req, res) => {
-        let { vehicleId, media, documents } = req.body; // Expecting vehicleId, mediaImages (comma-separated), and documents (comma-separated)
+        let { vehicleId, media, documents } = req.body; 
         let user = req.user;
         let userId = user.sub;
         let responseData = {};
 
         try {
-            // Validate user
             let userData = await userDbHandler.getByQuery({ _id: userId, user_role: 'fleet' });
             if (!userData.length) {
                 responseData.msg = 'Invalid login or token expired!';
                 return responseHelper.error(res, responseData);
             }
 
-            // Validate vehicle
             let vehicle = await VehicleDbHandler.getById(vehicleId);
             if (!vehicle) {
                 responseData.msg = 'Vehicle not found!';
                 return responseHelper.error(res, responseData);
             }
 
-            // Convert comma-separated strings to arrays
             let mediaToDelete = media ? media.split(',').map(item => item.trim()) : [];
             let documentsToDelete = documents ? documents.split(',').map(item => item.trim()) : [];
 
-            // Delete images from media
             if (mediaToDelete.length > 0) {
                 vehicle.media = vehicle.media.filter(image => !mediaToDelete.includes(image));
             }
 
-            // Delete images from documents
             if (documentsToDelete.length > 0) {
                 vehicle.document = vehicle.document.filter(doc => !documentsToDelete.includes(doc));
             }
 
-            // Save updated vehicle data
             await VehicleDbHandler.updateById(vehicleId, { media: vehicle.media, document: vehicle.document });
             responseData.msg = 'Media deleted successfully!';
             return responseHelper.success(res, responseData);
 
-        } catch (error) {
+       } catch (error) {
             log.error('Failed to delete images/documents with error::', error);
             responseData.msg = 'Failed to delete media!';
             return responseHelper.error(res, responseData);
         }
     },
+ 
+    getVehicleDetailsByVin: async (req, res) => {
+        try {
+            const { vin } = req.params; 
+            
+            if (!vin) {
+                return res.status(400).json({ status: false, message: "VIN is required" });
+            }
+
+            const result = await decodeVin(vin);
+
+            if (!result.success) {
+                return res.status(404).json({ status: false, message: result.message });
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "Vehicle decoded successfully",
+                data: result.data
+            });
+
+        } catch (error) {
+            console.error("Controller Error:", error);
+            return res.status(500).json({ status: false, message: "Internal Server Error" });
+        }
+    },
+   // ✅ 3. 获取服务下拉菜单列表
+    GetServiceCategories: async (req, res) => {
+        let responseData = {};
+        try {
+            // 只拉取激活状态的服务
+            let categories = await ServiceCategoryDbHandler.getByQuery({ is_active: true });
+            
+            // 如果数据库是空的，我们先塞几个默认的进去（自动初始化，省得你去数据库手敲！）
+            if (!categories.length) {
+                const defaultServices = [
+                    { title: "Tires", description: "Tire repair and replacement" },
+                    { title: "Towing", description: "Towing service" },
+                    { title: "Cleaning", description: "Vehicle cleaning and detailing" },
+                    { title: "Light Mechanical", description: "Basic mechanical repairs" },
+                    { title: "Heavy Mechanical", description: "Major mechanical repairs" },
+                    { title: "Glass", description: "Windshield and glass repair" }
+                ];
+                await Promise.all(defaultServices.map(s => ServiceCategoryDbHandler.create(s)));
+                categories = await ServiceCategoryDbHandler.getByQuery({ is_active: true });
+            }
+
+            responseData.msg = "Service categories fetched successfully!";
+            responseData.data = categories;
+            return responseHelper.success(res, responseData);
+
+        } catch (error) {
+            log.error('Failed to fetch service categories with error::', error);
+            responseData.msg = "Failed to fetch service categories";
+            return responseHelper.error(res, responseData);
+        }
+    }
 
 };
+
